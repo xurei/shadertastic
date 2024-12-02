@@ -39,6 +39,7 @@
 #include <util/platform.h>
 #include "version.h"
 #include "logging_functions.hpp"
+#include "is_module_loaded.h"
 
 // Uncomment this and comment the duplicate #define to print the param assignation (this will spam the logs)
 //#define debug_try_gs_effect(format, ...) debug(format, ##__VA_ARGS__)
@@ -85,6 +86,9 @@
 OBS_DECLARE_MODULE()
 OBS_MODULE_AUTHOR("xurei")
 OBS_MODULE_USE_DEFAULT_LOCALE("shadertastic", "en-US")
+//----------------------------------------------------------------------------------------------------------------------
+
+bool module_loaded = false;
 //----------------------------------------------------------------------------------------------------------------------
 
 obs_data_t * load_settings() {
@@ -389,10 +393,16 @@ static void show_settings_dialog() {
     QAction *action = static_cast<QAction *>(obs_frontend_add_tools_menu_qaction(obs_module_text("Shadertastic Settings")));
     QObject::connect(action, &QAction::triggered, [] { show_settings_dialog(); });
 
+    module_loaded = true;
     return true;
 }
 //----------------------------------------------------------------------------------------------------------------------
 
+bool is_module_loaded() {
+    return module_loaded;
+}
+
 [[maybe_unused]] void obs_module_unload(void) {
+    module_loaded = false;
 }
 //----------------------------------------------------------------------------------------------------------------------

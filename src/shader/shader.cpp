@@ -19,6 +19,7 @@
 #include <string>
 #include "../logging_functions.hpp"
 #include "../util/file_util.h"
+#include "../is_module_loaded.h"
 #include "shader.h"
 
 effect_shader::~effect_shader() {
@@ -103,7 +104,7 @@ void effect_shader::render(obs_source_t *filter, uint32_t cx, uint32_t cy) {
 }
 
 void effect_shader::release() {
-    if (gs_effect != nullptr) {
+    if (is_module_loaded() && gs_effect != nullptr) {
         debug("Release shader");
         obs_enter_graphics();
         gs_effect_destroy(gs_effect);
