@@ -16,8 +16,10 @@
 ******************************************************************************/
 
 class effect_shader {
+    private:
+    gs_effect_t *gs_effect = nullptr;
+
     public:
-    gs_effect_t *effect = nullptr;
     gs_eparam_t *param_tex_a = nullptr;
     gs_eparam_t *param_tex_b = nullptr;
     gs_eparam_t *param_tex_interm = nullptr;
@@ -40,7 +42,12 @@ class effect_shader {
 
     ~effect_shader();
 
-    void load(const char *shader_path);
+    bool load(const char *shader_path);
+
+    gs_eparam_t * get_param_by_name(const char *param_name);
+    bool loop(const char *tech_name);
+
+    void render(obs_source_t *filter, uint32_t cx, uint32_t cy);
 
     void release();
 

@@ -81,7 +81,7 @@ struct shadertastic_effect_t {
             for (size_t i=0; i < obs_data_array_count(parameters); i++) {
                 obs_data_t *param_metadata = obs_data_array_item(parameters, i);
                 const char *param_name = obs_data_get_string(param_metadata, "name");
-                gs_eparam_t *shader_param = gs_effect_get_param_by_name(main_shader->effect, param_name);
+                gs_eparam_t *shader_param = main_shader->get_param_by_name(param_name);
                 effect_parameter *effect_param = parameter_factory.create(name, shader_param, param_metadata);
 
                 if (effect_param != nullptr) {
@@ -172,7 +172,7 @@ struct shadertastic_effect_t {
             tech_name = "DrawLinear";
         }
 
-        while (gs_effect_loop(main_shader->effect, tech_name)) {
+        while (main_shader->loop(tech_name)) {
             gs_draw_sprite(nullptr, 0, cx, cy);
         }
     }

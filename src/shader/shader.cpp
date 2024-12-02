@@ -26,13 +26,14 @@ effect_shader::~effect_shader() {
     this->release();
 }
 
-void effect_shader::load(const char *shader_path) {
+bool effect_shader::load(const char *shader_path) {
     debug("SHADER PATH: %s", shader_path);
     this->path = std::string(shader_path);
     char *error_string = nullptr;
     char *shader_source_ = load_file_zipped_or_local(shader_path);
     if (shader_source_ == nullptr) {
         log_error("Could not open shader file %s : File does not exist", shader_path);
+        return false;
     }
     else {
         std::string shader_source = std::string(shader_source_);
@@ -57,41 +58,56 @@ void effect_shader::load(const char *shader_path) {
             shader_source
         );
         obs_enter_graphics();
-        effect = gs_effect_create(shader_source.c_str(), shader_path, &error_string);
+        gs_effect = gs_effect_create(shader_source.c_str(), shader_path, &error_string);
         obs_leave_graphics();
 
-        if (!effect) {
+        if (!gs_effect) {
             log_error("Could not open shader file %s : %s", shader_path, error_string);
             bfree(error_string);
+            return false;
         }
         else {
-            param_tex_a = gs_effect_get_param_by_name(effect, "tex_a");
-            param_tex_b = gs_effect_get_param_by_name(effect, "tex_b");
-            param_tex_interm = gs_effect_get_param_by_name(effect, "tex_interm");
-            param_time = gs_effect_get_param_by_name(effect, "time");
-            param_upixel = gs_effect_get_param_by_name(effect, "upixel");
-            param_vpixel = gs_effect_get_param_by_name(effect, "vpixel");
-            param_rand_seed = gs_effect_get_param_by_name(effect, "rand_seed");
-            param_current_step = gs_effect_get_param_by_name(effect, "current_step");
-            param_nb_steps = gs_effect_get_param_by_name(effect, "nb_steps");
+            param_tex_a = gs_effect_get_param_by_name(gs_effect, "tex_a");
+            param_tex_b = gs_effect_get_param_by_name(gs_effect, "tex_b");
+            param_tex_interm = gs_effect_get_param_by_name(gs_effect, "tex_interm");
+            param_time = gs_effect_get_param_by_name(gs_effect, "time");
+            param_upixel = gs_effect_get_param_by_name(gs_effect, "upixel");
+            param_vpixel = gs_effect_get_param_by_name(gs_effect, "vpixel");
+            param_rand_seed = gs_effect_get_param_by_name(gs_effect, "rand_seed");
+            param_current_step = gs_effect_get_param_by_name(gs_effect, "current_step");
+            param_nb_steps = gs_effect_get_param_by_name(gs_effect, "nb_steps");
 
-            param_fd_leye_1 = gs_effect_get_param_by_name(effect, "fd_leye_1");
-            param_fd_leye_2 = gs_effect_get_param_by_name(effect, "fd_leye_2");
-            param_fd_reye_1 = gs_effect_get_param_by_name(effect, "fd_reye_1");
-            param_fd_reye_2 = gs_effect_get_param_by_name(effect, "fd_reye_2");
-            param_fd_face_1 = gs_effect_get_param_by_name(effect, "fd_face_1");
-            param_fd_face_2 = gs_effect_get_param_by_name(effect, "fd_face_2");
-            param_fd_points_tex = gs_effect_get_param_by_name(effect, "fd_points_tex");
+            param_fd_leye_1 = gs_effect_get_param_by_name(gs_effect, "fd_leye_1");
+            param_fd_leye_2 = gs_effect_get_param_by_name(gs_effect, "fd_leye_2");
+            param_fd_reye_1 = gs_effect_get_param_by_name(gs_effect, "fd_reye_1");
+            param_fd_reye_2 = gs_effect_get_param_by_name(gs_effect, "fd_reye_2");
+            param_fd_face_1 = gs_effect_get_param_by_name(gs_effect, "fd_face_1");
+            param_fd_face_2 = gs_effect_get_param_by_name(gs_effect, "fd_face_2");
+            param_fd_points_tex = gs_effect_get_param_by_name(gs_effect, "fd_points_tex");
+
+            return true;
         }
     }
 }
 
+bool effect_shader::loop(const char *tech_name) {
+    return gs_effect_loop(gs_effect, tech_name);
+}
+
+gs_eparam_t *effect_shader::get_param_by_name(const char *param_name) {
+    return gs_effect_get_param_by_name(gs_effect, param_name);
+}
+
+void effect_shader::render(obs_source_t *filter, uint32_t cx, uint32_t cy) {
+    obs_source_process_filter_end(filter, gs_effect, cx, cy);
+}
+
 void effect_shader::release() {
-    if (effect != nullptr) {
+    if (gs_effect != nullptr) {
         debug("Release shader");
         obs_enter_graphics();
-        gs_effect_destroy(effect);
-        effect = nullptr;
+        gs_effect_destroy(gs_effect);
+        gs_effect = nullptr;
         obs_leave_graphics();
     }
 }

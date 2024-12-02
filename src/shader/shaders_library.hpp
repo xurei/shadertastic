@@ -9,8 +9,8 @@ class shaders_library_t {
             std::string shader_path = this->get_shader_path(path);
             debug("shaders_library.load_shader_file %s", shader_path.c_str());
             effect_shader *new_shader = new effect_shader();
-            new_shader->load(shader_path.c_str());
-            if (new_shader->effect == nullptr) {
+            bool is_loaded = new_shader->load(shader_path.c_str());
+            if (!is_loaded) {
                 // Effect loading failed. Using the fallback effect to show ERR on the source
                 delete new_shader;
                 auto emplaced = shaders.emplace(path, fallback_shader);

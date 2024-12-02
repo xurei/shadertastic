@@ -192,7 +192,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                     selected_effect->set_params(nullptr, nullptr, filter_time, cx, cy, s->rand_seed);
                     selected_effect->set_step_params(current_step, interm_texture);
 
-                    obs_source_process_filter_end(s->source, selected_effect->main_shader->effect, cx, cy);
+                    selected_effect->main_shader->render(s->source, cx, cy);
                     if (is_interm_step) {
                         gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
                         interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
