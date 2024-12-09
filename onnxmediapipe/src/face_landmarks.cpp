@@ -33,8 +33,7 @@ FILE* faceLandmarksDebugFile;
 
 namespace onnxmediapipe
 {
-    FaceLandmarks::FaceLandmarks(std::unique_ptr<Ort::Env> &ort_env)
-    {
+    FaceLandmarks::FaceLandmarks(std::unique_ptr<Ort::Env> &ort_env) {
         if (!ortSession) {
             Ort::SessionOptions sessionOptions;
             sessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
@@ -245,8 +244,7 @@ namespace onnxmediapipe
 //        inferRequest = compiledModel.create_infer_request();
     }
 
-    void FaceLandmarks::Run(const cv::Mat& frameRGB, const RotatedRect& roi, FaceLandmarksResults& results)
-    {
+    void FaceLandmarks::Run(const cv::Mat& frameRGB, const RotatedRect& roi, FaceLandmarksResults& results) {
         faceLandmarksDebugFile = fdebug_open("face_landmarks.txt");
         //TODO: sanity checks on roi vs. the cv::Mat.
         // preprocess (fill the input tensor)
@@ -266,8 +264,7 @@ namespace onnxmediapipe
     }
 
 
-    void FaceLandmarks::preprocess(const cv::Mat& frameRGB, const RotatedRect& roi)
-    {
+    void FaceLandmarks::preprocess(const cv::Mat& frameRGB, const RotatedRect& roi) {
         const cv::RotatedRect rotated_rect(cv::Point2f(roi.center_x, roi.center_y),
             cv::Size2f(roi.width, roi.height),
             (float)(roi.rotation * 180.f / M_PI));
@@ -320,28 +317,16 @@ namespace onnxmediapipe
         converted.copyTo(cv::Mat((int)netInputHeight, (int)netInputWidth, CV_32FC3, pTensor));
     }
 
-    static inline void fill2d_points_results(const float* raw_tensor, std::vector< cv::Point2f >& v, const int netInputWidth, const int netInputHeight)
-    {
-        for (size_t i = 0; i < v.size(); i++)
-        {
+    static inline void fill2d_points_results(const float* raw_tensor, const size_t num_points, cv::Point2f v[], const int netInputWidth, const int netInputHeight) {
+        for (size_t i = 0; i < num_points; i++) {
             v[i].x = raw_tensor[i * 2] / (float)netInputWidth;
             v[i].y = raw_tensor[i * 2 + 1] / (float)netInputHeight;
         }
     }
 
-    void FaceLandmarks::postprocess(const cv::Mat& frameRGB, const RotatedRect& roi, FaceLandmarksResults& results)
-    {
-//        UNUSED_PARAMETER(frameRGB);
-//        UNUSED_PARAMETER(roi);
+    void FaceLandmarks::postprocess(const cv::Mat& frameRGB, const RotatedRect& roi, FaceLandmarksResults& results) {
         results.face_flag = 0.f;
-        results.facial_surface.clear();
-        results.lips_refined_region.clear();
-        results.left_eye_refined_region.clear();
-        results.right_eye_refined_region.clear();
-        results.left_iris_refined_region.clear();
-        results.right_iris_refined_region.clear();
 
-        results.facial_surface.resize(nFacialSurfaceLandmarks);
         const float* facial_surface_tensor_data = outputTensorValues[4].data();
         const float* face_flag_data = outputTensorValues[0].data();
 
@@ -364,8 +349,7 @@ namespace onnxmediapipe
         results.face_flag = 1.0f / (1.0f + std::exp(-(*face_flag_data)));
         fdebug(faceLandmarksDebugFile, "Face Flag: %f", results.face_flag);
 
-        for (int i = 0; i < nFacialSurfaceLandmarks; i++)
-        {
+        for (size_t i = 0; i < facial_surface_num_points; i++) {
             //just set normalized values for now.
             results.facial_surface[i].x = facial_surface_tensor_data[i * 3] / (float)netInputWidth;
             results.facial_surface[i].y = facial_surface_tensor_data[i * 3 + 1] / (float)netInputHeight;
@@ -373,8 +357,7 @@ namespace onnxmediapipe
             fdebug(faceLandmarksDebugFile, "%i %f %f %f", i, results.facial_surface[i].x, results.facial_surface[i].y, results.facial_surface[i].z);
         }
 
-        if (_bWithAttention)
-        {
+        if (_bWithAttention) {
             const float* lips_refined_region_data = outputTensorValues[3].data();
             const float* left_eye_refined_region_data = outputTensorValues[1].data();
             const float* right_eye_refined_region_data = outputTensorValues[5].data();
@@ -399,40 +382,31 @@ namespace onnxmediapipe
 //                    throw std::logic_error(right_iris_refined_tensor_name + " output tensor is holding a smaller amount of data than expected.");
 //            }
 
-            results.lips_refined_region.resize(lips_refined_region_num_points);
-            fill2d_points_results(lips_refined_region_data, results.lips_refined_region, (int)netInputWidth, (int)netInputHeight);
+            fill2d_points_results(lips_refined_region_data, lips_refined_region_num_points, results.lips_refined_region, (int)netInputWidth, (int)netInputHeight);
 
-            results.left_eye_refined_region.resize(left_eye_refined_region_num_points);
-            fill2d_points_results(left_eye_refined_region_data, results.left_eye_refined_region, (int)netInputWidth, (int)netInputHeight);
+            fill2d_points_results(left_eye_refined_region_data, eye_refined_region_num_points, results.left_eye_refined_region, (int)netInputWidth, (int)netInputHeight);
 
-            results.right_eye_refined_region.resize(right_eye_refined_region_num_points);
-            fill2d_points_results(right_eye_refined_region_data, results.right_eye_refined_region, (int)netInputWidth, (int)netInputHeight);
+            fill2d_points_results(right_eye_refined_region_data, eye_refined_region_num_points, results.right_eye_refined_region, (int)netInputWidth, (int)netInputHeight);
 
-            results.left_iris_refined_region.resize(left_iris_refined_region_num_points);
-            fill2d_points_results(left_iris_refined_region_data, results.left_iris_refined_region, (int)netInputWidth, (int)netInputHeight);
+            fill2d_points_results(left_iris_refined_region_data, iris_refined_region_num_points, results.left_iris_refined_region, (int)netInputWidth, (int)netInputHeight);
 
-            results.right_iris_refined_region.resize(right_iris_refined_region_num_points);
-            fill2d_points_results(right_iris_refined_region_data, results.right_iris_refined_region, (int)netInputWidth, (int)netInputHeight);
+            fill2d_points_results(right_iris_refined_region_data, iris_refined_region_num_points, results.right_iris_refined_region, (int)netInputWidth, (int)netInputHeight);
 
             //create a (normalized) refined list of landmarks from the 6 separate lists that we generated.
-            results.refined_landmarks.resize(nRefinedLandmarks);
 
             //initialize the first 468 points to our face surface landmarks
-            for (size_t i = 0; i < results.facial_surface.size(); i++)
-            {
+            for (size_t i = 0; i < facial_surface_num_points; i++) {
                 results.refined_landmarks[i] = results.facial_surface[i];
             }
 
             //override x & y for lip points
-            for (size_t i = 0; i < lips_refined_region_num_points; i++)
-            {
+            for (size_t i = 0; i < lips_refined_region_num_points; i++) {
                 results.refined_landmarks[lips_refinement_indices[i]].x = results.lips_refined_region[i].x;
                 results.refined_landmarks[lips_refinement_indices[i]].y = results.lips_refined_region[i].y;
             }
 
             //override x & y for left & right_eye points
-            for (size_t i = 0; i < left_eye_refined_region_num_points; i++)
-            {
+            for (size_t i = 0; i < eye_refined_region_num_points; i++) {
                 results.refined_landmarks[right_eye_refinement_indices[i]].x = results.right_eye_refined_region[i].x;
                 results.refined_landmarks[right_eye_refinement_indices[i]].y = results.right_eye_refined_region[i].y;
 
@@ -441,29 +415,25 @@ namespace onnxmediapipe
             }
 
             float z_avg_for_left_iris = 0.f;
-            for (int i = 0; i < 16; i++)
-            {
+            for (int i = 0; i < 16; i++) {
                 z_avg_for_left_iris += results.refined_landmarks[left_iris_z_avg_indices[i]].z;
             }
             z_avg_for_left_iris /= 16.f;
 
             float z_avg_for_right_iris = 0.f;
-            for (int i = 0; i < 16; i++)
-            {
+            for (int i = 0; i < 16; i++) {
                 z_avg_for_right_iris += results.refined_landmarks[right_iris_z_avg_indices[i]].z;
             }
             z_avg_for_right_iris /= 16.f;
 
             //set x & y for left & right iris points
-            for (size_t i = 0; i < left_iris_refined_region_num_points; i++)
-            {
+            for (size_t i = 0; i < iris_refined_region_num_points; i++) {
                 results.refined_landmarks[left_iris_refinement_indices[i]].x = results.left_iris_refined_region[i].x;
                 results.refined_landmarks[left_iris_refinement_indices[i]].y = results.left_iris_refined_region[i].y;
                 results.refined_landmarks[left_iris_refinement_indices[i]].z = z_avg_for_left_iris;
             }
 
-            for (size_t i = 0; i < right_iris_refined_region_num_points; i++)
-            {
+            for (size_t i = 0; i < iris_refined_region_num_points; i++) {
                 results.refined_landmarks[right_iris_refinement_indices[i]].x = results.right_iris_refined_region[i].x;
                 results.refined_landmarks[right_iris_refinement_indices[i]].y = results.right_iris_refined_region[i].y;
                 results.refined_landmarks[right_iris_refinement_indices[i]].z = z_avg_for_right_iris;
@@ -480,8 +450,7 @@ namespace onnxmediapipe
             normalized_rect.height = roi.height / (float)frameRGB.rows;
             normalized_rect.rotation = roi.rotation;
 
-            for (size_t i = 0; i < results.facial_surface.size(); i++)
-            {
+            for (size_t i = 0; i < facial_surface_num_points; i++) {
                 cv::Point3f p = results.facial_surface[i];
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
@@ -497,8 +466,7 @@ namespace onnxmediapipe
                 results.facial_surface[i] = { new_x, new_y, new_z };
             }
 
-            for (size_t i = 0; i < results.refined_landmarks.size(); i++)
-            {
+            for (size_t i = 0; i < refined_landmarks_num_points; i++) {
                 cv::Point3f p = results.refined_landmarks[i];
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
@@ -514,8 +482,7 @@ namespace onnxmediapipe
                 results.refined_landmarks[i] = { new_x, new_y, new_z };
             }
 
-            for (auto& p : results.lips_refined_region)
-            {
+            for (auto& p : results.lips_refined_region) {
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
                 const float angle = normalized_rect.rotation;
@@ -529,8 +496,7 @@ namespace onnxmediapipe
                 p.y = new_y;
             }
 
-            for (auto& p : results.left_eye_refined_region)
-            {
+            for (auto& p : results.left_eye_refined_region) {
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
                 const float angle = normalized_rect.rotation;
@@ -544,8 +510,7 @@ namespace onnxmediapipe
                 p.y = new_y;
             }
 
-            for (auto& p : results.right_eye_refined_region)
-            {
+            for (auto& p : results.right_eye_refined_region) {
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
                 const float angle = normalized_rect.rotation;
@@ -559,8 +524,7 @@ namespace onnxmediapipe
                 p.y = new_y;
             }
 
-            for (auto& p : results.left_iris_refined_region)
-            {
+            for (auto& p : results.left_iris_refined_region) {
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
                 const float angle = normalized_rect.rotation;
@@ -574,8 +538,7 @@ namespace onnxmediapipe
                 p.y = new_y;
             }
 
-            for (auto& p : results.right_iris_refined_region)
-            {
+            for (auto& p : results.right_iris_refined_region) {
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
                 const float angle = normalized_rect.rotation;
@@ -597,8 +560,7 @@ namespace onnxmediapipe
             float y_min = std::numeric_limits<float>::max();
             float y_max = std::numeric_limits<float>::min();
 
-            for (auto& p : results.refined_landmarks)
-            {
+            for (auto& p : results.refined_landmarks) {
                 x_min = std::min(x_min, p.x);
                 x_max = std::max(x_max, p.x);
                 y_min = std::min(y_min, p.y);
@@ -638,13 +600,11 @@ namespace onnxmediapipe
                 const float scale_x = 1.5f;
                 const float scale_y = 1.5f;
 
-                if (rotation == 0.f)
-                {
+                if (rotation == 0.f) {
                     results.roi.center_x = results.roi.center_x + width * shift_x;
                     results.roi.center_y = results.roi.center_y + height * shift_y;
                 }
-                else
-                {
+                else {
                     const float x_shift =
                         (image_width * width * shift_x * std::cos(rotation) -
                             image_height * height * shift_y * std::sin(rotation)) /

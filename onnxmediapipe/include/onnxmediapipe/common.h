@@ -6,6 +6,7 @@
 #include <numeric>
 #include <opencv2/core.hpp>
 #include <vector>
+#include "onnxmediapipe/landmark_refinement_indices.h"
 
 #ifndef M_PI
 # define M_PI		3.14159265358979323846	/* pi */
@@ -39,34 +40,34 @@ namespace onnxmediapipe
         // x- and y-coordiates follow the image pixel coordinates;
         // z-coordinates are relative to the face center of mass and are
         // scaled proportionally to the face width
-        std::vector< cv::Point3f > facial_surface;
+        cv::Point3f facial_surface[facial_surface_num_points];
 
         //80 2d landmarks (inner and outer contours and an intermediate line)
         //(only populated if using 'with attention' model)
-        std::vector< cv::Point2f > lips_refined_region;
+        cv::Point2f lips_refined_region[lips_refined_region_num_points];
 
         //71 2d landmarks (inner and outer contours and an intermediate line)
         //(only populated if using 'with attention' model)
-        std::vector< cv::Point2f > left_eye_refined_region;
+        cv::Point2f left_eye_refined_region[eye_refined_region_num_points];
 
         //71 2d landmarks (inner and outer contours and an intermediate line)
         //(only populated if using 'with attention' model)
-        std::vector< cv::Point2f > right_eye_refined_region;
+        cv::Point2f right_eye_refined_region[eye_refined_region_num_points];
 
         //5 2d landmarks (1 for pupil center and 4 for iris contour)
         //(only populated if using 'with attention' model)
-        std::vector< cv::Point2f > left_iris_refined_region;
+        cv::Point2f left_iris_refined_region[iris_refined_region_num_points];
 
         //5 2d landmarks (1 for pupil center and 4 for iris contour)
         //(only populated if using 'with attention' model)
-        std::vector< cv::Point2f > right_iris_refined_region;
+        cv::Point2f right_iris_refined_region[iris_refined_region_num_points];
 
         //Refined landmarks
         // If using the 'with attention' model, this will be 478 points
         //  generated from the 6 'raw' landmark regions above.
         // If *not* using the 'with attention' model, this will simply be
         //  the same exact 468 point list as 'facial_surface'.
-        std::vector< cv::Point3f > refined_landmarks;
+        cv::Point3f refined_landmarks[refined_landmarks_num_points];
 
         //indicates the likelihood of the face being present in the input image.
         float face_flag;

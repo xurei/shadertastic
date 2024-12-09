@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Vignette in bundled filters
 
 ### Changed
+- Improved face tracking performance, ~10% frame time saved 
 - Face Detection Reference: add "Show texture" option
 - Various internal improvements
 

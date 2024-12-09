@@ -28,7 +28,6 @@
 
 #define FACEDETECTION_WIDTH 1280
 #define FACEDETECTION_HEIGHT 720
-#define FACEDETECTION_NB_ITERATIONS 5
 
 struct face_detection_bounding_box {
     union {

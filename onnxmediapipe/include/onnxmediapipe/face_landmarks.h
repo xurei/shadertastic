@@ -11,8 +11,6 @@ namespace onnxmediapipe
     class FaceLandmarks {
 
     public:
-        const int nFacialSurfaceLandmarks = 468;
-
         explicit FaceLandmarks(std::unique_ptr<Ort::Env> &ort_env);
 
         void Run(const cv::Mat& frameRGB, const RotatedRect& roi, FaceLandmarksResults& results);

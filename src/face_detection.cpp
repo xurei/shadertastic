@@ -20,6 +20,7 @@
 #include <opencv2/core.hpp>
 #include <thread>
 #include <obs-module.h>
+#include "../onnxmediapipe/include/onnxmediapipe/face_landmarks.h"
 #include "face_detection.h"
 #include "logging_functions.hpp"
 #include "util/rgba_to_rgb.h"
@@ -27,7 +28,7 @@
 
 #define FACEDETECTION_WIDTH 1280
 #define FACEDETECTION_HEIGHT 720
-#define FACEDETECTION_NB_ITERATIONS 5
+#define FACEDETECTION_NB_ITERATIONS 2
 
 // Globals
 std::unique_ptr<Ort::Env> ort_env;
@@ -40,12 +41,10 @@ face_detection_bounding_box no_bounding_box{
 //----------------------------------------------------------------------------------------------------------------------
 
 void face_detection_copy_points(onnxmediapipe::FaceLandmarksResults *facelandmark_results, float *points) {
-    for (size_t i=0; i<468; ++i) {
-        if (i < facelandmark_results->refined_landmarks.size()) {
-            points[i*4+0] = facelandmark_results->refined_landmarks[i].x;
-            points[i*4+1] = facelandmark_results->refined_landmarks[i].y;
-            points[i*4+2] = facelandmark_results->refined_landmarks[i].z;
-        }
+    for (size_t i=0; i < facial_surface_num_points; ++i) {
+        points[i*4+0] = facelandmark_results->refined_landmarks[i].x;
+        points[i*4+1] = facelandmark_results->refined_landmarks[i].y;
+        points[i*4+2] = facelandmark_results->refined_landmarks[i].z;
         points[i*4+3] = 1.0;
     }
 }
@@ -59,8 +58,8 @@ face_detection_bounding_box face_detection_get_bounding_box(onnxmediapipe::FaceL
     // Find the bounding box
     for (int i=0; i<nb_indices; ++i) {
         const size_t landmark_i = indices[i];
-        if (landmark_i < facelandmark_results->refined_landmarks.size()) {
-            auto k = facelandmark_results->refined_landmarks[landmark_i];
+        if (landmark_i < refined_landmarks_num_points) {
+            auto &k = facelandmark_results->refined_landmarks[landmark_i];
             minPoint.x = std::min(minPoint.x, k.x);
             minPoint.y = std::min(minPoint.y, k.y);
 
@@ -657,28 +656,27 @@ void face_detection_tick(face_detection_state *s, obs_source_t *target_source) {
                 /* nothing to do */
             }
             else {
-                s->average_results.facial_surface.resize(s->facelandmark_results[0].facial_surface.size());
-                for (size_t i = 0; i < s->facelandmark_results[0].facial_surface.size(); ++i) {
+                for (size_t i = 0; i < facial_surface_num_points; ++i) {
                     s->average_results.facial_surface[i].x = 0.0;
                     s->average_results.facial_surface[i].y = 0.0;
                     s->average_results.facial_surface[i].z = 0.0;
                     size_t count = 0;
                     for (size_t j = 0; j < FACEDETECTION_NB_ITERATIONS; ++j) {
-                        if (i < s->facelandmark_results[j].facial_surface.size()) {
+                        if (i < facial_surface_num_points) {
                             s->average_results.facial_surface[i] += s->facelandmark_results[j].facial_surface[i];
                             ++count;
                         }
                     }
                     s->average_results.facial_surface[i] /= (float) count;
                 }
-                s->average_results.refined_landmarks.resize(s->facelandmark_results[0].refined_landmarks.size());
-                for (size_t i = 0; i < s->facelandmark_results[0].refined_landmarks.size(); ++i) {
+
+                for (size_t i = 0; i < refined_landmarks_num_points; ++i) {
                     s->average_results.refined_landmarks[i].x = 0.0;
                     s->average_results.refined_landmarks[i].y = 0.0;
                     s->average_results.refined_landmarks[i].z = 0.0;
                     size_t count = 0;
                     for (size_t j = 0; j < FACEDETECTION_NB_ITERATIONS; ++j) {
-                        if (i < s->facelandmark_results[j].refined_landmarks.size()) {
+                        if (i < refined_landmarks_num_points) {
                             s->average_results.refined_landmarks[i] += s->facelandmark_results[j].refined_landmarks[i];
                             ++count;
                         }
@@ -721,13 +719,13 @@ void face_detection_render(face_detection_state *s, effect_shader *main_shader) 
     }
     else {
         {
-            auto bbox = face_detection_get_bounding_box(&s->average_results, left_iris_refinement_indices, left_iris_refined_region_num_points);
+            auto bbox = face_detection_get_bounding_box(&s->average_results, left_iris_refinement_indices, iris_refined_region_num_points);
             try_gs_effect_set_vec2("fd_leye_1", main_shader->param_fd_leye_1, &bbox.point1);
             try_gs_effect_set_vec2("fd_leye_2", main_shader->param_fd_leye_2, &bbox.point2);
             //debug("Left Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
         }
         {
-            auto bbox = face_detection_get_bounding_box(&s->average_results, right_iris_refinement_indices, right_iris_refined_region_num_points);
+            auto bbox = face_detection_get_bounding_box(&s->average_results, right_iris_refinement_indices, iris_refined_region_num_points);
             try_gs_effect_set_vec2("fd_reye_1", main_shader->param_fd_reye_1, &bbox.point1);
             try_gs_effect_set_vec2("fd_reye_2", main_shader->param_fd_reye_2, &bbox.point2);
             //debug("Right Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);

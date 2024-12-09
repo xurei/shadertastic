@@ -2,12 +2,11 @@
 // SPDX - License - Identifier: Apache - 2.0
 #pragma once
 
-const size_t nRefinedLandmarks = 478;
+const size_t facial_surface_num_points = 468;
+const size_t refined_landmarks_num_points = 478;
 const size_t lips_refined_region_num_points = 80;
-const size_t left_eye_refined_region_num_points = 71;
-const size_t right_eye_refined_region_num_points = 71;
-const size_t left_iris_refined_region_num_points = 5;
-const size_t right_iris_refined_region_num_points = 5;
+const size_t eye_refined_region_num_points = 71;
+const size_t iris_refined_region_num_points = 5;
 
 const unsigned short lips_refinement_indices[lips_refined_region_num_points] = {
     61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 185, 40, 39, 37, 0,
@@ -17,7 +16,7 @@ const unsigned short lips_refinement_indices[lips_refined_region_num_points] = {
     86, 15, 316, 403, 319, 325, 292, 183, 42, 41, 38, 12, 268, 271, 272, 407,
 };
 
-const unsigned short left_eye_refinement_indices[left_eye_refined_region_num_points] = {
+const unsigned short left_eye_refinement_indices[eye_refined_region_num_points] = {
     33, 7, 163, 144, 145, 153, 154, 155, 133, 246, 161, 160, 159, 158, 157, 173,
     130, 25, 110, 24, 23, 22, 26, 112, 243, 247, 30, 29, 27, 28, 56, 190,
     226, 31, 228, 229, 230, 231, 232, 233, 244, 113, 225, 224, 223, 222, 221, 189,
@@ -25,7 +24,7 @@ const unsigned short left_eye_refinement_indices[left_eye_refined_region_num_poi
     70, 63, 105, 66, 107, 55, 193,
 };
 
-const unsigned short right_eye_refinement_indices[right_eye_refined_region_num_points] = {
+const unsigned short right_eye_refinement_indices[eye_refined_region_num_points] = {
     263, 249, 390, 373, 374, 380, 381, 382, 362, 466, 388, 387, 386, 385, 384, 398,
     359, 255, 339, 254, 253, 252, 256, 341, 463, 467, 260, 259, 257, 258, 286, 414,
     446, 261, 448, 449, 450, 451, 452, 453, 464, 342, 445, 444, 443, 442, 441, 413,
@@ -33,11 +32,11 @@ const unsigned short right_eye_refinement_indices[right_eye_refined_region_num_p
     300, 293, 334, 296, 336, 285, 417,
 };
 
-const unsigned short left_iris_refinement_indices[left_iris_refined_region_num_points] = {
+const unsigned short left_iris_refinement_indices[iris_refined_region_num_points] = {
     468, 469, 470, 471, 472,
 };
 
-const unsigned short right_iris_refinement_indices[right_iris_refined_region_num_points] = {
+const unsigned short right_iris_refinement_indices[iris_refined_region_num_points] = {
     473, 474, 475, 476, 477,
 };
 
