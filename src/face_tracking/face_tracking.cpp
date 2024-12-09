@@ -40,7 +40,7 @@ face_tracking_bounding_box no_bounding_box{
 //----------------------------------------------------------------------------------------------------------------------
 
 void face_tracking_copy_points(onnxmediapipe::FaceLandmarksResults *facelandmark_results, float *points) {
-    for (size_t i=0; i < facial_surface_num_points; ++i) {
+    for (size_t i=0; i < refined_landmarks_num_points; ++i) {
         points[i*4+0] = facelandmark_results->refined_landmarks[i].x;
         points[i*4+1] = facelandmark_results->refined_landmarks[i].y;
         points[i*4+2] = facelandmark_results->refined_landmarks[i].z;
@@ -113,7 +113,7 @@ void face_tracking_create(face_tracking_state *s) {
     s->staging_texture = gs_stagesurface_create(FACEDETECTION_WIDTH, FACEDETECTION_HEIGHT, GS_BGRA);
 
     if (!s->fd_points_texture) {
-        s->fd_points_texture = gs_texture_create(468, 2, GS_RGBA32F, 1, nullptr, GS_DYNAMIC);
+        s->fd_points_texture = gs_texture_create(refined_landmarks_num_points, 2, GS_RGBA32F, 1, nullptr, GS_DYNAMIC);
     }
 
     float *texpoints;
@@ -121,7 +121,7 @@ void face_tracking_create(face_tracking_state *s) {
     gs_texture_map(s->fd_points_texture, (uint8_t **)(&texpoints), &linesize2);
     {
         // Fill in the second row of the texture with the point from the original model
-        int k = 468 * 4;
+        int k = refined_landmarks_num_points * 4;
         texpoints[k++] = 0.499977f; texpoints[k++] = 0.347466f; k++; texpoints[k++] = 1.0f;
         texpoints[k++] = 0.500026f; texpoints[k++] = 0.452513f; k++; texpoints[k++] = 1.0f;
         texpoints[k++] = 0.499974f; texpoints[k++] = 0.397628f; k++; texpoints[k++] = 1.0f;
@@ -655,19 +655,17 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source) {
                 /* nothing to do */
             }
             else {
-                for (size_t i = 0; i < facial_surface_num_points; ++i) {
-                    s->average_results.facial_surface[i].x = 0.0;
-                    s->average_results.facial_surface[i].y = 0.0;
-                    s->average_results.facial_surface[i].z = 0.0;
-                    size_t count = 0;
-                    for (size_t j = 0; j < FACEDETECTION_NB_ITERATIONS; ++j) {
-                        if (i < facial_surface_num_points) {
-                            s->average_results.facial_surface[i] += s->facelandmark_results[j].facial_surface[i];
-                            ++count;
-                        }
-                    }
-                    s->average_results.facial_surface[i] /= (float) count;
-                }
+//                for (size_t i = 0; i < facial_surface_num_points; ++i) {
+//                    s->average_results.facial_surface[i].x = 0.0;
+//                    s->average_results.facial_surface[i].y = 0.0;
+//                    s->average_results.facial_surface[i].z = 0.0;
+//                    size_t count = 0;
+//                    for (size_t j = 0; j < FACEDETECTION_NB_ITERATIONS; ++j) {
+//                        s->average_results.facial_surface[i] += s->facelandmark_results[j].facial_surface[i];
+//                        ++count;
+//                    }
+//                    s->average_results.facial_surface[i] /= (float) count;
+//                }
 
                 for (size_t i = 0; i < refined_landmarks_num_points; ++i) {
                     s->average_results.refined_landmarks[i].x = 0.0;
@@ -675,15 +673,13 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source) {
                     s->average_results.refined_landmarks[i].z = 0.0;
                     size_t count = 0;
                     for (size_t j = 0; j < FACEDETECTION_NB_ITERATIONS; ++j) {
-                        if (i < refined_landmarks_num_points) {
-                            s->average_results.refined_landmarks[i] += s->facelandmark_results[j].refined_landmarks[i];
-                            ++count;
-                        }
+                        s->average_results.refined_landmarks[i] += s->facelandmark_results[j].refined_landmarks[i];
+                        ++count;
                     }
                     s->average_results.refined_landmarks[i] /= (float) count;
                 }
 
-                float points[468 * 4];
+                float points[refined_landmarks_num_points * 4];
                 face_tracking_copy_points(&s->average_results, points);
 
                 float *texpoints;
@@ -691,7 +687,7 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source) {
                 obs_enter_graphics();
                 {
                     gs_texture_map(s->fd_points_texture, (uint8_t **) (&texpoints), &linesize2);
-                    memcpy(texpoints, points, 468 * 4 * sizeof(float));
+                    memcpy(texpoints, points, refined_landmarks_num_points * 4 * sizeof(float));
                     gs_texture_unmap(s->fd_points_texture);
                 }
                 obs_leave_graphics();

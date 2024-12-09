@@ -145,19 +145,19 @@ int3 get_best_triangle(float2 uv) {
     for (int i=0; i<28; ++i) {
         int3 current_triangle = triangles[i];
         if (current_triangle[0] != prev_triangle[0]) {
-            edge1 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[0] + 0.5)/468.0, 0.0));
+            edge1 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[0] + 0.5)/478.0, 0.0));
         }
         if (current_triangle[1] == prev_triangle[2]) {
             edge2 = edge3;
-            edge3 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[2] + 0.5)/468.0, 0.0));
+            edge3 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[2] + 0.5)/478.0, 0.0));
         }
         else if (current_triangle[2] == prev_triangle[1]) {
             edge3 = edge2;
-            edge2 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[1] + 0.5)/468.0, 0.0));
+            edge2 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[1] + 0.5)/478.0, 0.0));
         }
         else {
-            edge2 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[1] + 0.5)/468.0, 0.0));
-            edge3 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[2] + 0.5)/468.0, 0.0));
+            edge2 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[1] + 0.5)/478.0, 0.0));
+            edge3 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[2] + 0.5)/478.0, 0.0));
         }
         prev_triangle = current_triangle;
 
@@ -392,9 +392,9 @@ float4 EffectLinear__step2(float2 uv) {
 //----------------------------------------------------------------------------------------------------------------------
 
 float4 EffectLinear__step3(float2 uv) {
-    float4 leye_point = fd_points_tex.Sample(pointsSampler, float2((33 + 0.5)/468.0, 0.0));
-    float4 reye_point = fd_points_tex.Sample(pointsSampler, float2((263 + 0.5)/468.0, 0.0));
-    float4 chin_point = fd_points_tex.Sample(pointsSampler, float2((152 + 0.5)/468.0, 0.0));
+    float4 leye_point = fd_points_tex.Sample(pointsSampler, float2((33 + 0.5)/478.0, 0.0));
+    float4 reye_point = fd_points_tex.Sample(pointsSampler, float2((263 + 0.5)/478.0, 0.0));
+    float4 chin_point = fd_points_tex.Sample(pointsSampler, float2((152 + 0.5)/478.0, 0.0));
     float3 direction = perpendicularVector(leye_point.xyz, reye_point.xyz, chin_point.xyz);
 
     float4 ppx = image.Sample(textureSampler, uv);

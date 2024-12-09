@@ -167,15 +167,15 @@ float arcEllipse(float2 A, float2 B, float2 center, float2 uv) {
 
 float4 EffectLinear_real(float2 uv)
 {
-    float2 face_tip = fd_points_tex.Sample(pointsSampler, float2((1 + 0.5)/468.0, 0)).xy;
-    float2 face_center = fd_points_tex.Sample(pointsSampler, float2((197 + 0.5)/468.0, 0)).xy;
-    float2 face_top = fd_points_tex.Sample(pointsSampler, float2((10 + 0.5)/468.0, 0)).xy;
-    float2 face_bottom = fd_points_tex.Sample(pointsSampler, float2((152 + 0.5)/468.0, 0)).xy;
+    float2 face_tip = fd_points_tex.Sample(pointsSampler, float2((1 + 0.5)/478.0, 0)).xy;
+    float2 face_center = fd_points_tex.Sample(pointsSampler, float2((197 + 0.5)/478.0, 0)).xy;
+    float2 face_top = fd_points_tex.Sample(pointsSampler, float2((10 + 0.5)/478.0, 0)).xy;
+    float2 face_bottom = fd_points_tex.Sample(pointsSampler, float2((152 + 0.5)/478.0, 0)).xy;
 
-    float2 face_left1 = fd_points_tex.Sample(pointsSampler, float2((234 + 0.5)/468.0, 0)).xy;
-    float2 face_left2 = fd_points_tex.Sample(pointsSampler, float2((227 + 0.5)/468.0, 0)).xy;
-    float2 face_left3 = fd_points_tex.Sample(pointsSampler, float2((116 + 0.5)/468.0, 0)).xy;
-    float2 face_left  = fd_points_tex.Sample(pointsSampler, float2((117 + 0.5)/468.0, 0)).xy;
+    float2 face_left1 = fd_points_tex.Sample(pointsSampler, float2((234 + 0.5)/478.0, 0)).xy;
+    float2 face_left2 = fd_points_tex.Sample(pointsSampler, float2((227 + 0.5)/478.0, 0)).xy;
+    float2 face_left3 = fd_points_tex.Sample(pointsSampler, float2((116 + 0.5)/478.0, 0)).xy;
+    float2 face_left  = fd_points_tex.Sample(pointsSampler, float2((117 + 0.5)/478.0, 0)).xy;
     if (face_left.x > face_left1.x) {
         face_left = face_left1;
     }
@@ -189,10 +189,10 @@ float4 EffectLinear_real(float2 uv)
         face_left = face_tip;
     }
 
-    float2 face_right1 = fd_points_tex.Sample(pointsSampler, float2((454 + 0.5)/468.0, 0)).xy;
-    float2 face_right2 = fd_points_tex.Sample(pointsSampler, float2((447 + 0.5)/468.0, 0)).xy;
-    float2 face_right3 = fd_points_tex.Sample(pointsSampler, float2((345 + 0.5)/468.0, 0)).xy;
-    float2 face_right  = fd_points_tex.Sample(pointsSampler, float2((346 + 0.5)/468.0, 0)).xy;
+    float2 face_right1 = fd_points_tex.Sample(pointsSampler, float2((454 + 0.5)/478.0, 0)).xy;
+    float2 face_right2 = fd_points_tex.Sample(pointsSampler, float2((447 + 0.5)/478.0, 0)).xy;
+    float2 face_right3 = fd_points_tex.Sample(pointsSampler, float2((345 + 0.5)/478.0, 0)).xy;
+    float2 face_right  = fd_points_tex.Sample(pointsSampler, float2((346 + 0.5)/478.0, 0)).xy;
     if (face_right.x < face_right1.x) {
         face_right = face_right1;
     }

@@ -105,8 +105,8 @@ float4 EffectLinear(float2 uv)
         #ifdef _D3D11
         [loop]
         #endif
-        for (int i=0; i<468; ++i) {
-            float4 px2 = fd_points_tex.Sample(pointsSampler, float2((i + 0.5)/468.0, 0));
+        for (int i=0; i<478; ++i) {
+            float4 px2 = fd_points_tex.Sample(pointsSampler, float2((i + 0.5)/478.0, 0));
             px2[2] = 1.0;
             px2[3] = 1.0;
 
