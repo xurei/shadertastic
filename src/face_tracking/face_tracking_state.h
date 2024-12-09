@@ -15,23 +15,23 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#ifndef SHADERTASTIC_FACE_DETECTION_STATE_H
-#define SHADERTASTIC_FACE_DETECTION_STATE_H
+#ifndef SHADERTASTIC_FACE_TRACKING_STATE_H
+#define SHADERTASTIC_FACE_TRACKING_STATE_H
 
 #include <onnxruntime_cxx_api.h>
 #include "onnxmediapipe/face_mesh.h"
 
-struct face_detection_state {
+struct face_tracking_state {
     bool created = false;
     gs_texrender_t *facedetection_texrender;
     gs_texture_t *fd_points_texture;
     gs_stagesurf_t *staging_texture = nullptr;
     std::shared_ptr<onnxmediapipe::FaceMesh> facemesh;
     std::vector<std::string> ov_available_devices;
-    onnxmediapipe::FaceLandmarksResults facelandmark_results[10];
+    onnxmediapipe::FaceLandmarksResults facelandmark_results[100];
     onnxmediapipe::FaceLandmarksResults average_results;
     size_t facelandmark_results_counter = 0;
     bool facelandmark_results_display_results = false;
 };
 
-#endif /* SHADERTASTIC_FACE_DETECTION_STATE_H */
+#endif /* SHADERTASTIC_FACE_TRACKING_STATE_H */

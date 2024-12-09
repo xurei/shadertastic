@@ -20,11 +20,10 @@
 #include <opencv2/core.hpp>
 #include <thread>
 #include <obs-module.h>
-#include "../onnxmediapipe/include/onnxmediapipe/face_landmarks.h"
-#include "face_detection.h"
-#include "logging_functions.hpp"
-#include "util/rgba_to_rgb.h"
-#include "try_gs_effect_set.h"
+#include "onnxmediapipe/face_landmarks.h"
+#include "face_tracking.h"
+#include "../logging_functions.hpp"
+#include "../try_gs_effect_set.h"
 
 #define FACEDETECTION_WIDTH 1280
 #define FACEDETECTION_HEIGHT 720
@@ -33,14 +32,14 @@
 // Globals
 std::unique_ptr<Ort::Env> ort_env;
 
-face_detection_bounding_box no_bounding_box{
+face_tracking_bounding_box no_bounding_box{
     -1.0f, -1.0f
     -1.0f, -1.0f
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void face_detection_copy_points(onnxmediapipe::FaceLandmarksResults *facelandmark_results, float *points) {
+void face_tracking_copy_points(onnxmediapipe::FaceLandmarksResults *facelandmark_results, float *points) {
     for (size_t i=0; i < facial_surface_num_points; ++i) {
         points[i*4+0] = facelandmark_results->refined_landmarks[i].x;
         points[i*4+1] = facelandmark_results->refined_landmarks[i].y;
@@ -50,7 +49,7 @@ void face_detection_copy_points(onnxmediapipe::FaceLandmarksResults *facelandmar
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-face_detection_bounding_box face_detection_get_bounding_box(onnxmediapipe::FaceLandmarksResults *facelandmark_results, const unsigned short int *indices, int nb_indices) {
+face_tracking_bounding_box face_tracking_get_bounding_box(onnxmediapipe::FaceLandmarksResults *facelandmark_results, const unsigned short int *indices, int nb_indices) {
     // Initialize min and max points
     cv::Point2f minPoint(std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
     cv::Point2f maxPoint(std::numeric_limits<float>::min(), std::numeric_limits<float>::min());
@@ -69,7 +68,7 @@ face_detection_bounding_box face_detection_get_bounding_box(onnxmediapipe::FaceL
     }
 
     // Finding the bounding box
-    face_detection_bounding_box out{
+    face_tracking_bounding_box out{
         minPoint.x, minPoint.y,
         maxPoint.x, maxPoint.y
     };
@@ -77,7 +76,7 @@ face_detection_bounding_box face_detection_get_bounding_box(onnxmediapipe::FaceL
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-static void face_detection_update(face_detection_state *s) {
+static void face_tracking_update(face_tracking_state *s) {
     UNUSED_PARAMETER(s);
     try {
         auto facemesh = std::make_shared <onnxmediapipe::FaceMesh>(ort_env);
@@ -89,7 +88,7 @@ static void face_detection_update(face_detection_state *s) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void face_detection_create(face_detection_state *s) {
+void face_tracking_create(face_tracking_state *s) {
     s->created = true;
 
     if (!ort_env) {
@@ -598,11 +597,11 @@ void face_detection_create(face_detection_state *s) {
     //debug("STAGING TEXTURE = %p", s->staging_texture);
 
     /** Configure networks **/
-    face_detection_update(s);
+    face_tracking_update(s);
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void face_detection_tick(face_detection_state *s, obs_source_t *target_source) {
+void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source) {
     const enum gs_color_space preferred_spaces[] = {
         GS_CS_SRGB,
         GS_CS_SRGB_16F,
@@ -685,7 +684,7 @@ void face_detection_tick(face_detection_state *s, obs_source_t *target_source) {
                 }
 
                 float points[468 * 4];
-                face_detection_copy_points(&s->average_results, points);
+                face_tracking_copy_points(&s->average_results, points);
 
                 float *texpoints;
                 uint32_t linesize2 = 0;
@@ -708,7 +707,7 @@ void face_detection_tick(face_detection_state *s, obs_source_t *target_source) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void face_detection_render(face_detection_state *s, effect_shader *main_shader) {
+void face_tracking_render(face_tracking_state *s, effect_shader *main_shader) {
     if (s->facelandmark_results_counter <= FACEDETECTION_NB_ITERATIONS || !s->facelandmark_results_display_results) {
         try_gs_effect_set_vec2("fd_leye_1", main_shader->param_fd_leye_1, &no_bounding_box.point1);
         try_gs_effect_set_vec2("fd_leye_2", main_shader->param_fd_leye_2, &no_bounding_box.point2);
@@ -719,19 +718,19 @@ void face_detection_render(face_detection_state *s, effect_shader *main_shader) 
     }
     else {
         {
-            auto bbox = face_detection_get_bounding_box(&s->average_results, left_iris_refinement_indices, iris_refined_region_num_points);
+            auto bbox = face_tracking_get_bounding_box(&s->average_results, left_iris_refinement_indices, iris_refined_region_num_points);
             try_gs_effect_set_vec2("fd_leye_1", main_shader->param_fd_leye_1, &bbox.point1);
             try_gs_effect_set_vec2("fd_leye_2", main_shader->param_fd_leye_2, &bbox.point2);
             //debug("Left Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
         }
         {
-            auto bbox = face_detection_get_bounding_box(&s->average_results, right_iris_refinement_indices, iris_refined_region_num_points);
+            auto bbox = face_tracking_get_bounding_box(&s->average_results, right_iris_refinement_indices, iris_refined_region_num_points);
             try_gs_effect_set_vec2("fd_reye_1", main_shader->param_fd_reye_1, &bbox.point1);
             try_gs_effect_set_vec2("fd_reye_2", main_shader->param_fd_reye_2, &bbox.point2);
             //debug("Right Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
         }
         {
-            auto bbox = face_detection_get_bounding_box(&s->average_results, not_lips_eyes_indices, 310);
+            auto bbox = face_tracking_get_bounding_box(&s->average_results, not_lips_eyes_indices, 310);
             try_gs_effect_set_vec2("fd_face_1", main_shader->param_fd_face_1, &bbox.point1);
             try_gs_effect_set_vec2("fd_face_2", main_shader->param_fd_face_2, &bbox.point2);
             //debug("Face: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
@@ -741,7 +740,7 @@ void face_detection_render(face_detection_state *s, effect_shader *main_shader) 
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void face_detection_destroy(face_detection_state *s) {
+void face_tracking_destroy(face_tracking_state *s) {
     obs_enter_graphics();
     gs_texrender_destroy(s->facedetection_texrender);
     gs_texture_destroy(s->fd_points_texture);

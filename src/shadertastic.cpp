@@ -69,7 +69,7 @@
 #include "effect.hpp"
 
 #include "shadertastic.hpp"
-#include "face_detection.h"
+#include "face_tracking/face_tracking.h"
 //----------------------------------------------------------------------------------------------------------------------
 
 OBS_DECLARE_MODULE()

@@ -61,7 +61,7 @@ void shadertastic_filter_destroy(void *data) {
     gs_texrender_destroy(s->interm_texrender[0]);
     gs_texrender_destroy(s->interm_texrender[1]);
     obs_leave_graphics();
-    face_detection_destroy(&s->face_detection);
+    face_tracking_destroy(&s->face_tracking);
     s->release();
     bfree(data);
 }
@@ -119,8 +119,8 @@ static void shadertastic_filter_tick(void *data, float seconds) {
     s->height = obs_source_get_base_height(target);
 
     bool is_enabled = obs_source_enabled(s->source);
-    if (!s->face_detection.created && s->selected_effect && s->selected_effect->input_facedetection) {
-        face_detection_create(&s->face_detection);
+    if (!s->face_tracking.created && s->selected_effect && s->selected_effect->input_facedetection) {
+        face_tracking_create(&s->face_tracking);
     }
     if (is_enabled != s->was_enabled) {
         s->was_enabled = is_enabled;
@@ -158,8 +158,8 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
 
     shadertastic_effect_t *selected_effect = s->selected_effect;
     if (selected_effect != nullptr && selected_effect->main_shader != nullptr) {
-        if (selected_effect->input_facedetection && s->face_detection.created) {
-            face_detection_tick(&s->face_detection, target_source);
+        if (selected_effect->input_facedetection && s->face_tracking.created) {
+            face_tracking_tick(&s->face_tracking, target_source);
         }
         gs_texture_t *interm_texture = s->transparent_texture;
         if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_ALLOW_DIRECT_RENDERING)) {
@@ -171,8 +171,8 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
             struct vec4 clear_color{0,0,0,0};
 
             for (int current_step=0; current_step < selected_effect->nb_steps; ++current_step) {
-                if (selected_effect->input_facedetection && s->face_detection.created) {
-                    face_detection_render(&s->face_detection, selected_effect->main_shader.get());
+                if (selected_effect->input_facedetection && s->face_tracking.created) {
+                    face_tracking_render(&s->face_tracking, selected_effect->main_shader.get());
                 }
                 bool texrender_ok = true;
                 bool is_interm_step = (current_step < selected_effect->nb_steps - 1);

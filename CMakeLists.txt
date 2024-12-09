@@ -42,16 +42,12 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in ${CMAKE_CURRENT_SOUR
 
 file(GLOB sources_CPP
     "src/*.cpp"
-    "src/shader/*.cpp"
-    "src/util/*.cpp"
+    "src/**/*.cpp"
 )
 file(GLOB sources_HPP
-    "src/shader/*.hpp"
-    "src/util/*.hpp"
-    "src/parameters/*.hpp"
     "src/*.hpp"
+    "src/**/*.hpp"
 )
-# TODO Remove this
 file(GLOB onnxmediapipe_CPP
     "onnxmediapipe/src/*"
     "onnxmediapipe/src/filtering/*"
