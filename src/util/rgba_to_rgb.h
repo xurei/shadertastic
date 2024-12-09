@@ -1,6 +1,9 @@
+#ifndef SHADERTASTIC_RGBA_TO_RGB_H
+#define SHADERTASTIC_RGBA_TO_RGB_H
+
 #include <opencv2/core.hpp>
 
-cv::Mat rgbaToRgb(const cv::Mat& rgbaImage) {
+inline cv::Mat rgbaToRgb(const cv::Mat& rgbaImage) {
     // Split the RGBA image into individual channels
     std::vector<cv::Mat> channels;
     cv::split(rgbaImage, channels);
@@ -11,3 +14,5 @@ cv::Mat rgbaToRgb(const cv::Mat& rgbaImage) {
 
     return rgbImage;
 }
+
+#endif /* SHADERTASTIC_RGBA_TO_RGB_H */

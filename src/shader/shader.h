@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#ifndef SHADERTASTIC_SHADER_H
+#define SHADERTASTIC_SHADER_H
+
 class effect_shader {
     private:
     gs_effect_t *gs_effect = nullptr;
@@ -56,3 +59,5 @@ class effect_shader {
     //static bool sourceHasValidBraces(const std::string& str);
     //static std::string removeComments(const std::string& str);
 };
+
+#endif /* SHADERTASTIC_SHADER_H */

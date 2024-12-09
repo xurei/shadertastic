@@ -15,6 +15,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#include "face_detection_state.h"
+
 typedef std::map<std::string, shadertastic_effect_t> shadertastic_effects_map_t;
 //----------------------------------------------------------------------------------------------------------------------
 

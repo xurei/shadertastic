@@ -15,33 +15,19 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#include <thread>
+#include <graphics/vec2.h>
+#include <onnxruntime_cxx_api.h>
 #include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
-#include "onnxmediapipe/landmark_refinement_indices.h"
+#include <thread>
+#include <obs-module.h>
+#include "face_detection.h"
+#include "logging_functions.hpp"
 #include "util/rgba_to_rgb.h"
+#include "try_gs_effect_set.h"
 
 #define FACEDETECTION_WIDTH 1280
 #define FACEDETECTION_HEIGHT 720
-#define FACEDETECTION_NB_ITERATIONS 2
-
-struct face_detection_bounding_box {
-    union {
-        vec2 point1;
-        struct {
-            float x1;
-            float y1;
-        };
-    };
-    union {
-        vec2 point2;
-        struct {
-            float x2;
-            float y2;
-        };
-    };
-};
-//----------------------------------------------------------------------------------------------------------------------
+#define FACEDETECTION_NB_ITERATIONS 5
 
 // Globals
 std::unique_ptr<Ort::Env> ort_env;
@@ -656,8 +642,9 @@ void face_detection_tick(face_detection_state *s, obs_source_t *target_source) {
             gs_stagesurface_unmap(s->staging_texture);
 
             auto facemesh = s->facemesh;
-            if (!facemesh)
+            if (!facemesh) {
                 return;
+            }
 
             // Convert to BGR
             cv::Mat imageRGBA(FACEDETECTION_HEIGHT, FACEDETECTION_WIDTH, CV_8UC4, data);// = convertFrameToBGR(frame, tf);

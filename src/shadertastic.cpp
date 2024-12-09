@@ -41,17 +41,7 @@
 #include "logging_functions.hpp"
 #include "is_module_loaded.h"
 
-// Uncomment this and comment the duplicate #define to print the param assignation (this will spam the logs)
-//#define debug_try_gs_effect(format, ...) debug(format, ##__VA_ARGS__)
-#define debug_try_gs_effect(format, ...)
-
-#define try_gs_effect_set_val(param_name, param, data, data_size) if (param) { debug_try_gs_effect("try_gs_effect_set_val %s", param_name); gs_effect_set_val(param, data, data_size); debug_try_gs_effect("try_gs_effect_set_val %s DONE", param_name); }
-#define try_gs_effect_set_texture(param_name, param, val) if (param)         { debug_try_gs_effect("try_gs_effect_set_texture %s", param_name); gs_effect_set_texture(param, val); debug_try_gs_effect("try_gs_effect_set_texture %s DONE", param_name); }
-#define try_gs_effect_set_texture_srgb(param_name, param, val) if (param)    { debug_try_gs_effect("try_gs_effect_set_texture_srgb %s", param_name); gs_effect_set_texture_srgb(param, val); debug_try_gs_effect("try_gs_effect_set_texture_srgb %s DONE", param_name); }
-#define try_gs_effect_set_int(param_name, param, val) if (param)             { debug_try_gs_effect("try_gs_effect_set_int %s", param_name); gs_effect_set_int(param, val); debug_try_gs_effect("try_gs_effect_set_int %s DONE", param_name); }
-#define try_gs_effect_set_float(param_name, param, val) if (param)           { debug_try_gs_effect("try_gs_effect_set_float %s", param_name); gs_effect_set_float(param, val); debug_try_gs_effect("try_gs_effect_set_float %s DONE", param_name); }
-#define try_gs_effect_set_vec2(param_name, param, val) if (param)            { debug_try_gs_effect("try_gs_effect_set_vec2 %s", param_name); gs_effect_set_vec2(param, val); debug_try_gs_effect("try_gs_effect_set_vec2 %s DONE", param_name); }
-#define try_gs_effect_set_bool(param, val) if (param) { gs_effect_set_bool(param, val); }
+#include "try_gs_effect_set.h"
 
 #ifdef DEV_MODE
 #include "util/enum_util.hpp"
@@ -78,9 +68,8 @@
 #include "parameters/parameter_factory.hpp"
 #include "effect.hpp"
 
-#include "face_detection_state.h"
 #include "shadertastic.hpp"
-#include "face_detection.hpp"
+#include "face_detection.h"
 //----------------------------------------------------------------------------------------------------------------------
 
 OBS_DECLARE_MODULE()
@@ -192,7 +181,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
         fs::path fs_path(zip);
         std::string effect_name = fs_path.filename().string();
         effect_name = effect_name.substr(0, effect_name.length() - extension.length());
-        std::string effect_path = zip.c_str();
+        std::string effect_path = zip;
 
         if (s->effects->find(effect_name) != s->effects->end()) {
             warn("NOT LOADING EFFECT %s/%s : an effect with the name '%s' already exist", effects_dir.c_str(), zip.c_str(), effect_name.c_str());
@@ -224,6 +213,8 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
 #include "shader_transition.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "MemoryLeak"
 static void show_settings_dialog() {
     obs_data_t *settings = load_settings();
 
@@ -337,6 +328,7 @@ static void show_settings_dialog() {
 
     dialog->show();
 }
+#pragma clang diagnostic pop
 //----------------------------------------------------------------------------------------------------------------------
 
 [[maybe_unused]] bool obs_module_load(void) {

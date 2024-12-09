@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#ifndef SHADERTASTIC_FACE_DETECTION_STATE_H
+#define SHADERTASTIC_FACE_DETECTION_STATE_H
+
 #include <onnxruntime_cxx_api.h>
 #include "onnxmediapipe/face_mesh.h"
 
@@ -30,3 +33,5 @@ struct face_detection_state {
     size_t facelandmark_results_counter = 0;
     bool facelandmark_results_display_results = false;
 };
+
+#endif /* SHADERTASTIC_FACE_DETECTION_STATE_H */
