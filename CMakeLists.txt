@@ -92,7 +92,7 @@ elseif(OS_LINUX)
 endif()
 
 if(OS_WINDOWS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:avx2 /O2 /openmp")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2 /openmp")
     # Disable treating warnings as errors for your project
     string(REPLACE "/WX " "/WX- " CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
     string(REPLACE "/WX " "/WX- " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")

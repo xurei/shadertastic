@@ -95,10 +95,10 @@ void face_tracking_create(face_tracking_state *s) {
     for (size_t i = 0; i < refined_landmarks_num_points * 3; ++i) {
         //s->filters[i].setAlpha(0.8);
 
-        s->filters[i].setFrequency(30);
-        s->filters[i].setMinCutoff(10.0);
-        s->filters[i].setBeta(0.007);
-        s->filters[i].setDerivateCutoff(10.0);
+        s->filters[i].setFrequency(30.0f);
+        s->filters[i].setMinCutoff(10.0f);
+        s->filters[i].setBeta(0.007f);
+        s->filters[i].setDerivateCutoff(10.0f);
     }
 
     if (!ort_env) {

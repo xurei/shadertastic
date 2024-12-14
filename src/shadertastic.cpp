@@ -155,8 +155,10 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
 #include "settings.h"
 //----------------------------------------------------------------------------------------------------------------------
 
+#ifndef _WIN32
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "MemoryLeak"
+#endif
 static QDoubleSpinBox * settings_dialog__float_input(QDialog *dialog, QFormLayout* layout, std::string input_label, float value) {
     QHBoxLayout *inputLayout = new QHBoxLayout;
 
@@ -178,9 +180,14 @@ static QDoubleSpinBox * settings_dialog__float_input(QDialog *dialog, QFormLayou
 
     return spinBox;
 }
+#ifndef _WIN32
+#pragma clang diagnostic pop
+#endif
 
+#ifndef _WIN32
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "MemoryLeak"
+#endif
 static void show_settings_dialog() {
     obs_data_t *settings = load_settings();
 
@@ -345,7 +352,9 @@ static void show_settings_dialog() {
 
     dialog->show();
 }
+#ifndef _WIN32
 #pragma clang diagnostic pop
+#endif
 //----------------------------------------------------------------------------------------------------------------------
 
 [[maybe_unused]] bool obs_module_load(void) {
