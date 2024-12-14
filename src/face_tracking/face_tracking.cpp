@@ -24,6 +24,7 @@
 #include "face_tracking.h"
 #include "../logging_functions.hpp"
 #include "../try_gs_effect_set.h"
+#include "../settings.h"
 
 #define FACEDETECTION_WIDTH 1280
 #define FACEDETECTION_HEIGHT 720
@@ -90,6 +91,15 @@ static void face_tracking_update(face_tracking_state *s) {
 
 void face_tracking_create(face_tracking_state *s) {
     s->created = true;
+
+    for (size_t i = 0; i < refined_landmarks_num_points * 3; ++i) {
+        //s->filters[i].setAlpha(0.8);
+
+        s->filters[i].setFrequency(30);
+        s->filters[i].setMinCutoff(10.0);
+        s->filters[i].setBeta(0.007);
+        s->filters[i].setDerivateCutoff(10.0);
+    }
 
     if (!ort_env) {
         const char *instanceName = "shadertastic-onnx-inference";
@@ -601,7 +611,7 @@ void face_tracking_create(face_tracking_state *s) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source) {
+void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, float deltatime) {
     const enum gs_color_space preferred_spaces[] = {
         GS_CS_SRGB,
         GS_CS_SRGB_16F,
@@ -649,34 +659,35 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source) {
             cv::Mat imageRGB = rgbaToRgb(imageRGBA);// = convertFrameToBGR(frame, tf);
 
             s->facelandmark_results_counter++;
-            s->facelandmark_results_display_results = facemesh->Run(imageRGB, s->facelandmark_results[s->facelandmark_results_counter%FACEDETECTION_NB_ITERATIONS]);
+            //s->facelandmark_results_display_results = facemesh->Run(imageRGB, s->facelandmark_results[s->facelandmark_results_counter%FACEDETECTION_NB_ITERATIONS]);
+            s->facelandmark_results_display_results = facemesh->Run(imageRGB, s->facelandmark_results[0]);
 
             if (s->facelandmark_results_counter <= FACEDETECTION_NB_ITERATIONS || !s->facelandmark_results_display_results) {
                 /* nothing to do */
             }
             else {
-//                for (size_t i = 0; i < facial_surface_num_points; ++i) {
-//                    s->average_results.facial_surface[i].x = 0.0;
-//                    s->average_results.facial_surface[i].y = 0.0;
-//                    s->average_results.facial_surface[i].z = 0.0;
-//                    size_t count = 0;
-//                    for (size_t j = 0; j < FACEDETECTION_NB_ITERATIONS; ++j) {
-//                        s->average_results.facial_surface[i] += s->facelandmark_results[j].facial_surface[i];
-//                        ++count;
-//                    }
-//                    s->average_results.facial_surface[i] /= (float) count;
-//                }
-
-                for (size_t i = 0; i < refined_landmarks_num_points; ++i) {
-                    s->average_results.refined_landmarks[i].x = 0.0;
-                    s->average_results.refined_landmarks[i].y = 0.0;
-                    s->average_results.refined_landmarks[i].z = 0.0;
-                    size_t count = 0;
-                    for (size_t j = 0; j < FACEDETECTION_NB_ITERATIONS; ++j) {
-                        s->average_results.refined_landmarks[i] += s->facelandmark_results[j].refined_landmarks[i];
-                        ++count;
+                if (shadertastic_settings().one_euro_enabled) {
+                    for (size_t i = 0; i < refined_landmarks_num_points; ++i) {
+                        s->filters[i * 3 + 0].setMinCutoff(std::max(0.01f, shadertastic_settings().one_euro_min_cutoff));
+                        s->filters[i * 3 + 0].setBeta(std::max(0.01f, shadertastic_settings().one_euro_beta));
+                        s->filters[i * 3 + 0].setDerivateCutoff(std::max(0.01f, shadertastic_settings().one_euro_deriv_cutoff));
+                        s->filters[i * 3 + 1].setMinCutoff(std::max(0.01f, shadertastic_settings().one_euro_min_cutoff));
+                        s->filters[i * 3 + 1].setBeta(std::max(0.01f, shadertastic_settings().one_euro_beta));
+                        s->filters[i * 3 + 1].setDerivateCutoff(std::max(0.01f, shadertastic_settings().one_euro_deriv_cutoff));
+                        s->filters[i * 3 + 2].setMinCutoff(std::max(0.01f, shadertastic_settings().one_euro_min_cutoff));
+                        s->filters[i * 3 + 2].setBeta(std::max(0.01f, shadertastic_settings().one_euro_beta));
+                        s->filters[i * 3 + 2].setDerivateCutoff(std::max(0.01f, shadertastic_settings().one_euro_deriv_cutoff));
+                        s->average_results.refined_landmarks[i].x = s->filters[i * 3 + 0].filter(s->facelandmark_results[0].refined_landmarks[i].x, deltatime);
+                        s->average_results.refined_landmarks[i].y = s->filters[i * 3 + 1].filter(s->facelandmark_results[0].refined_landmarks[i].y, deltatime);
+                        s->average_results.refined_landmarks[i].z = s->filters[i * 3 + 2].filter(s->facelandmark_results[0].refined_landmarks[i].z, deltatime);
                     }
-                    s->average_results.refined_landmarks[i] /= (float) count;
+                }
+                else {
+                    for (size_t i = 0; i < refined_landmarks_num_points; ++i) {
+                        s->average_results.refined_landmarks[i].x = s->facelandmark_results[0].refined_landmarks[i].x;
+                        s->average_results.refined_landmarks[i].y = s->facelandmark_results[0].refined_landmarks[i].y;
+                        s->average_results.refined_landmarks[i].z = s->facelandmark_results[0].refined_landmarks[i].z;
+                    }
                 }
 
                 float points[refined_landmarks_num_points * 4];

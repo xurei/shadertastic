@@ -37,6 +37,7 @@
 #define QT_UTF8(str) QString::fromUtf8(str, -1)
 
 #include <util/platform.h>
+#include <QDoubleSpinBox>
 #include "version.h"
 #include "logging_functions.hpp"
 #include "is_module_loaded.h"
@@ -47,7 +48,6 @@
 #include "util/enum_util.hpp"
 #include "util/debug_util.hpp"
 #endif
-#include "util/string_util.h"
 #include "util/file_util.h"
 #include "util/time_util.hpp"
 #include "util/compare_nocase.hpp"
@@ -68,6 +68,7 @@
 #include "parameters/parameter_factory.hpp"
 #include "effect.hpp"
 
+#include "settings.h"
 #include "shadertastic.hpp"
 #include "face_tracking/face_tracking.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -78,66 +79,6 @@ OBS_MODULE_USE_DEFAULT_LOCALE("shadertastic", "en-US")
 //----------------------------------------------------------------------------------------------------------------------
 
 bool module_loaded = false;
-//----------------------------------------------------------------------------------------------------------------------
-
-obs_data_t * load_settings() {
-    char *file = obs_module_config_path("settings.json");
-    char *path_abs = os_get_abs_path_ptr(file);
-    debug("Settings path: %s", path_abs);
-
-    obs_data_t *settings = obs_data_create_from_json_file(path_abs);
-    obs_data_set_default_bool(settings, SETTING_DEV_MODE_ENABLED, false);
-
-    if (!settings) {
-        info("Settings not found. Creating default settings in %s ...", file);
-        os_mkdirs(obs_module_config_path(""));
-        // Create default settings
-        settings = obs_data_create();
-        if (obs_data_save_json(settings, file)) {
-            info("Settings saved to %s", file);
-        }
-        else {
-            warn("Failed to save settings to file.");
-        }
-    }
-    else {
-        blog(LOG_INFO, "Settings loaded successfully");
-    }
-    bfree(file);
-    bfree(path_abs);
-    return settings;
-}
-
-void apply_settings(obs_data_t *settings) {
-    if (shadertastic_settings.effects_path != nullptr) {
-        delete shadertastic_settings.effects_path;
-    }
-    const char *effects_path_str = obs_data_get_string(settings, SETTING_EFFECTS_PATH);
-    if (effects_path_str != nullptr) {
-        shadertastic_settings.effects_path = new std::string(effects_path_str);
-    }
-    else {
-        shadertastic_settings.effects_path = nullptr;
-    }
-
-    shadertastic_settings.dev_mode_enabled = obs_data_get_bool(settings, SETTING_DEV_MODE_ENABLED);
-}
-
-void save_settings(obs_data_t *settings) {
-    char *configPath = obs_module_config_path("settings.json");
-    debug("%s", obs_data_get_json(settings));
-
-    if (obs_data_save_json(settings, configPath)) {
-        blog(LOG_INFO, "Settings saved to %s", configPath);
-    }
-    else {
-        blog(LOG_WARNING, "Failed to save settings to file.");
-    }
-
-    if (configPath != nullptr) {
-        bfree(configPath);
-    }
-}
 //----------------------------------------------------------------------------------------------------------------------
 
 void load_effects(shadertastic_common *s, obs_data_t *settings, const std::string effects_dir, const std::string effects_type) {
@@ -211,7 +152,32 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
 
 #include "shader_filter.hpp"
 #include "shader_transition.hpp"
+#include "settings.h"
 //----------------------------------------------------------------------------------------------------------------------
+
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "MemoryLeak"
+static QDoubleSpinBox * settings_dialog__float_input(QDialog *dialog, QFormLayout* layout, std::string input_label, float value) {
+    QHBoxLayout *inputLayout = new QHBoxLayout;
+
+    QLabel *label = new QLabel(QString(input_label.c_str()), dialog);
+    QDoubleSpinBox *spinBox = new QDoubleSpinBox(dialog);
+
+    // Set a placeholder and a double validator for the input
+    spinBox->setRange(0, 9999.0);
+    spinBox->setDecimals(4);
+    spinBox->setSingleStep(0.01);
+    spinBox->setValue(value);
+
+    // Add widgets to the input layout
+    inputLayout->addWidget(label);
+    inputLayout->addWidget(spinBox);
+
+    // Add the input layout to the main layout
+    layout->addRow(inputLayout);
+
+    return spinBox;
+}
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "MemoryLeak"
@@ -269,17 +235,68 @@ static void show_settings_dialog() {
     formLayout->addRow(line);
 
     // Developper mode
-    QCheckBox *devmodeCheckbox = new QCheckBox("Developper mode");
-    devmodeCheckbox->setChecked(obs_data_get_bool(settings, SETTING_DEV_MODE_ENABLED));
-    QObject::connect(devmodeCheckbox, &QCheckBox::clicked, [=]() {
-        bool checked = devmodeCheckbox->isChecked();
-        obs_data_set_bool(settings, SETTING_DEV_MODE_ENABLED, checked);
-    });
-    formLayout->addRow(devmodeCheckbox);
-    formLayout->addRow(new QLabel(
-        "WARNING: this has a great impact on stability and performance.\n"
-        "Enable this if you are creating your own effects and allow to hot-reload them."
-    ));
+    {
+        QCheckBox *devmodeCheckbox = new QCheckBox("Developper mode");
+        devmodeCheckbox->setChecked(obs_data_get_bool(settings, SETTING_DEV_MODE_ENABLED));
+        QObject::connect(devmodeCheckbox, &QCheckBox::clicked, [=]() {
+            bool checked = devmodeCheckbox->isChecked();
+            obs_data_set_bool(settings, SETTING_DEV_MODE_ENABLED, checked);
+        });
+        formLayout->addRow(devmodeCheckbox);
+        formLayout->addRow(new QLabel(
+            "WARNING: this has a great impact on stability and performance.\n"
+            "Enable this if you are creating your own effects and allow to hot-reload them."
+        ));
+    }
+
+    // Separator
+    line = new QFrame();
+    line->setFrameShape(QFrame::HLine);
+    line->setFrameShadow(QFrame::Sunken);
+    line->setLineWidth(0);
+    formLayout->addRow(line);
+
+    // One Euro Filter params
+    {
+        QCheckBox *oneEuroEnable = new QCheckBox("One Euro Filter");
+        oneEuroEnable->setChecked(obs_data_get_bool(settings, SETTING_ONE_EURO_ENABLED));
+        QObject::connect(oneEuroEnable, &QCheckBox::clicked, [=]() {
+            bool checked = oneEuroEnable->isChecked();
+            obs_data_set_bool(settings, SETTING_ONE_EURO_ENABLED, checked);
+            apply_settings(settings);
+        });
+        formLayout->addRow(oneEuroEnable);
+    }
+
+    {
+        float one_euro_filter_mincutoff = (float)obs_data_get_double(settings, SETTING_ONE_EURO_MIN_CUTOFF);
+        QDoubleSpinBox *one_euro_min_cutoff_edit = settings_dialog__float_input(dialog, formLayout, "Min Cutoff", one_euro_filter_mincutoff);
+        QObject::connect(one_euro_min_cutoff_edit, &QDoubleSpinBox::textChanged, [=]() {
+            float float_value = (float)(one_euro_min_cutoff_edit->value());
+            obs_data_set_double(settings, SETTING_ONE_EURO_MIN_CUTOFF, float_value);
+            apply_settings(settings);
+        });
+    }
+
+    {
+        float one_euro_filter_beta = (float)obs_data_get_double(settings, SETTING_ONE_EURO_BETA);
+        QDoubleSpinBox *one_euro_beta_edit = settings_dialog__float_input(dialog, formLayout, "Beta", one_euro_filter_beta);
+        QObject::connect(one_euro_beta_edit, &QDoubleSpinBox::textChanged, [=]() {
+            float float_value = (float)(one_euro_beta_edit->value());
+            obs_data_set_double(settings, SETTING_ONE_EURO_BETA, float_value);
+            apply_settings(settings);
+        });
+    }
+
+    {
+        float one_euro_filter_derivcutoff = (float)obs_data_get_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF);
+        QDoubleSpinBox *one_euro_derivcutoff_edit = settings_dialog__float_input(dialog, formLayout, "Deriv Cutoff", one_euro_filter_derivcutoff);
+        QObject::connect(one_euro_derivcutoff_edit, &QDoubleSpinBox::textChanged, [=]() {
+            float float_value = (float)(one_euro_derivcutoff_edit->value());
+            obs_data_set_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF, float_value);
+            apply_settings(settings);
+        });
+    }
 
     // Separator
     line = new QFrame();

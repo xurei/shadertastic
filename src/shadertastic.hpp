@@ -20,17 +20,6 @@
 typedef std::map<std::string, shadertastic_effect_t> shadertastic_effects_map_t;
 //----------------------------------------------------------------------------------------------------------------------
 
-struct shadertastic_settings_t {
-    // Path where the user can add their own effects
-    std::string *effects_path = nullptr;
-    bool dev_mode_enabled = false;
-};
-#define SETTING_EFFECTS_PATH "effects_path"
-#define SETTING_DEV_MODE_ENABLED "dev_mode_enabled"
-
-shadertastic_settings_t shadertastic_settings;
-//----------------------------------------------------------------------------------------------------------------------
-
 struct shadertastic_common {
     shadertastic_effects_map_t *effects;
     shadertastic_effect_t *selected_effect = nullptr;
@@ -81,6 +70,7 @@ struct shadertastic_filter : public shadertastic_common {
     double speed = 1.0;
     bool reset_time_on_show = false;
     double time = 0.0;
+    float deltatime = 0.0;
 
     // Face detection state
     face_tracking_state face_tracking;

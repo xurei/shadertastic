@@ -58,7 +58,7 @@ static void face_tracking_update(face_tracking_state *s);
 
 void face_tracking_create(face_tracking_state *s);
 
-void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source);
+void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, float deltatime);
 
 void face_tracking_render(face_tracking_state *s, effect_shader *main_shader);
 

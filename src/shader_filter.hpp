@@ -36,8 +36,8 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     bfree(filters_dir_);
 
     load_effects(s, settings, filters_dir, "filter");
-    if (shadertastic_settings.effects_path != nullptr) {
-        load_effects(s, settings, *(shadertastic_settings.effects_path), "filter");
+    if (shadertastic_settings().effects_path != nullptr) {
+        load_effects(s, settings, *(shadertastic_settings().effects_path), "filter");
     }
 
     // Set defaults for each effect
@@ -110,10 +110,10 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-static void shadertastic_filter_tick(void *data, float seconds) {
-    UNUSED_PARAMETER(seconds);
+static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
     obs_source_t *target = obs_filter_get_target(s->source);
+    s->deltatime = deltatime_seconds;
 
     s->width = obs_source_get_base_width(target);
     s->height = obs_source_get_base_height(target);
@@ -159,7 +159,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     shadertastic_effect_t *selected_effect = s->selected_effect;
     if (selected_effect != nullptr && selected_effect->main_shader != nullptr) {
         if (selected_effect->input_facedetection && s->face_tracking.created) {
-            face_tracking_tick(&s->face_tracking, target_source);
+            face_tracking_tick(&s->face_tracking, target_source, s->deltatime);
         }
         gs_texture_t *interm_texture = s->transparent_texture;
         if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_ALLOW_DIRECT_RENDERING)) {
@@ -259,7 +259,7 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
     obs_property_t *p;
 
     // Dev mode settings
-    if (shadertastic_settings.dev_mode_enabled) {
+    if (shadertastic_settings().dev_mode_enabled) {
         obs_properties_add_button(props, "reload_btn", "Reload", shadertastic_filter_reload_button_click);
     }
 

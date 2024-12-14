@@ -438,7 +438,6 @@ namespace onnxmediapipe
                 results.refined_landmarks[right_iris_refinement_indices[i]].y = results.right_iris_refined_region[i].y;
                 results.refined_landmarks[right_iris_refinement_indices[i]].z = z_avg_for_right_iris;
             }
-
         }
 
         //project the points back into the pre-rotated / pre-cropped space
@@ -451,7 +450,7 @@ namespace onnxmediapipe
             normalized_rect.rotation = roi.rotation;
 
             for (size_t i = 0; i < facial_surface_num_points; i++) {
-                cv::Point3f p = results.facial_surface[i];
+                cv::Point3f &p = results.facial_surface[i];
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
                 const float angle = normalized_rect.rotation;
@@ -460,14 +459,15 @@ namespace onnxmediapipe
 
                 new_x = new_x * normalized_rect.width + normalized_rect.center_x;
                 new_y = new_y * normalized_rect.height + normalized_rect.center_y;
-                const float new_z =
-                    p.z * normalized_rect.width;  // Scale Z coordinate as X.
+                const float new_z = p.z * normalized_rect.width;  // Scale Z coordinate as X.
 
-                results.facial_surface[i] = { new_x, new_y, new_z };
+                results.facial_surface[i].x = new_x;
+                results.facial_surface[i].y = new_y;
+                results.facial_surface[i].z = new_z;
             }
 
             for (size_t i = 0; i < refined_landmarks_num_points; i++) {
-                cv::Point3f p = results.refined_landmarks[i];
+                cv::Point3f &p = results.refined_landmarks[i];
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
                 const float angle = normalized_rect.rotation;
@@ -476,10 +476,11 @@ namespace onnxmediapipe
 
                 new_x = new_x * normalized_rect.width + normalized_rect.center_x;
                 new_y = new_y * normalized_rect.height + normalized_rect.center_y;
-                const float new_z =
-                    p.z * normalized_rect.width;  // Scale Z coordinate as X.
+                const float new_z = p.z * normalized_rect.width;  // Scale Z coordinate as X.
 
-                results.refined_landmarks[i] = { new_x, new_y, new_z };
+                results.refined_landmarks[i].x = new_x;
+                results.refined_landmarks[i].y = new_y;
+                results.refined_landmarks[i].z = new_z;
             }
 
             for (auto& p : results.lips_refined_region) {

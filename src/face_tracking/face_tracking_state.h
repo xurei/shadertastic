@@ -20,6 +20,7 @@
 
 #include <onnxruntime_cxx_api.h>
 #include "onnxmediapipe/face_mesh.h"
+#include "one_euro_filter.h"
 
 struct face_tracking_state {
     bool created = false;
@@ -28,8 +29,10 @@ struct face_tracking_state {
     gs_stagesurf_t *staging_texture = nullptr;
     std::shared_ptr<onnxmediapipe::FaceMesh> facemesh;
     std::vector<std::string> ov_available_devices;
-    onnxmediapipe::FaceLandmarksResults facelandmark_results[100];
+    onnxmediapipe::FaceLandmarksResults facelandmark_results[2];
     onnxmediapipe::FaceLandmarksResults average_results;
+    //LowPassFilter filters[3 * refined_landmarks_num_points];
+    OneEuroFilter filters[3 * refined_landmarks_num_points];
     size_t facelandmark_results_counter = 0;
     bool facelandmark_results_display_results = false;
 };
