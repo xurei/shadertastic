@@ -1,5 +1,8 @@
 // Copyright(C) 2022-2023 Intel Corporation
 // SPDX - License - Identifier: Apache - 2.0
+#ifndef ONNX_FACE_LANDMARKS_H
+#define ONNX_FACE_LANDMARKS_H
+
 #include <opencv2/imgproc.hpp>
 #include <string>
 #include <vector>
@@ -52,3 +55,5 @@ namespace onnxmediapipe
     };
 
 } //ovfacemesh
+
+#endif /* ONNX_FACE_LANDMARKS_H */

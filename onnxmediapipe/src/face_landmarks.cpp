@@ -26,14 +26,14 @@
 
 #include "../../src/logging_functions.hpp"
 #include "../../src/fdebug.h"
-
-#define UNUSED_PARAMETER(param) (void)param
+#include "../../src/util/time_util.hpp"
 
 FILE* faceLandmarksDebugFile;
 
 namespace onnxmediapipe
 {
     FaceLandmarks::FaceLandmarks(std::unique_ptr<Ort::Env> &ort_env) {
+        unsigned long tic = get_time_ms();
         if (!ortSession) {
             Ort::SessionOptions sessionOptions;
             sessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
@@ -128,120 +128,12 @@ namespace onnxmediapipe
                     outputShape.data(), outputShape.size()
                 ));
             }
-//            maxProposalCount = static_cast<int>(outputShapes[REGRESSORS][1]);
-//            debug("FACE_LANDMARKS maxProposalCount: %lu", maxProposalCount);
-
             netInputHeight = inputShapes[0][2];
             netInputWidth = inputShapes[0][3];
         }
 
-//        std::shared_ptr<ov::Model> model = core.read_model(model_xml_path);
-//        //logBasicModelInfo(model);
-//
-//        //prepare inputs / outputs
-//        {
-//            if (model->inputs().size() != 1) {
-//                throw std::logic_error("FaceLandmarks model should have only 1 input");
-//            }
-//
-//            inputsNames.push_back(model->input().get_any_name());
-//
-//            const auto& input = model->input();
-//            const ov::Shape& inputShape = model->input().get_shape();
-//            ov::Layout inputLayout = getLayoutFromShape(input.get_shape());
-//
-//            if (inputShape.size() != 4 || inputShape[ov::layout::channels_idx(inputLayout)] != 3)
-//                throw std::runtime_error("3-channel 4-dimensional model's input is expected");
-//
-//            netInputWidth = inputShape[ov::layout::width_idx(inputLayout)];
-//            netInputHeight = inputShape[ov::layout::height_idx(inputLayout)];
-//
-//            ov::preprocess::PrePostProcessor ppp(model);
-//
-//            ppp.input().model().set_layout(inputLayout);
-//
-//            const ov::OutputVector& outputs = model->outputs();
-//
-//            ppp.input().tensor().set_element_type(ov::element::u8).set_layout({ "NHWC" });
-//
-//            if (outputs.size() == 2)
-//            {
-//                _bWithAttention = false;
-//
-//                int i = 0;
-//                for (auto& out : outputs) {
-//                    ppp.output(out.get_any_name()).tensor().set_element_type(ov::element::f32);
-//                    outputsNames.push_back(out.get_any_name());
-//                    auto outShape = out.get_shape();
-//
-//                    if ((outShape == std::vector<size_t>{1, 1, 1, 1404}) ||
-//                        (outShape == std::vector<size_t>{1, 1404, 1, 1}))
-//                    {
-//                        facial_surface_tensor_name = out.get_any_name();
-//                    }
-//                    else if (outShape == std::vector<size_t>{1, 1, 1, 1})
-//                    {
-//                        face_flag_tensor_name = out.get_any_name();
-//                    }
-//                    else
-//                    {
-//                        throw std::runtime_error("Unexpected FaceLandmarks output tensor size");
-//                    }
-//
-//                    i++;
-//                }
-//
-//                if (facial_surface_tensor_name.empty())
-//                    throw std::runtime_error("Expected to find an output tensor with shape {1, 1, 1, 1404} or {1, 1404, 1, 1}, but didn't find one.");
-//
-//                if (face_flag_tensor_name.empty())
-//                    throw std::runtime_error("Expected to find an output tensor with shape {1, 1, 1, 1}, but didn't find one.");
-//            }
-//            else
-//            {
-//                _bWithAttention = true;
-//
-//                for (auto& out : outputs) {
-//                    ppp.output(out.get_any_name()).tensor().set_element_type(ov::element::f32);
-//                    outputsNames.push_back(out.get_any_name());
-//                }
-//
-//                #define CHECK_OUT_TENSOR_EXISTENCE(out_tensor_name) \
-//                if (std::find(outputsNames.begin(), outputsNames.end(), out_tensor_name) == outputsNames.end()) \
-//                    throw std::runtime_error("Face Landmark model was expected to have an output tensor named " + out_tensor_name);
-//
-//                // For the 'With Attention' model, we know what the expected output tensor names are.
-//                // So, set them but also double check that there indeed is some output tensor named that.
-//                facial_surface_tensor_name = "output_mesh_identity";
-//                CHECK_OUT_TENSOR_EXISTENCE(facial_surface_tensor_name)
-//
-//                    face_flag_tensor_name = "conv_faceflag";
-//                CHECK_OUT_TENSOR_EXISTENCE(face_flag_tensor_name)
-//
-//                    lips_refined_tensor_name = "output_lips";
-//                CHECK_OUT_TENSOR_EXISTENCE(lips_refined_tensor_name)
-//
-//                    left_eye_with_eyebrow_tensor_name = "output_left_eye";
-//                CHECK_OUT_TENSOR_EXISTENCE(left_eye_with_eyebrow_tensor_name)
-//
-//                    right_eye_with_eyebrow_tensor_name = "output_right_eye";
-//                CHECK_OUT_TENSOR_EXISTENCE(right_eye_with_eyebrow_tensor_name)
-//
-//                    left_iris_refined_tensor_name = "output_left_iris";
-//                CHECK_OUT_TENSOR_EXISTENCE(left_iris_refined_tensor_name)
-//
-//                    right_iris_refined_tensor_name = "output_right_iris";
-//                CHECK_OUT_TENSOR_EXISTENCE(right_iris_refined_tensor_name)
-//                #undef CHECK_OUT_TENSOR_EXISTENCE
-//            }
-//
-//            model = ppp.build();
-//        }
-//
-//        ov::set_batch(model, 1);
-//
-//        compiledModel = core.compile_model(model, device);
-//        inferRequest = compiledModel.create_infer_request();
+        unsigned long toc = get_time_ms();
+        debug("FACE_LANDMARKS Done Loading model in %li ms", toc-tic);
     }
 
     void FaceLandmarks::Run(const cv::Mat& frameRGB, const RotatedRect& roi, FaceLandmarksResults& results) {

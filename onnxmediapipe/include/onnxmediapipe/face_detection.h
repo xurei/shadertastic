@@ -1,6 +1,7 @@
 // Copyright(C) 2022-2023 Intel Corporation
 // SPDX - License - Identifier: Apache - 2.0
-#pragma once
+#ifndef ONNX_FACE_DETECTION_H
+#define ONNX_FACE_DETECTION_H
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -48,3 +49,5 @@ namespace onnxmediapipe {
         float face_bbox_scale;
     };
 } //ovfacemesh
+
+#endif /* ONNX_FACE_DETECTION_H */

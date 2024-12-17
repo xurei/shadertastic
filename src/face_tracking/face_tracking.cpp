@@ -20,7 +20,7 @@
 #include <opencv2/core.hpp>
 #include <thread>
 #include <obs-module.h>
-#include "onnxmediapipe/face_landmarks.h"
+#include "onnxmediapipe/models_provider.h"
 #include "face_tracking.h"
 #include "../logging_functions.hpp"
 #include "../try_gs_effect_set.h"
@@ -31,13 +31,10 @@
 #define FACEDETECTION_NB_ITERATIONS 2
 
 // Globals
-std::unique_ptr<Ort::Env> ort_env;
-
 face_tracking_bounding_box no_bounding_box{
     -1.0f, -1.0f
     -1.0f, -1.0f
 };
-
 //----------------------------------------------------------------------------------------------------------------------
 
 void face_tracking_copy_points(onnxmediapipe::FaceLandmarksResults *facelandmark_results, float *points) {
@@ -77,18 +74,6 @@ face_tracking_bounding_box face_tracking_get_bounding_box(onnxmediapipe::FaceLan
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-static void face_tracking_update(face_tracking_state *s) {
-    UNUSED_PARAMETER(s);
-    try {
-        auto facemesh = std::make_shared <onnxmediapipe::FaceMesh>(ort_env);
-        s->facemesh = facemesh;
-    }
-    catch (const std::exception& error) {
-        blog(LOG_INFO, "in detection inference creation, exception: %s", error.what());
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------
-
 void face_tracking_create(face_tracking_state *s) {
     s->created = true;
 
@@ -101,21 +86,7 @@ void face_tracking_create(face_tracking_state *s) {
         s->filters[i].setDerivateCutoff(10.0f);
     }
 
-    if (!ort_env) {
-        const char *instanceName = "shadertastic-onnx-inference";
-
-        // TODO maybe add a global setting in OBS to allocate the number of threads ?
-        Ort::ThreadingOptions ortThreadingOptions;
-        ortThreadingOptions.SetGlobalInterOpNumThreads(
-            std::min(
-                2, // No more than this many threads
-                std::max(1, (int) std::thread::hardware_concurrency() / 4) // A quarter of the threads that can concurrently run on the CPU
-            )
-        );
-        ortThreadingOptions.SetGlobalIntraOpNumThreads(1);
-
-        ort_env.reset(new Ort::Env(ortThreadingOptions, OrtLoggingLevel::ORT_LOGGING_LEVEL_WARNING, instanceName));
-    }
+    onnxmediapipe::ModelsProvider::initialize();
 
     obs_enter_graphics();
     s->facelandmark_results_counter = 0;
@@ -607,7 +578,13 @@ void face_tracking_create(face_tracking_state *s) {
     //debug("STAGING TEXTURE = %p", s->staging_texture);
 
     /** Configure networks **/
-    face_tracking_update(s);
+    try {
+        auto facemesh = std::make_shared <onnxmediapipe::FaceMesh>();
+        s->facemesh = facemesh;
+    }
+    catch (const std::exception& error) {
+        blog(LOG_INFO, "in detection inference creation, exception: %s", error.what());
+    }
 }
 //----------------------------------------------------------------------------------------------------------------------
 

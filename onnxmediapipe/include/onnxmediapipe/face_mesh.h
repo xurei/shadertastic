@@ -14,25 +14,20 @@ namespace onnxmediapipe
     class FaceMesh
     {
     public:
-        FaceMesh(
-            std::unique_ptr<Ort::Env> &ort_env
-        );
+        explicit FaceMesh();
 
         // Given a BGR frame, generate landmarks.
         bool Run(const cv::Mat& frameRGB, FaceLandmarksResults& results);
 
-        // TODO make private
-        std::shared_ptr < FaceDetection > _facedetection;
+    private:
+        std::shared_ptr<FaceDetection> _facedetection;
         RotatedRect _tracked_roi = {};
         std::vector<DetectedObject> objects;
-
-    private:
-
-        std::shared_ptr < FaceLandmarks > _facelandmarks;
+        std::shared_ptr<FaceLandmarks> _facelandmarks;
 
         bool _bNeedsDetection = true;
 
         //static ov::Core core;
     };
 
-} //namespace ovfacemesh
+} //namespace onnxmediapipe

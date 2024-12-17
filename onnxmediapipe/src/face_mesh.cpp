@@ -17,20 +17,17 @@
 
 // NOTE : this file has been taken from https://github.com/intel/openvino-plugins-for-obs-studio and modified to use ONNX instead
 #include <iostream>
+#include "onnxmediapipe/models_provider.h"
 #include "onnxmediapipe/face_mesh.h"
-#include "onnxmediapipe/face_detection.h"
-#include "onnxmediapipe/face_landmarks.h"
 #include "../../src/logging_functions.hpp"
 
 namespace onnxmediapipe
 {
-    FaceMesh::FaceMesh(
-        std::unique_ptr<Ort::Env> &ort_env
-    ) : _facedetection(std::make_shared<FaceDetection>(ort_env)),
-        _facelandmarks(std::make_shared<FaceLandmarks>(ort_env)) {}
+    FaceMesh::FaceMesh():
+        _facedetection(onnxmediapipe::ModelsProvider::getFaceDetection()),
+        _facelandmarks(onnxmediapipe::ModelsProvider::getFaceLandmarks()) {}
 
-    bool FaceMesh::Run(const cv::Mat& frameRGB, FaceLandmarksResults& results)
-    {
+    bool FaceMesh::Run(const cv::Mat& frameRGB, FaceLandmarksResults& results) {
         try {
             if (_bNeedsDetection) {
                 objects.clear();
@@ -65,5 +62,4 @@ namespace onnxmediapipe
             return false;
         }
     }
-
 } //namespace onnxmediapipe
