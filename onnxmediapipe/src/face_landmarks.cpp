@@ -188,23 +188,20 @@ namespace onnxmediapipe
 
         // Wrap the already-allocated tensor as a cv::Mat of floats
         cv::Mat floated = cv::Mat((int)netInputHeight, (int)netInputWidth, CV_32FC3);
-        subFrame.convertTo(floated, CV_32FC3);
+        subFrame.convertTo(floated, CV_32FC3, 1.0 / 255.0);
         float* pTensor = inputTensorValues[0].data();
         cv::Mat converted = cv::Mat((int)netInputHeight, (int)netInputWidth, CV_32FC3);
 
         //hwcToChw
         std::vector<cv::Mat> channels;
         cv::split(floated, channels);
-        int i = 0;
         for (auto &img : channels) {
             cv::Mat reshaped = img.reshape(1, 1);
-            ++i;
         }
 
         // Concatenate three vectors to one
         cv::vconcat(channels, converted);
 
-        converted /= 255.0f;
         converted = converted.reshape(3, (int)netInputHeight);
         converted.copyTo(cv::Mat((int)netInputHeight, (int)netInputWidth, CV_32FC3, pTensor));
     }
@@ -239,7 +236,7 @@ namespace onnxmediapipe
 
         //apply sigmoid activation to produce face flag result
         results.face_flag = 1.0f / (1.0f + std::exp(-(*face_flag_data)));
-        fdebug(faceLandmarksDebugFile, "Face Flag: %f", results.face_flag);
+        fdebug(faceLandmarksDebugFile, "Face Flag: %f → %f", *face_flag_data, results.face_flag);
 
         for (size_t i = 0; i < facial_surface_num_points; i++) {
             //just set normalized values for now.
@@ -334,20 +331,24 @@ namespace onnxmediapipe
 
         //project the points back into the pre-rotated / pre-cropped space
         {
-            RotatedRect normalized_rect{};
-            normalized_rect.center_x = roi.center_x / (float)frameRGB.cols;
-            normalized_rect.center_y = roi.center_y / (float)frameRGB.rows;
-            normalized_rect.width = roi.width / (float)frameRGB.cols;
-            normalized_rect.height = roi.height / (float)frameRGB.rows;
-            normalized_rect.rotation = roi.rotation;
+            RotatedRect normalized_rect{
+                .center_x = roi.center_x / (float)frameRGB.cols,
+                .center_y = roi.center_y / (float)frameRGB.rows,
+                .width = roi.width / (float)frameRGB.cols,
+                .height = roi.height / (float)frameRGB.rows,
+                .rotation = roi.rotation
+            };
+
+            const float angle = normalized_rect.rotation;
+            const float sin_angle = std::sin(angle);
+            const float cos_angle = std::cos(angle);
 
             for (size_t i = 0; i < facial_surface_num_points; i++) {
                 cv::Point3f &p = results.facial_surface[i];
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
-                const float angle = normalized_rect.rotation;
-                float new_x = std::cos(angle) * x - std::sin(angle) * y;
-                float new_y = std::sin(angle) * x + std::cos(angle) * y;
+                float new_x = cos_angle * x - sin_angle * y;
+                float new_y = sin_angle * x + cos_angle * y;
 
                 new_x = new_x * normalized_rect.width + normalized_rect.center_x;
                 new_y = new_y * normalized_rect.height + normalized_rect.center_y;
@@ -362,9 +363,8 @@ namespace onnxmediapipe
                 cv::Point3f &p = results.refined_landmarks[i];
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
-                const float angle = normalized_rect.rotation;
-                float new_x = std::cos(angle) * x - std::sin(angle) * y;
-                float new_y = std::sin(angle) * x + std::cos(angle) * y;
+                float new_x = cos_angle * x - sin_angle * y;
+                float new_y = sin_angle * x + cos_angle * y;
 
                 new_x = new_x * normalized_rect.width + normalized_rect.center_x;
                 new_y = new_y * normalized_rect.height + normalized_rect.center_y;
@@ -378,9 +378,8 @@ namespace onnxmediapipe
             for (auto& p : results.lips_refined_region) {
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
-                const float angle = normalized_rect.rotation;
-                float new_x = std::cos(angle) * x - std::sin(angle) * y;
-                float new_y = std::sin(angle) * x + std::cos(angle) * y;
+                float new_x = cos_angle * x - sin_angle * y;
+                float new_y = sin_angle * x + cos_angle * y;
 
                 new_x = new_x * normalized_rect.width + normalized_rect.center_x;
                 new_y = new_y * normalized_rect.height + normalized_rect.center_y;
@@ -392,9 +391,8 @@ namespace onnxmediapipe
             for (auto& p : results.left_eye_refined_region) {
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
-                const float angle = normalized_rect.rotation;
-                float new_x = std::cos(angle) * x - std::sin(angle) * y;
-                float new_y = std::sin(angle) * x + std::cos(angle) * y;
+                float new_x = cos_angle * x - sin_angle * y;
+                float new_y = sin_angle * x + cos_angle * y;
 
                 new_x = new_x * normalized_rect.width + normalized_rect.center_x;
                 new_y = new_y * normalized_rect.height + normalized_rect.center_y;
@@ -406,9 +404,8 @@ namespace onnxmediapipe
             for (auto& p : results.right_eye_refined_region) {
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
-                const float angle = normalized_rect.rotation;
-                float new_x = std::cos(angle) * x - std::sin(angle) * y;
-                float new_y = std::sin(angle) * x + std::cos(angle) * y;
+                float new_x = cos_angle * x - sin_angle * y;
+                float new_y = sin_angle * x + cos_angle * y;
 
                 new_x = new_x * normalized_rect.width + normalized_rect.center_x;
                 new_y = new_y * normalized_rect.height + normalized_rect.center_y;
@@ -420,9 +417,8 @@ namespace onnxmediapipe
             for (auto& p : results.left_iris_refined_region) {
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
-                const float angle = normalized_rect.rotation;
-                float new_x = std::cos(angle) * x - std::sin(angle) * y;
-                float new_y = std::sin(angle) * x + std::cos(angle) * y;
+                float new_x = cos_angle * x - sin_angle * y;
+                float new_y = sin_angle * x + cos_angle * y;
 
                 new_x = new_x * normalized_rect.width + normalized_rect.center_x;
                 new_y = new_y * normalized_rect.height + normalized_rect.center_y;
@@ -434,9 +430,8 @@ namespace onnxmediapipe
             for (auto& p : results.right_iris_refined_region) {
                 const float x = p.x - 0.5f;
                 const float y = p.y - 0.5f;
-                const float angle = normalized_rect.rotation;
-                float new_x = std::cos(angle) * x - std::sin(angle) * y;
-                float new_y = std::sin(angle) * x + std::cos(angle) * y;
+                float new_x = cos_angle * x - sin_angle * y;
+                float new_y = sin_angle * x + cos_angle * y;
 
                 new_x = new_x * normalized_rect.width + normalized_rect.center_x;
                 new_y = new_y * normalized_rect.height + normalized_rect.center_y;

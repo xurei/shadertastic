@@ -645,13 +645,13 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
             else {
                 if (shadertastic_settings().one_euro_enabled) {
                     for (size_t i = 0; i < refined_landmarks_num_points; ++i) {
-                        s->filters[i * 3 + 0].setMinCutoff(std::max(0.01f, shadertastic_settings().one_euro_min_cutoff));
+                        s->filters[i * 3 + 0].setMinCutoff(std::max(0.00001f, shadertastic_settings().one_euro_min_cutoff));
                         s->filters[i * 3 + 0].setBeta(std::max(0.01f, shadertastic_settings().one_euro_beta));
                         s->filters[i * 3 + 0].setDerivateCutoff(std::max(0.01f, shadertastic_settings().one_euro_deriv_cutoff));
-                        s->filters[i * 3 + 1].setMinCutoff(std::max(0.01f, shadertastic_settings().one_euro_min_cutoff));
+                        s->filters[i * 3 + 1].setMinCutoff(std::max(0.00001f, shadertastic_settings().one_euro_min_cutoff));
                         s->filters[i * 3 + 1].setBeta(std::max(0.01f, shadertastic_settings().one_euro_beta));
                         s->filters[i * 3 + 1].setDerivateCutoff(std::max(0.01f, shadertastic_settings().one_euro_deriv_cutoff));
-                        s->filters[i * 3 + 2].setMinCutoff(std::max(0.01f, shadertastic_settings().one_euro_min_cutoff));
+                        s->filters[i * 3 + 2].setMinCutoff(std::max(0.00001f, shadertastic_settings().one_euro_min_cutoff));
                         s->filters[i * 3 + 2].setBeta(std::max(0.01f, shadertastic_settings().one_euro_beta));
                         s->filters[i * 3 + 2].setDerivateCutoff(std::max(0.01f, shadertastic_settings().one_euro_deriv_cutoff));
                         s->average_results.refined_landmarks[i].x = s->filters[i * 3 + 0].filter(s->facelandmark_results[0].refined_landmarks[i].x, deltatime);

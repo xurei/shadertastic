@@ -15,9 +15,9 @@ obs_data_t * load_settings() {
     obs_data_set_default_bool(settings, SETTING_DEV_MODE_ENABLED, false);
 
     obs_data_set_default_bool(settings, SETTING_ONE_EURO_ENABLED, false);
-    obs_data_set_default_double(settings, SETTING_ONE_EURO_MIN_CUTOFF, 5.0);
-    obs_data_set_default_double(settings, SETTING_ONE_EURO_BETA, 0.007);
-    obs_data_set_default_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF, 10.0);
+    obs_data_set_default_double(settings, SETTING_ONE_EURO_MIN_CUTOFF, 50.0);
+    obs_data_set_default_double(settings, SETTING_ONE_EURO_BETA, 0.001);
+    obs_data_set_default_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF, 1.0);
 
     if (!settings) {
         info("Settings not found. Creating default settings in %s ...", file);

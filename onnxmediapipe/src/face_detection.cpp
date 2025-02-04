@@ -190,8 +190,7 @@ namespace onnxmediapipe
 
         //pad the roi
         {
-            const float tensor_aspect_ratio =
-                static_cast<float>(netInputHeight) / static_cast<float>(netInputWidth);
+            const float tensor_aspect_ratio = static_cast<float>(netInputHeight) / static_cast<float>(netInputWidth);
 
             const float roi_aspect_ratio = (float)img.rows / (float)img.cols;
             float new_width;
@@ -243,9 +242,8 @@ namespace onnxmediapipe
         // Wrap the already-allocated tensor as a cv::Mat of floats
         float* pTensor = inputTensorValues[0].data();
         cv::Mat transformed = cv::Mat((int)netInputHeight, (int)netInputWidth, CV_32FC3, pTensor);
-        scaledDown.convertTo(transformed, CV_32FC3);
-        transformed /= 127.5f;
-        transformed -= 1.0f;
+        scaledDown.convertTo(transformed, CV_32FC3, 1.0 / 255.0f);
+        //transformed -= 1.0f;
     }
 
     // Function to resize an image while preserving aspect ratio and adding black bands
@@ -505,7 +503,7 @@ namespace onnxmediapipe
         const float* raw_scores = outputTensorValues[CLASSIFICATORS].data();
 
         size_t num_boxes_ = maxProposalCount;
-        int num_coords_ = 16;
+        const size_t num_coords_ = 16;
 
 //        //double check that the output tensors have the correct size
 //        {
@@ -560,8 +558,7 @@ namespace onnxmediapipe
         fdebug(faceDetectionDebugFile, "results: %lu", results.size());
         DetectedObject bestDetectedObject;
 
-        for (size_t i = 0; i < results.size(); i++)
-        {
+        for (size_t i = 0; i < results.size(); i++) {
             //project keypoints
             for (size_t k = 0; k < results[i].keypoints.size(); ++k) {
                 float x = results[i].keypoints[k].x;
@@ -588,8 +585,7 @@ namespace onnxmediapipe
               cv::Point2f{xmin, ymin + height}
             };
 
-            for (auto& p : box_coordinates)
-            {
+            for (auto& p : box_coordinates) {
                 float x = p.x;
                 float y = p.y;
                 x = x * transform_matrix[0] + y * transform_matrix[1] + transform_matrix[3];
@@ -655,12 +651,10 @@ namespace onnxmediapipe
             const float scale_x = face_bbox_scale;
             const float scale_y = face_bbox_scale;
 
-            if (rotation == 0.f)
-            {
+            if (rotation == 0.f) {
                 det.center = { det.center.x + width * shift_x,  det.center.y + height * shift_y };
             }
-            else
-            {
+            else {
                 const float x_shift =
                     (image_width * width * shift_x * std::cos(rotation) -
                         image_height * height * shift_y * std::sin(rotation)) /
@@ -685,7 +679,5 @@ namespace onnxmediapipe
 
             fdebug(faceDetectionDebugFile, "result %lu: %f %f %f %f (confidence %i %)", i, det.x, det.y, det.width, det.height, (int)(det.confidence*100.0f));
         }
-
     }
-
 } //namespace onnxmediapipe
