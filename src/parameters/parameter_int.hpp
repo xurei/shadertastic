@@ -31,7 +31,8 @@ class effect_parameter_int : public effect_parameter {
             return PARAM_DATATYPE_INT;
         }
 
-        void initialize_params(obs_data_t *metadata) override {
+        void initialize_params(obs_data_t *metadata, const std::string &effect_path) override {
+            UNUSED_PARAMETER(effect_path);
             obs_data_set_default_bool(metadata, "slider", false);
             obs_data_set_default_int(metadata, "min", 0);
             obs_data_set_default_int(metadata, "max", 100);

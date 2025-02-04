@@ -17,7 +17,7 @@
 
 class effect_parameter_factory {
     public:
-        effect_parameter *create(const std::string &effect_name, gs_eparam_t *shader_param, obs_data_t *param_metadata) {
+        effect_parameter *create(const std::string &effect_name, const std::string &effect_path, gs_eparam_t *shader_param, obs_data_t *param_metadata) {
             const char *param_name = obs_data_get_string(param_metadata, "name");
             const char *data_type = obs_data_get_string(param_metadata, "type");
             if (param_name == nullptr || strcmp(param_name, "") == 0) {
@@ -74,7 +74,7 @@ class effect_parameter_factory {
                     }
                 }
                 out->load_common_fields(param_metadata);
-                out->initialize_params(param_metadata);
+                out->initialize_params(param_metadata, effect_path);
                 return out;
             }
         }

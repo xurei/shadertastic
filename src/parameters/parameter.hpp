@@ -53,7 +53,7 @@ class effect_parameter {
             }
         }
 
-        virtual void initialize_params(obs_data_t *metadata) = 0;
+        virtual void initialize_params(obs_data_t *metadata, const std::string &effect_path) = 0;
 
         virtual void set_default(obs_data_t *settings, const char *full_param_name) = 0;
 

@@ -28,10 +28,13 @@ namespace fs = std::filesystem;
 
 std::string normalize_path(const std::string &input);
 
-char *load_file_zipped_or_local(std::string path);
+char *load_file_zipped_or_local(const std::string &path);
+bool extract_file_zipped_or_local(const std::string &source_path, const std::string &destination_path);
 
 std::vector<std::string> list_files(const char* folderPath, std::string &extension);
 
 std::vector<std::string> list_directories(const char* folderPath);
+
+std::string create_temp_file();
 
 #endif //FILE_UTIL_HPP

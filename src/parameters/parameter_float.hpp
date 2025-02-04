@@ -31,7 +31,8 @@ class effect_parameter_float : public effect_parameter {
             return PARAM_DATATYPE_DOUBLE;
         }
 
-        void initialize_params(obs_data_t *metadata) override {
+        void initialize_params(obs_data_t *metadata, const std::string &effect_path) override {
+            UNUSED_PARAMETER(effect_path);
             obs_data_set_default_bool(metadata, "slider", false);
             obs_data_set_default_double(metadata, "min", 0.0);
             obs_data_set_default_double(metadata, "max", 100.0);

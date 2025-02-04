@@ -61,8 +61,9 @@ class effect_parameter_audiolevel : public effect_parameter {
             return PARAM_DATATYPE_AUDIOLEVEL;
         }
 
-        void initialize_params(obs_data_t *metadata) override {
+        void initialize_params(obs_data_t *metadata, const std::string &effect_path) override {
             UNUSED_PARAMETER(metadata);
+            UNUSED_PARAMETER(effect_path);
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {

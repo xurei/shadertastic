@@ -82,7 +82,7 @@ struct shadertastic_effect_t {
                 obs_data_t *param_metadata = obs_data_array_item(parameters, i);
                 const char *param_name = obs_data_get_string(param_metadata, "name");
                 gs_eparam_t *shader_param = main_shader->get_param_by_name(param_name);
-                effect_parameter *effect_param = parameter_factory.create(name, shader_param, param_metadata);
+                effect_parameter *effect_param = parameter_factory.create(name, this->path, shader_param, param_metadata);
 
                 if (effect_param != nullptr) {
                     std::string param_name_str = std::string(param_name);
