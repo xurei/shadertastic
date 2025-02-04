@@ -38,7 +38,7 @@ class effect_parameter_list_int : public effect_parameter {
             return PARAM_DATATYPE_LIST_INT;
         }
 
-        void set_defaults(obs_data_t *metadata) override {
+        void initialize_params(obs_data_t *metadata) override {
             default_array = obs_data_array_create();
             obs_data_set_default_array(metadata, "values", default_array);
             obs_data_set_default_int(metadata, "default", 0);

@@ -28,7 +28,7 @@ class effect_parameter_bool : public effect_parameter {
             return PARAM_DATATYPE_BOOL;
         }
 
-        void set_defaults(obs_data_t *metadata) override {
+        void initialize_params(obs_data_t *metadata) override {
             obs_data_set_default_bool(metadata, "default", false);
 
             default_value = obs_data_get_bool(metadata, "default");

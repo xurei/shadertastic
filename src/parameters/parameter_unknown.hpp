@@ -24,7 +24,7 @@ class effect_parameter_unknown : public effect_parameter {
             return PARAM_DATATYPE_UNKNOWN;
         }
 
-        void set_defaults(obs_data_t *metadata) override {
+        void initialize_params(obs_data_t *metadata) override {
             UNUSED_PARAMETER(metadata);
         }
 

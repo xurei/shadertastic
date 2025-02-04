@@ -47,7 +47,7 @@ class effect_parameter_image : public effect_parameter {
             return PARAM_DATATYPE_IMAGE;
         }
 
-        void set_defaults(obs_data_t *metadata) override {
+        void initialize_params(obs_data_t *metadata) override {
             UNUSED_PARAMETER(metadata);
         }
 

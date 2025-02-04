@@ -50,7 +50,7 @@ class effect_parameter_color_alpha : public effect_parameter {
             return PARAM_DATATYPE_COLOR_ALPHA;
         }
 
-        void set_defaults(obs_data_t *metadata) override {
+        void initialize_params(obs_data_t *metadata) override {
             obs_data_set_default_string(metadata, "default", "#000000FF");
             default_value = rgbaStringToInt(std::string(obs_data_get_string(metadata, "default")));
         }

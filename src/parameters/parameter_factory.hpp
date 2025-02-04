@@ -74,7 +74,7 @@ class effect_parameter_factory {
                     }
                 }
                 out->load_common_fields(param_metadata);
-                out->set_defaults(param_metadata);
+                out->initialize_params(param_metadata);
                 return out;
             }
         }

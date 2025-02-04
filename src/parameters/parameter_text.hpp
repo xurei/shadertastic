@@ -26,7 +26,7 @@ class effect_parameter_text : public effect_parameter {
             return PARAM_DATATYPE_UNKNOWN;
         }
 
-        void set_defaults(obs_data_t *metadata) override {
+        void initialize_params(obs_data_t *metadata) override {
             const char *value_c_str = obs_data_get_string(metadata, "value");
             value = std::string(value_c_str);
         }
