@@ -18,6 +18,9 @@ uniform float2 fd_face_1;
 uniform float2 fd_face_2;
 uniform texture2d fd_points_tex;
 uniform bool show_tex;
+uniform bool show_mesh_face;
+uniform bool show_mesh_lips;
+uniform bool show_eyes;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -60,19 +63,6 @@ float rand(float a, float b) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-float triangleArea(float2 p1, float2 p2, float2 p3) {
-    return 0.5 * ((p2.x - p1.x) * (p3.y - p1.y) - (p3.x - p1.x) * (p2.y - p1.y));
-}
-//----------------------------------------------------------------------------------------------------------------------
-
-float2 barycentricCoordinates(float2 p1, float2 p2, float2 p3, float2 point) {
-    float totalArea = triangleArea(p1, p2, p3);
-    float u = triangleArea(p3, p1, point) / totalArea;
-    float v = triangleArea(p1, p2, point) / totalArea;
-    return float2(u, v);
-}
-//----------------------------------------------------------------------------------------------------------------------
-
 float4 EffectLinear(float2 uv)
 {
     if (show_tex && uv.y < 0.05) {
@@ -87,16 +77,18 @@ float4 EffectLinear(float2 uv)
     float2 orthoCorrection = float2(aspectRatio, 1.0);
     float2 uv_ortho = uv * orthoCorrection;
 
-    float2 fd_leye_center = ((fd_leye_1 + fd_leye_2) / 2.0) * orthoCorrection;
-    float fd_leye_radius = abs(fd_leye_1.y - fd_leye_center.y);
-    if (distance(uv_ortho, fd_leye_center) < fd_leye_radius) {
-        return float4(1.0, 0.0, 0.0, 1.0);
-    }
+    if (show_eyes) {
+        float2 fd_leye_center = ((fd_leye_1 + fd_leye_2) / 2.0) * orthoCorrection;
+        float fd_leye_radius = abs(fd_leye_1.y - fd_leye_center.y);
+        if (distance(uv_ortho, fd_leye_center) < fd_leye_radius) {
+            return lerp(px, float4(1.0, 0.0, 0.0, 1.0), 0.4);
+        }
 
-    float2 fd_reye_center = ((fd_reye_1 + fd_reye_2) / 2.0) * orthoCorrection;
-    float fd_reye_radius = abs(fd_reye_1.y - fd_reye_center.y);
-    if (distance(uv_ortho, fd_reye_center) < fd_reye_radius) {
-        return float4(0.0, 0.0, 1.0, 1.0);
+        float2 fd_reye_center = ((fd_reye_1 + fd_reye_2) / 2.0) * orthoCorrection;
+        float fd_reye_radius = abs(fd_reye_1.y - fd_reye_center.y);
+        if (distance(uv_ortho, fd_reye_center) < fd_reye_radius) {
+            return lerp(px, float4(1.0, 1.0, 0.0, 1.0), 0.4);
+        }
     }
 
     if (fd_face_1.x - upixel <= uv.x && uv.x <= fd_face_2.x + upixel && fd_face_1.y - vpixel <= uv.y && uv.y <= fd_face_2.y + vpixel) {
@@ -111,6 +103,14 @@ float4 EffectLinear(float2 uv)
             px2[3] = 1.0;
 
             float2 ptuv = float2(px2.x, px2.y);
+
+            bool isEyes = (
+                i > 467
+            );
+
+            if (isEyes) {
+                continue;
+            }
 
             bool isLips = (
                 i == 0 ||
@@ -197,10 +197,14 @@ float4 EffectLinear(float2 uv)
 
             if (ptuv.x - upixel*2 <= uv.x && uv.x <= ptuv.x + upixel*2 && ptuv.y - vpixel*2 <= uv.y && uv.y <= ptuv.y + vpixel*2) {
                 if (isLips) {
-                    return float4(1.0, 0.0, 0.0, 1.0);
+                    if (show_mesh_lips) {
+                        return float4(1.0, 0.0, 0.0, 1.0);
+                    }
                 }
                 else {
-                    return float4(0.0, 1.0, 0.0, 1.0);
+                    if (show_mesh_face) {
+                        return float4(0.0, 1.0, 0.0, 1.0);
+                    }
                 }
             }
         }

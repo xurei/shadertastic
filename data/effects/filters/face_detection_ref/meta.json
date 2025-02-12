@@ -5,8 +5,26 @@
   "input_facedetection": true,
   "parameters": [
     {
+      "name": "show_mesh_face",
+      "label": "Show face mesh points",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "show_mesh_lips",
+      "label": "Show lips mesh points",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "show_eyes",
+      "label": "Show eyes points",
+      "type": "bool",
+      "default": true
+    },
+    {
       "name": "show_tex",
-      "label": "Show texture",
+      "label": "Show produced texture",
       "type": "bool",
       "default": true
     }
