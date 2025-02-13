@@ -152,7 +152,6 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
 
 #include "shader_filter.hpp"
 #include "shader_transition.hpp"
-#include "settings.h"
 //----------------------------------------------------------------------------------------------------------------------
 
 #ifndef _WIN32
