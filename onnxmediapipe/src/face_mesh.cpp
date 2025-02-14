@@ -16,6 +16,8 @@
 ******************************************************************************/
 
 // NOTE : this file has been taken from https://github.com/intel/openvino-plugins-for-obs-studio and modified to use ONNX instead
+// It has been widely modified since then
+
 #include <iostream>
 #include "onnxmediapipe/models_provider.h"
 #include "onnxmediapipe/face_mesh.h"
@@ -27,31 +29,45 @@ namespace onnxmediapipe
         _facedetection(onnxmediapipe::ModelsProvider::getFaceDetection()),
         _facelandmarks(onnxmediapipe::ModelsProvider::getFaceLandmarks()) {}
 
-    bool FaceMesh::Run(const cv::Mat& frameRGB, FaceLandmarksResults& results) {
+    float * FaceMesh::getFaceDetectionInputTensorBuffer() {
+        return _facedetection->getInputTensorBuffer();
+    }
+
+    float * FaceMesh::getFaceMeshInputTensorBuffer() {
+        return _facelandmarks->getInputTensorBuffer();
+    }
+
+    bool FaceMesh::RunFaceDetection(const cv::Mat &frameBGR) {
         try {
-            if (_bNeedsDetection) {
+            if (IsFaceDetectionNeeded()) {
                 objects.clear();
-                _facedetection->Run(frameRGB, objects);
+                _facedetection->Run(frameBGR, objects);
 
                 if (objects.empty()) {
                     return false;
                 }
 
                 _tracked_roi = {
-                    objects[0].center.x * (float) frameRGB.cols,
-                    objects[0].center.y * (float) frameRGB.rows,
-                    objects[0].width * (float) frameRGB.cols,
-                    objects[0].height * (float) frameRGB.rows, objects[0].rotation
+                    .center_x = objects[0].center.x,
+                    .center_y = objects[0].center.y,
+                    .width = objects[0].width,
+                    .height = objects[0].height,
+                    .rotation = objects[0].rotation,
                 };
             }
+            return true;
+        }
+        catch (const Ort::Exception& e) {
+            std::cerr << "Caught Ort::Exception: " << e.what() << std::endl;
+            return false;
+        }
+    }
 
-            _facelandmarks->Run(frameRGB, _tracked_roi, results);
+    bool FaceMesh::Run(const cv::Mat& imageBGR, int image_width, int image_height, FaceLandmarksResults& results) {
+        try {
+            _facelandmarks->Run(imageBGR, image_width, image_height, _tracked_roi, results);
 
             _tracked_roi = results.roi;
-            _tracked_roi.center_x *= (float)frameRGB.cols;
-            _tracked_roi.center_y *= (float)frameRGB.rows;
-            _tracked_roi.width *= (float)frameRGB.cols;
-            _tracked_roi.height *= (float)frameRGB.rows;
 
             _bNeedsDetection = (results.face_flag < 0.5f);
 

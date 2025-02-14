@@ -17,13 +17,17 @@ namespace onnxmediapipe {
     public:
         explicit FaceDetection(std::unique_ptr<Ort::Env> &ort_env, float bbox_scale = 1.5f);
 
-        void Run(const cv::Mat& frameRGB, std::vector<DetectedObject>& results);
+        void Run(const cv::Mat &frameBGR, std::vector<DetectedObject>& results);
+
+        float * getInputTensorBuffer() {
+            return inputTensorValues[0].data();
+        }
 
     //TODO make private
     //private:
-        void preprocess(const cv::Mat& frameRGB, std::array<float, 16>& transform_matrix);
-        void postprocess(const cv::Mat& frameRGB, std::array<float, 16>& transform_matrix, std::vector<DetectedObject>& results);
-        void resizeWithAspectRatio(const cv::Mat& inputImage, const cv::Mat &outputImage, cv::Size size);
+        void preprocess(const cv::Mat &frameBGR, std::array<float, 16>& transform_matrix);
+        void postprocess(const cv::Mat &frameBGR, std::array<float, 16>& transform_matrix, std::vector<DetectedObject>& results);
+        cv::Mat centerWithAspectRatio(const cv::Mat &inputImage);
 
         std::shared_ptr<Ort::Session> ortSession;
         size_t netInputHeight = 0;

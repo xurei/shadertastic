@@ -136,13 +136,11 @@ namespace onnxmediapipe
         debug("FACE_LANDMARKS Done Loading model in %li ms", toc-tic);
     }
 
-    void FaceLandmarks::Run(const cv::Mat& frameRGB, const RotatedRect& roi, FaceLandmarksResults& results) {
+    void FaceLandmarks::Run(const cv::Mat& frameBGR, int image_width, int image_height, const RotatedRect& roi, FaceLandmarksResults& results) {
         faceLandmarksDebugFile = fdebug_open("face_landmarks.txt");
-        //TODO: sanity checks on roi vs. the cv::Mat.
-        // preprocess (fill the input tensor)
-        preprocess(frameRGB, roi);
+        preprocess(frameBGR);
 
-        // perform inference
+        // Perform inference
         /* To run inference, we provide the run options, an array of input names corresponding to the
         inputs in the input tensor, an array of input tensor, number of inputs, an array of output names
         corresponding to the outputs in the output tensor, an array of output tensor, number of outputs. */
@@ -151,59 +149,20 @@ namespace onnxmediapipe
             outputNames.data(), outputTensors.data(), outputCount);
 
         // post-process
-        postprocess(frameRGB, roi, results);
+        postprocess(image_width, image_height, roi, results);
         fdebug_close(faceLandmarksDebugFile);
     }
 
-
-    void FaceLandmarks::preprocess(const cv::Mat& frameRGB, const RotatedRect& roi) {
-        const cv::RotatedRect rotated_rect(cv::Point2f(roi.center_x, roi.center_y),
-            cv::Size2f(roi.width, roi.height),
-            (float)(roi.rotation * 180.f / M_PI));
-
-        cv::Mat src_points;
-        cv::boxPoints(rotated_rect, src_points);
-
-        const float dst_width = (float)netInputWidth;
-        const float dst_height = (float)netInputHeight;
-        /* clang-format off */
-        float dst_corners[8] = {
-            0.0f,      dst_height,
-            0.0f,      0.0f,
-            dst_width, 0.0f,
-            dst_width, dst_height
-        };
-        /* clang-format on */
-
-        cv::Mat dst_points = cv::Mat(4, 2, CV_32F, dst_corners);
-        cv::Mat projection_matrix = cv::getPerspectiveTransform(src_points, dst_points);
-
-        // Extract ROI from frame
-        cv::Mat subFrame = cv::Mat((int)dst_height, (int)dst_width, CV_8UC3);
-
-        cv::warpPerspective(frameRGB, subFrame, projection_matrix,
-            cv::Size((int)netInputWidth, (int)netInputHeight),
-            /*flags=*/cv::INTER_LINEAR,
-            /*borderMode=*/cv::BORDER_REPLICATE);
-
+    void FaceLandmarks::preprocess(const cv::Mat &frameBGR) {
         // Wrap the already-allocated tensor as a cv::Mat of floats
-        cv::Mat floated = cv::Mat((int)netInputHeight, (int)netInputWidth, CV_32FC3);
-        subFrame.convertTo(floated, CV_32FC3, 1.0 / 255.0);
         float* pTensor = inputTensorValues[0].data();
-        cv::Mat converted = cv::Mat((int)netInputHeight, (int)netInputWidth, CV_32FC3);
+        cv::Mat converted = cv::Mat((int)netInputHeight*3, (int)netInputWidth, CV_32FC1, pTensor);
 
         //hwcToChw
         std::vector<cv::Mat> channels;
-        cv::split(floated, channels);
-        for (auto &img : channels) {
-            cv::Mat reshaped = img.reshape(1, 1);
-        }
-
+        cv::split(frameBGR, channels);
         // Concatenate three vectors to one
         cv::vconcat(channels, converted);
-
-        converted = converted.reshape(3, (int)netInputHeight);
-        converted.copyTo(cv::Mat((int)netInputHeight, (int)netInputWidth, CV_32FC3, pTensor));
     }
 
     static inline void fill2d_points_results(const float* raw_tensor, const size_t num_points, cv::Point2f v[], const int netInputWidth, const int netInputHeight) {
@@ -213,7 +172,7 @@ namespace onnxmediapipe
         }
     }
 
-    void FaceLandmarks::postprocess(const cv::Mat& frameRGB, const RotatedRect& roi, FaceLandmarksResults& results) {
+    void FaceLandmarks::postprocess(int image_width, int image_height, const RotatedRect& roi, FaceLandmarksResults& results) {
         results.face_flag = 0.f;
 
         const float* facial_surface_tensor_data = outputTensorValues[4].data();
@@ -271,22 +230,16 @@ namespace onnxmediapipe
 //                    throw std::logic_error(right_iris_refined_tensor_name + " output tensor is holding a smaller amount of data than expected.");
 //            }
 
-            fill2d_points_results(lips_refined_region_data, lips_refined_region_num_points, results.lips_refined_region, (int)netInputWidth, (int)netInputHeight);
-
-            fill2d_points_results(left_eye_refined_region_data, eye_refined_region_num_points, results.left_eye_refined_region, (int)netInputWidth, (int)netInputHeight);
-
-            fill2d_points_results(right_eye_refined_region_data, eye_refined_region_num_points, results.right_eye_refined_region, (int)netInputWidth, (int)netInputHeight);
-
-            fill2d_points_results(left_iris_refined_region_data, iris_refined_region_num_points, results.left_iris_refined_region, (int)netInputWidth, (int)netInputHeight);
-
+            fill2d_points_results(lips_refined_region_data,       lips_refined_region_num_points, results.lips_refined_region,       (int)netInputWidth, (int)netInputHeight);
+            fill2d_points_results(left_eye_refined_region_data,   eye_refined_region_num_points,  results.left_eye_refined_region,   (int)netInputWidth, (int)netInputHeight);
+            fill2d_points_results(right_eye_refined_region_data,  eye_refined_region_num_points,  results.right_eye_refined_region,  (int)netInputWidth, (int)netInputHeight);
+            fill2d_points_results(left_iris_refined_region_data,  iris_refined_region_num_points, results.left_iris_refined_region,  (int)netInputWidth, (int)netInputHeight);
             fill2d_points_results(right_iris_refined_region_data, iris_refined_region_num_points, results.right_iris_refined_region, (int)netInputWidth, (int)netInputHeight);
 
             //create a (normalized) refined list of landmarks from the 6 separate lists that we generated.
 
             //initialize the first 468 points to our face surface landmarks
-            for (size_t i = 0; i < facial_surface_num_points; i++) {
-                results.refined_landmarks[i] = results.facial_surface[i];
-            }
+            memcpy(results.refined_landmarks, results.facial_surface, facial_surface_num_points * sizeof(cv::Point3f));
 
             //override x & y for lip points
             for (size_t i = 0; i < lips_refined_region_num_points; i++) {
@@ -331,33 +284,11 @@ namespace onnxmediapipe
 
         //project the points back into the pre-rotated / pre-cropped space
         {
-            RotatedRect normalized_rect{
-                .center_x = roi.center_x / (float)frameRGB.cols,
-                .center_y = roi.center_y / (float)frameRGB.rows,
-                .width = roi.width / (float)frameRGB.cols,
-                .height = roi.height / (float)frameRGB.rows,
-                .rotation = roi.rotation
-            };
+            RotatedRect normalized_rect = roi;
 
             const float angle = normalized_rect.rotation;
             const float sin_angle = std::sin(angle);
             const float cos_angle = std::cos(angle);
-
-            for (size_t i = 0; i < facial_surface_num_points; i++) {
-                cv::Point3f &p = results.facial_surface[i];
-                const float x = p.x - 0.5f;
-                const float y = p.y - 0.5f;
-                float new_x = cos_angle * x - sin_angle * y;
-                float new_y = sin_angle * x + cos_angle * y;
-
-                new_x = new_x * normalized_rect.width + normalized_rect.center_x;
-                new_y = new_y * normalized_rect.height + normalized_rect.center_y;
-                const float new_z = p.z * normalized_rect.width;  // Scale Z coordinate as X.
-
-                results.facial_surface[i].x = new_x;
-                results.facial_surface[i].y = new_y;
-                results.facial_surface[i].z = new_z;
-            }
 
             for (size_t i = 0; i < refined_landmarks_num_points; i++) {
                 cv::Point3f &p = results.refined_landmarks[i];
@@ -466,18 +397,18 @@ namespace onnxmediapipe
             results.roi.height = bbox_height;
 
             //calculate rotation from keypoints 33 & 263
-            const float x0 = results.refined_landmarks[33].x * (float)frameRGB.cols;
-            const float y0 = results.refined_landmarks[33].y * (float)frameRGB.rows;
-            const float x1 = results.refined_landmarks[263].x * (float)frameRGB.cols;
-            const float y1 = results.refined_landmarks[263].y * (float)frameRGB.rows;
+            const float x0 = results.refined_landmarks[33].x * (float)image_width;
+            const float y0 = results.refined_landmarks[33].y * (float)image_height;
+            const float x1 = results.refined_landmarks[263].x * (float)image_width;
+            const float y1 = results.refined_landmarks[263].y * (float)image_height;
 
             float target_angle = 0.f;
             results.roi.rotation = NormalizeRadians(target_angle - std::atan2(-(y1 - y0), x1 - x0));
 
             //final transform
             {
-                const float image_width = (float)frameRGB.cols;
-                const float image_height = (float)frameRGB.rows;
+                const float image_width_f = (float)image_width;
+                const float image_height_f = (float)image_height;
 
                 float width = results.roi.width;
                 float height = results.roi.height;
@@ -494,26 +425,27 @@ namespace onnxmediapipe
                 }
                 else {
                     const float x_shift =
-                        (image_width * width * shift_x * std::cos(rotation) -
-                            image_height * height * shift_y * std::sin(rotation)) /
-                        image_width;
+                        (image_width_f * width * shift_x * std::cos(rotation) -
+                            image_height_f * height * shift_y * std::sin(rotation)) /
+                        image_width_f;
                     const float y_shift =
-                        (image_width * width * shift_x * std::sin(rotation) +
-                            image_height * height * shift_y * std::cos(rotation)) /
-                        image_height;
+                        (image_width_f * width * shift_x * std::sin(rotation) +
+                            image_height_f * height * shift_y * std::cos(rotation)) /
+                        image_height_f;
 
                     results.roi.center_x = results.roi.center_x + x_shift;
                     results.roi.center_y = results.roi.center_y + y_shift;
                 }
 
-                const float long_side = std::max(width * image_width, height * image_height);
-                width = long_side / image_width;
-                height = long_side / image_height;
+                const float long_side = std::max(width * image_width_f, height * image_height_f);
+                width = long_side / image_width_f;
+                height = long_side / image_height_f;
 
                 results.roi.width = width * scale_x;
                 results.roi.height = height * scale_y;
             }
         }
-    }
 
+        results.roi = results.roi;
+    }
 } //namespace onnxmediapipe

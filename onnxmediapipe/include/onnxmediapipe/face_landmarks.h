@@ -16,11 +16,15 @@ namespace onnxmediapipe
     public:
         explicit FaceLandmarks(std::unique_ptr<Ort::Env> &ort_env);
 
-        void Run(const cv::Mat& frameRGB, const RotatedRect& roi, FaceLandmarksResults& results);
+        void Run(const cv::Mat& frameBGR, int image_width, int image_height, const RotatedRect& roi, FaceLandmarksResults& results);
+
+        float * getInputTensorBuffer() {
+            return inputTensorValues[0].data();
+        }
 
     private:
-        void preprocess(const cv::Mat& frameRGB, const RotatedRect& roi);
-        void postprocess(const cv::Mat& frameRGB, const RotatedRect& roi, FaceLandmarksResults& results);
+        void preprocess(const cv::Mat& frameBGR);
+        void postprocess(int image_width, int image_height, const RotatedRect& roi, FaceLandmarksResults& results);
 
         std::shared_ptr<Ort::Session> ortSession;
         size_t netInputHeight = 0;

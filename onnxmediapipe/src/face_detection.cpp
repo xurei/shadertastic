@@ -16,6 +16,7 @@
 ******************************************************************************/
 
 // NOTE : this file has been taken from https://github.com/intel/openvino-plugins-for-obs-studio and modified to use ONNX instead
+// It has been widely modified since then
 
 #include <memory>
 #include "onnxmediapipe/face_detection.h"
@@ -157,15 +158,14 @@ namespace onnxmediapipe
         debug("FACE_DETECTION initialization done !");
     }
 
-    void FaceDetection::Run(const cv::Mat& frameRGB, std::vector<DetectedObject>& results)
-    {
+    void FaceDetection::Run(const cv::Mat &frameBGR, std::vector<DetectedObject> &results) {
         if (!ortSession) {
             return;
         }
         faceDetectionDebugFile = fdebug_open("face_detection.txt");
 
-        std::array<float, 16> transform_matrix;  // NOLINT(*-pro-type-member-init)
-        preprocess(frameRGB, transform_matrix);
+        std::array<float, 16> transform_matrix{};
+        preprocess(frameBGR, transform_matrix);
 
         // perform inference
         /* To run inference, we provide the run options, an array of input names corresponding to the
@@ -175,109 +175,74 @@ namespace onnxmediapipe
             inputNames.data(), inputTensors.data(), inputCount,
             outputNames.data(), outputTensors.data(), outputCount);
 
-        postprocess(frameRGB, transform_matrix, results);
+        postprocess(frameBGR, transform_matrix, results);
         fdebug_close(faceDetectionDebugFile);
     }
 
-    void FaceDetection::preprocess(const cv::Mat& img, std::array<float, 16>& transform_matrix)
-    {
-        RotatedRect roi = {/*center_x=*/0.5f * (float)img.cols,
-            /*center_y =*/0.5f * (float)img.rows,
-            /*width =*/static_cast<float>(img.cols),
-            /*height =*/static_cast<float>(img.rows),
-            /*rotation =*/0
+    void FaceDetection::preprocess(const cv::Mat &frameBGR, std::array<float, 16>& transform_matrix) {
+        RotatedRect roi = {
+            .center_x = 0.5f * (float)frameBGR.cols,
+            .center_y = 0.5f * (float)frameBGR.rows,
+            .width = static_cast<float>(frameBGR.cols),
+            .height = static_cast<float>(frameBGR.rows),
+            .rotation = 0,
         };
 
         //pad the roi
         {
             const float tensor_aspect_ratio = static_cast<float>(netInputHeight) / static_cast<float>(netInputWidth);
 
-            const float roi_aspect_ratio = (float)img.rows / (float)img.cols;
+            const float roi_aspect_ratio = (float)frameBGR.rows / (float)frameBGR.cols;
             float new_width;
             float new_height;
             if (tensor_aspect_ratio > roi_aspect_ratio) {
-                new_width = (float)img.cols;
-                new_height = (float)img.cols * tensor_aspect_ratio;
+                new_width = (float)frameBGR.cols;
+                new_height = (float)frameBGR.cols * tensor_aspect_ratio;
             }
             else {
-                new_width = (float)img.rows / tensor_aspect_ratio;
-                new_height = (float)img.rows;
+                new_width = (float)frameBGR.rows / tensor_aspect_ratio;
+                new_height = (float)frameBGR.rows;
             }
 
             roi.width = new_width;
             roi.height = new_height;
         }
 
-        GetRotatedSubRectToRectTransformMatrix(roi, img.cols, img.rows, false, &transform_matrix);
+        GetRotatedSubRectToRectTransformMatrix(roi, frameBGR.cols, frameBGR.rows, false, &transform_matrix);
 
-        const cv::RotatedRect rotated_rect(cv::Point2f(roi.center_x, roi.center_y),
-            cv::Size2f(roi.width, roi.height),
-            (float)(roi.rotation * 180.f / M_PI));
-
-        cv::Mat src_points;
-        cv::boxPoints(rotated_rect, src_points);
-
-        const float dst_width = (float)netInputWidth;
-        const float dst_height = (float)netInputHeight;
-
-        /* clang-format off */
-        float dst_corners[8] = { 0.0f,      dst_height,
-                                 0.0f,      0.0f,
-                                 dst_width, 0.0f,
-                                 dst_width, dst_height };
-        /* clang-format on */
-
-        cv::Mat dst_points = cv::Mat(4, 2, CV_32F, dst_corners);
-        cv::Mat projection_matrix = cv::getPerspectiveTransform(src_points, dst_points);
-
-        //get the input tensor as an array
-        //const ov::Tensor& frameTensor = inferRequest.get_tensor(inputsNames[0]);  // first input should be image
-
-                //frameTensor.data<uint8_t>();
-
-        //Scale down image
-        cv::Mat scaledDown((int)netInputWidth, (int)netInputHeight, CV_8UC3, cv::Scalar(0, 0, 0));
-        resizeWithAspectRatio(img, scaledDown, cv::Size((int)netInputWidth, (int)netInputHeight));
+        //Center image
+        cv::Mat centered = centerWithAspectRatio(frameBGR);
 
         // Wrap the already-allocated tensor as a cv::Mat of floats
         float* pTensor = inputTensorValues[0].data();
         cv::Mat transformed = cv::Mat((int)netInputHeight, (int)netInputWidth, CV_32FC3, pTensor);
-        scaledDown.convertTo(transformed, CV_32FC3, 1.0 / 255.0f);
-        //transformed -= 1.0f;
+        centered.copyTo(transformed);
     }
 
-    // Function to resize an image while preserving aspect ratio and adding black bands
-    void FaceDetection::resizeWithAspectRatio(const cv::Mat& inputImage, const cv::Mat &outputImage, cv::Size size) {
-        // Get the dimensions of the input image
-        int inputWidth = inputImage.cols;
-        int inputHeight = inputImage.rows;
+    // Function to center an image while preserving aspect ratio and adding black bands
+    cv::Mat FaceDetection::centerWithAspectRatio(const cv::Mat &inputImage) {
+        // Get the original dimensions
+        int width = inputImage.cols;
+        int height = inputImage.rows;
 
-        // Calculate the aspect ratios of the input and target sizes
-        double inputAspectRatio = static_cast<double>(inputWidth) / inputHeight;
-        double targetAspectRatio = static_cast<double>(size.width) / size.height;
+        // Determine the size of the square image
+        int newSize = std::max(width, height);
 
-        // Initialize the output image
-        //cv::Mat outputImage(newHeight, newWidth, inputImage.type(), cv::Scalar(0, 0, 0));
+        // Compute top/left padding for centering
+        int top = (newSize - height) / 2;
+        int bottom = newSize - height - top;
+        int left = (newSize - width) / 2;
+        int right = newSize - width - left;
 
-        // Calculate the scale factor to fit the image into the target size while preserving aspect ratio
-        double scaleFactor = (targetAspectRatio > inputAspectRatio) ?
-                             static_cast<double>(size.height) / inputHeight :
-                             static_cast<double>(size.width) / inputWidth;
+        // Create a new larger Mat with a black background
+        cv::Mat squareImage;
+        cv::copyMakeBorder(inputImage, squareImage, top, bottom, left, right, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
 
-        // Calculate the resized dimensions
-        int resizedWidth = static_cast<int>(inputWidth * scaleFactor);
-        int resizedHeight = static_cast<int>(inputHeight * scaleFactor);
-
-        // Calculate the position to paste the resized image (centering)
-        int startX = (size.width - resizedWidth) / 2;
-        int startY = (size.height - resizedHeight) / 2;
-
-        // Resize the input image while preserving aspect ratio
-        cv::resize(inputImage, outputImage(cv::Rect(startX, startY, resizedWidth, resizedHeight)), cv::Size(resizedWidth, resizedHeight));
+        // Return a reference to the new image (no data copy)
+        return squareImage;
     }
 
-    static void DecodeBoxes(const float* raw_boxes, const std::vector<Anchor>& anchors, std::vector<float>* boxes, size_t num_boxes_, size_t num_coords_, int netWidth, int netHeight)
-    {
+    static void DecodeBoxes(const float* raw_boxes, const std::vector<Anchor>& anchors, std::vector<float>* boxes, size_t num_boxes_, size_t num_coords_, int netWidth, int netHeight) {
 //        debug("DecodeBoxes");
         int box_coord_offset = 0;
         const float x_scale = (float)netWidth;
@@ -352,8 +317,7 @@ namespace onnxmediapipe
         return (indexed_score_0.second > indexed_score_1.second);
     }
 
-    static void NMS(std::vector<DetectedObject>& detections)
-    {
+    static void NMS(std::vector<DetectedObject>& detections) {
         float min_suppression_threshold = 0.3f;
         fdebug(faceDetectionDebugFile, "NMS %lu", detections.size());
 

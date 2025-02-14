@@ -28,9 +28,7 @@
 #include "onnxmediapipe/landmark_refinement_indices.h"
 #include "../shader/shader.h"
 #include "../util/rgba_to_rgb.h"
-
-#define FACEDETECTION_WIDTH 1280
-#define FACEDETECTION_HEIGHT 720
+#include "../util/tuple.h"
 
 struct face_tracking_bounding_box {
     union {
@@ -57,6 +55,10 @@ face_tracking_bounding_box face_tracking_get_bounding_box(onnxmediapipe::FaceLan
 void face_tracking_create(face_tracking_state *s);
 
 void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, float deltatime);
+
+cv::Mat face_tracking_get_image_for_detection(face_tracking_state *s, obs_source_t *target_source, uint2 &texrender_size);
+
+cv::Mat face_tracking_get_image_for_mesh(face_tracking_state *s, obs_source_t *target_source, float2 &roi_topleft, float2 &roi_size, float rotation);
 
 void face_tracking_render(face_tracking_state *s, effect_shader *main_shader);
 
