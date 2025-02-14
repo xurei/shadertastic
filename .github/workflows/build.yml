@@ -134,7 +134,7 @@ jobs:
 #          codesignPass: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
 #
 #      - name: Upload Build Artifact
-#        uses: actions/upload-artifact@v3.1.1
+#        uses: actions/upload-artifact@v4
 #        with:
 #          name: ${{ env.PLUGIN_NAME }}-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}
 #          path: ${{ github.workspace }}/plugin/release/${{ env.PLUGIN_NAME }}-*-macos-${{ matrix.arch }}.pkg
@@ -254,7 +254,7 @@ jobs:
           mv ./plugins/${{ env.PLUGIN_NAME }}/data ./${{ env.PLUGIN_NAME }}/data
           zip -r "${FILE_NAME}" ${{ env.PLUGIN_NAME }}
       - name: 'Publish'
-        uses: actions/upload-artifact@v3.1.1
+        uses: actions/upload-artifact@v4
         with:
           name: '${{ env.FILE_NAME }}'
           path: '*.zip'
@@ -268,7 +268,7 @@ jobs:
             *.zip
 #      - name: 'Build failed - all files'
 #        if: failure()
-#        uses: actions/upload-artifact@v3.1.1
+#        uses: actions/upload-artifact@v4
 #        with:
 #          name: '${{ env.FILE_NAME }}-debug-files'
 #          path: build/*
@@ -493,19 +493,19 @@ jobs:
           exit 0
       - name: 'Publish zip'
         if: success()
-        uses: actions/upload-artifact@v3.1.1
+        uses: actions/upload-artifact@v4
         with:
           name: '${{ env.FILE_NAME }}'
           path: package/*
 #      - name: 'Build failed - all files'
 #        if: failure()
-#        uses: actions/upload-artifact@v3.1.1
+#        uses: actions/upload-artifact@v4
 #        with:
 #          name: '${{ env.FILE_NAME }}-debug-files'
 #          path: build/*
       - name: Publish Installer Files
         if: success()
-        uses: actions/upload-artifact@v3.1.1
+        uses: actions/upload-artifact@v4
         with:
           name: 'installer-files'
           path: installer/*
@@ -565,7 +565,7 @@ jobs:
           7z a "${{ env.RELEASE_FILE_NAME_X64 }}.zip" ".\package\*"
       - name: Publish zip
         if: success()
-        uses: actions/upload-artifact@v3.1.1
+        uses: actions/upload-artifact@v4
         with:
           name: '${{ env.FILE_NAME }}'
           path: package/*
@@ -584,7 +584,7 @@ jobs:
           mv ".\package\${{ env.PLUGIN_NAME }}-installer.exe" ".\package\${{ env.RELEASE_FILE_NAME_X64 }}-installer.exe"
       - name: Publish installer
         if: success()
-        uses: actions/upload-artifact@v3.1.1
+        uses: actions/upload-artifact@v4
         with:
           name: '${{ env.RELEASE_FILE_NAME_X64 }}-installer'
           path: package/*.exe
