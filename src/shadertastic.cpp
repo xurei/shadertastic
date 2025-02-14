@@ -276,7 +276,7 @@ static void show_settings_dialog() {
 
     {
         float one_euro_filter_mincutoff = (float)obs_data_get_double(settings, SETTING_ONE_EURO_MIN_CUTOFF);
-        QDoubleSpinBox *one_euro_min_cutoff_edit = settings_dialog__float_input(dialog, formLayout, "Min Cutoff", one_euro_filter_mincutoff, 0.0001);
+        QDoubleSpinBox *one_euro_min_cutoff_edit = settings_dialog__float_input(dialog, formLayout, "Min Cutoff", one_euro_filter_mincutoff, 0.0001f);
         QObject::connect(one_euro_min_cutoff_edit, &QDoubleSpinBox::textChanged, [=]() {
             float float_value = (float)(one_euro_min_cutoff_edit->value());
             obs_data_set_double(settings, SETTING_ONE_EURO_MIN_CUTOFF, float_value);
@@ -286,7 +286,7 @@ static void show_settings_dialog() {
 
     {
         float one_euro_filter_beta = (float)obs_data_get_double(settings, SETTING_ONE_EURO_BETA);
-        QDoubleSpinBox *one_euro_beta_edit = settings_dialog__float_input(dialog, formLayout, "Beta", one_euro_filter_beta, 0.001);
+        QDoubleSpinBox *one_euro_beta_edit = settings_dialog__float_input(dialog, formLayout, "Beta", one_euro_filter_beta, 0.001f);
         QObject::connect(one_euro_beta_edit, &QDoubleSpinBox::textChanged, [=]() {
             float float_value = (float)(one_euro_beta_edit->value());
             obs_data_set_double(settings, SETTING_ONE_EURO_BETA, float_value);
@@ -296,7 +296,7 @@ static void show_settings_dialog() {
 
     {
         float one_euro_filter_derivcutoff = (float)obs_data_get_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF);
-        QDoubleSpinBox *one_euro_derivcutoff_edit = settings_dialog__float_input(dialog, formLayout, "Deriv Cutoff", one_euro_filter_derivcutoff, 0.0001);
+        QDoubleSpinBox *one_euro_derivcutoff_edit = settings_dialog__float_input(dialog, formLayout, "Deriv Cutoff", one_euro_filter_derivcutoff, 0.0001f);
         QObject::connect(one_euro_derivcutoff_edit, &QDoubleSpinBox::textChanged, [=]() {
             float float_value = (float)(one_euro_derivcutoff_edit->value());
             obs_data_set_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF, float_value);
