@@ -1,10 +1,13 @@
 # --- Detect if the plugin is build out of tree or not ---
 if(CMAKE_PROJECT_NAME STREQUAL "obs-studio")
-  set(BUILD_OUT_OF_TREE OFF)
+    set(BUILD_OUT_OF_TREE OFF)
 else()
-  set(BUILD_OUT_OF_TREE ON)
-  cmake_minimum_required(VERSION 3.18)
+    if(OS_LINUX)
+        set(BUILD_OUT_OF_TREE ON)
+    endif()
 endif()
+
+cmake_minimum_required(VERSION 3.18)
 
 #Commit hash of the project, used by the CI. Set to 'localbuild' otherwise
 if (NOT DEFINED SHADERTASTIC_COMMIT)
@@ -60,11 +63,13 @@ target_sources(${PROJECT_NAME} PRIVATE
 )
 
 if(BUILD_OUT_OF_TREE)
+    message("OUT OF TREE BUILD")
     find_package(libobs REQUIRED)
     find_package(obs-frontend-api REQUIRED)
     include(cmake/ObsPluginHelpers.cmake)
     set(OBS_FRONTEND_API_NAME "obs-frontend-api")
 else()
+    message("IN TREE BUILD")
     set(OBS_FRONTEND_API_NAME "frontend-api")
 endif()
 
@@ -92,7 +97,12 @@ elseif(OS_LINUX)
 endif()
 
 if(OS_WINDOWS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2 /openmp")
+    if(DEBUG_MODE EQUAL 1)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2 /openmp")
+    else()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2 /arch:AVX2 /openmp")
+    endif()
+
     # Disable treating warnings as errors for your project
     string(REPLACE "/WX " "/WX- " CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
     string(REPLACE "/WX " "/WX- " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -103,6 +113,8 @@ if(OS_WINDOWS)
         string(REPLACE "/WX " "/WX- " CMAKE_CXX_FLAGS_${config} "${CMAKE_CXX_FLAGS_${config}}")
     endforeach()
 
+    #Ignore missing PDB files
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/ignore:4099")
     add_link_options(
         "LINKER:/WX-"
     )
@@ -196,4 +208,15 @@ else()
     target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/UI/obs-frontend-api")
     set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "plugins/xurei")
 endif()
-setup_plugin_target(${PROJECT_NAME})
+#setup_plugin_target(${PROJECT_NAME})
+
+#set_target_properties_obs(shadertastic PROPERTIES FOLDER plugins PREFIX "")
+#target_enable_feature(shadertastic "Shadertastic" LIBSHADERTASTIC_ENABLED)
+
+# Make sure CMake does not try to compile hlsl files in the data folder
+file(GLOB_RECURSE shaders_HLSL
+    "*.hlsl"
+    "**/*.hlsl"
+)
+set_source_files_properties(SOURCE ${shaders_HLSL} PROPERTIES VS_SETTINGS "ExcludedFromBuild=true")
+
