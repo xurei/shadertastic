@@ -36,6 +36,9 @@ float4 getGaussianU(float2 uv, int nb_samples) {
     float gaussian_sum = gaussian(0);
     float4 px_out = image.Sample(textureSampler, uv) * gaussian_sum;
     float nb_samples_f = float(nb_samples);
+    #ifdef _D3D11
+    [unroll(100)]
+    #endif
     for (int i=1; i<nb_samples; ++i) {
         float du = i*upixel;
         float4 px_right = image.Sample(textureSampler, float2(uv[0]+du, uv[1]));
@@ -52,6 +55,9 @@ float4 getGaussianV(float2 uv, int nb_samples) {
     float gaussian_sum = gaussian(0);
     float4 px_out = tex_interm.Sample(textureSampler, uv) * gaussian_sum;
     float nb_samples_f = float(nb_samples);
+    #ifdef _D3D11
+    [unroll(100)]
+    #endif
     for (int i=1; i<nb_samples; ++i) {
         float dv = i*vpixel;
         float4 px_right = tex_interm.Sample(textureSampler, float2(uv[0], uv[1]+dv));
