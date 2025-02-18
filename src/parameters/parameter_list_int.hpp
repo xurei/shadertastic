@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#include <vector>
+#include <string>
+
 struct effect_parameter_list_int_value {
     std::string label;
     int value{};

@@ -15,6 +15,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#include <list>
+#include <string>
+#include "../util/compare_nocase.hpp"
+#include "../util/time_util.hpp"
+
 static bool effect_parameter_audiolevel_add(void *data, obs_source_t *source) {
     std::list<std::string> *sources_list = (std::list<std::string>*)(data);
 

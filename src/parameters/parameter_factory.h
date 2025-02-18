@@ -1,5 +1,5 @@
 /******************************************************************************
-Copyright (C) 2023 by xurei <xureilab@gmail.com>
+    Copyright (C) 2023 by xurei <xureilab@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,17 +15,17 @@ Copyright (C) 2023 by xurei <xureilab@gmail.com>
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#ifndef SHADERTASTIC_TIME_UTIL_HPP
-#define SHADERTASTIC_TIME_UTIL_HPP
-#include <chrono>
+#ifndef SHADERTASTIC_PARAMETER_FACTORY_HPP
+#define SHADERTASTIC_PARAMETER_FACTORY_HPP
 
-inline unsigned long get_time_ms() {
-    const auto now = std::chrono::system_clock::now();
-    const auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+class effect_parameter_factory {
+    public:
+        effect_parameter *create(const std::string &effect_name, const std::string &effect_path, gs_eparam_t *shader_param, obs_data_t *param_metadata);
 
-    const auto value = now_ms.time_since_epoch();
-    const unsigned long duration = static_cast<unsigned long>(value.count());
+    private:
+        effect_param_datatype effect_parse_datatype(const char *datatype_str);
+};
 
-    return duration;
-}
-#endif // SHADERTASTIC_TIME_UTIL_HPP
+inline effect_parameter_factory parameter_factory;
+
+#endif /* SHADERTASTIC_PARAMETER_FACTORY_HPP */

@@ -15,7 +15,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-std::string get_full_param_name_static(std::string effect_name, std::string param_name) {
+#ifndef SHADERTASTIC_PARAMETER_HPP
+#define SHADERTASTIC_PARAMETER_HPP
+
+#include "parameter_datatype.hpp"
+#include "../try_gs_effect_set.h"
+
+static std::string get_full_param_name_static(std::string effect_name, std::string param_name) {
     return effect_name + '.' + param_name;
 }
 
@@ -103,3 +109,5 @@ class effect_parameter {
             // By default, do nothing
         }
 };
+
+#endif /* SHADERTASTIC_PARAMETER_HPP */

@@ -50,23 +50,9 @@
 #endif
 #include "util/file_util.h"
 #include "util/time_util.hpp"
-#include "util/compare_nocase.hpp"
-#include "shader/shader.h"
-#include "shader/shaders_library.hpp"
-#include "parameters/parameter_datatype.hpp"
+#include "shader/shaders_library.h"
 #include "parameters/parameter.hpp"
-#include "parameters/parameter_audiolevel.hpp"
-#include "parameters/parameter_bool.hpp"
-#include "parameters/parameter_color_alpha.hpp"
-#include "parameters/parameter_float.hpp"
-#include "parameters/parameter_int.hpp"
-#include "parameters/parameter_list_int.hpp"
-#include "parameters/parameter_unknown.hpp"
-#include "parameters/parameter_image.hpp"
-#include "parameters/parameter_source.hpp"
-#include "parameters/parameter_text.hpp"
-#include "parameters/parameter_factory.hpp"
-#include "effect.hpp"
+#include "effect.h"
 
 #include "settings.h"
 #include "shadertastic.hpp"
@@ -358,6 +344,7 @@ static void show_settings_dialog() {
 
 [[maybe_unused]] bool obs_module_load(void) {
     info("loaded version %s", PROJECT_VERSION);
+    srand(time(nullptr));
     obs_data_t *settings = load_settings();
     apply_settings(settings);
     obs_data_release(settings);

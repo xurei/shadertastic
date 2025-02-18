@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#include "../util/string_util.h"
+#include "../util/file_util.h"
+
 struct effect_parameter_image_value {
     std::string label;
     std::string value{};

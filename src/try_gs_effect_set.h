@@ -1,3 +1,6 @@
+#ifndef SHADERTASTIC_TRY_GS_SET_VAL_HPP
+#define SHADERTASTIC_TRY_GS_SET_VAL_HPP
+
 // Uncomment this and comment the duplicate #define to print the param assignation (this will spam the logs)
 //#define debug_try_gs_effect(format, ...) debug(format, ##__VA_ARGS__)
 #define debug_try_gs_effect(format, ...)
@@ -9,3 +12,5 @@
 #define try_gs_effect_set_float(param_name, param, val) if (param)           { debug_try_gs_effect("try_gs_effect_set_float %s", param_name); gs_effect_set_float(param, val); debug_try_gs_effect("try_gs_effect_set_float %s DONE", param_name); }
 #define try_gs_effect_set_vec2(param_name, param, val) if (param)            { debug_try_gs_effect("try_gs_effect_set_vec2 %s", param_name); gs_effect_set_vec2(param, val); debug_try_gs_effect("try_gs_effect_set_vec2 %s DONE", param_name); }
 #define try_gs_effect_set_bool(param, val) if (param) { gs_effect_set_bool(param, val); }
+
+#endif /* SHADERTASTIC_TRY_GS_SET_VAL_HPP */

@@ -1,3 +1,10 @@
+#ifndef SHADERTASTIC_PARAMS_LIST_HPP
+#define SHADERTASTIC_PARAMS_LIST_HPP
+
+#include <list>
+#include <map>
+#include "parameters/parameter.hpp"
+
 class params_list {
     private:
     std::list<effect_parameter *> params;
@@ -37,3 +44,5 @@ class params_list {
         return params.end();
     }
 };
+
+#endif /* SHADERTASTIC_PARAMS_LIST_HPP */
