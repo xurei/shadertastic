@@ -19,7 +19,6 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(bzalloc(sizeof(struct shadertastic_filter)));
     s->source = source;
     s->effects = new shadertastic_effects_map_t();
-    s->rand_seed = (float)rand() / (float)RAND_MAX;
 
     debug("FILTER %s Settings : %s", obs_source_get_name(source), obs_data_get_json(settings));
 
@@ -189,7 +188,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                 }
 
                 if (texrender_ok) {
-                    selected_effect->set_params(nullptr, nullptr, filter_time, cx, cy, s->rand_seed);
+                    selected_effect->set_params(nullptr, nullptr, filter_time, cx, cy);
                     selected_effect->set_step_params(current_step, interm_texture);
 
                     selected_effect->main_shader->render(s->source, cx, cy);
@@ -247,7 +246,6 @@ bool shadertastic_filter_reload_button_click(obs_properties_t *props, obs_proper
         s->selected_effect->reload();
     }
     s->should_reload = true;
-    s->rand_seed = (float)rand() / (float)RAND_MAX;
     obs_source_update(s->source, nullptr);
     return true;
 }

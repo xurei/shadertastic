@@ -34,7 +34,6 @@ struct shadertastic_transition : public shadertastic_common {
     gs_texrender_t *transition_texrender[2]{};
     int transition_texrender_buffer = 0;
     gs_texture_t *transparent_texture{};
-    float rand_seed{};
 
     bool auto_reload = false;
 
@@ -59,7 +58,6 @@ struct shadertastic_filter : public shadertastic_common {
     gs_texrender_t *interm_texrender[2]{};
     int interm_texrender_buffer = 0;
     gs_texture_t *transparent_texture{};
-    float rand_seed{};
     uint32_t width{}, height{};
     bool should_reload = false;
 
