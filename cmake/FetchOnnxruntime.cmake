@@ -30,6 +30,7 @@ if(USE_PREDEFINED_ONNXRUNTIME)
     set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-osx-universal2-${Onnxruntime_VERSION}.tgz")
     set(Onnxruntime_HASH SHA256=9FA57FA6F202A373599377EF75064AE568FDA8DA838632B26A86024C7378D306)
   elseif(MSVC)
+    message("${Onnxruntime_WINDOWS_BASEURL}/onnxruntime-windows-${Onnxruntime_WINDOWS_VERSION}-Release.zip")
     set(Onnxruntime_URL "${Onnxruntime_WINDOWS_BASEURL}/onnxruntime-windows-${Onnxruntime_WINDOWS_VERSION}-Release.zip")
     set(OOnnxruntime_HASH SHA256=39E63850D9762810161AE1B4DEAE5E3C02363521273E4B894A9D9707AB626C38)
   else()
@@ -52,7 +53,8 @@ set(FETCHCONTENT_QUIET FALSE)
 FetchContent_Declare(
   onnxruntime
   URL ${Onnxruntime_URL}
-  URL_HASH ${Onnxruntime_HASH})
+  URL_HASH ${Onnxruntime_HASH}
+  DOWNLOAD_EXTRACT_TIMESTAMP OLD)
 FetchContent_MakeAvailable(onnxruntime)
 
 if(APPLE)

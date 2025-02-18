@@ -63,7 +63,8 @@ set(FETCHCONTENT_QUIET FALSE)
 FetchContent_Declare(
   opencv
   URL ${OpenCV_URL}
-  URL_HASH ${OpenCV_HASH})
+  URL_HASH ${OpenCV_HASH}
+  DOWNLOAD_EXTRACT_TIMESTAMP OLD)
 FetchContent_MakeAvailable(opencv)
 
 add_library(OpenCV INTERFACE)
