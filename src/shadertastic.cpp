@@ -144,21 +144,25 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "MemoryLeak"
 #endif
-static QDoubleSpinBox * settings_dialog__float_input(QDialog *dialog, QFormLayout* layout, std::string input_label, float value, float step) {
+static QDoubleSpinBox * settings_dialog__float_input(QDialog *dialog, QFormLayout* layout, std::string input_label, std::string comments, float value, float step, const float min_val, const float max_val) {
     QHBoxLayout *inputLayout = new QHBoxLayout;
 
     QLabel *label = new QLabel(QString(input_label.c_str()), dialog);
     QDoubleSpinBox *spinBox = new QDoubleSpinBox(dialog);
+    QLabel *label2 = new QLabel(QString(comments.c_str()), dialog);
 
     // Set a placeholder and a double validator for the input
     spinBox->setRange(0, 9999.0);
     spinBox->setDecimals(4);
     spinBox->setSingleStep(step);
     spinBox->setValue(value);
+    spinBox->setMinimum(min_val);
+    spinBox->setMaximum(max_val);
 
     // Add widgets to the input layout
     inputLayout->addWidget(label);
     inputLayout->addWidget(spinBox);
+    inputLayout->addWidget(label2);
 
     // Add the input layout to the main layout
     layout->addRow(inputLayout);
@@ -260,9 +264,10 @@ static void show_settings_dialog() {
         formLayout->addRow(oneEuroEnable);
     }
 
+    QDoubleSpinBox *one_euro_min_cutoff_edit;
     {
         float one_euro_filter_mincutoff = (float)obs_data_get_double(settings, SETTING_ONE_EURO_MIN_CUTOFF);
-        QDoubleSpinBox *one_euro_min_cutoff_edit = settings_dialog__float_input(dialog, formLayout, "Min Cutoff", one_euro_filter_mincutoff, 0.0001f);
+        one_euro_min_cutoff_edit = settings_dialog__float_input(dialog, formLayout, "Min Cutoff", "Lower is smoother", one_euro_filter_mincutoff, 0.001f, 0.0f, 20.0f);
         QObject::connect(one_euro_min_cutoff_edit, &QDoubleSpinBox::textChanged, [=]() {
             float float_value = (float)(one_euro_min_cutoff_edit->value());
             obs_data_set_double(settings, SETTING_ONE_EURO_MIN_CUTOFF, float_value);
@@ -270,9 +275,10 @@ static void show_settings_dialog() {
         });
     }
 
+    QDoubleSpinBox *one_euro_beta_edit;
     {
         float one_euro_filter_beta = (float)obs_data_get_double(settings, SETTING_ONE_EURO_BETA);
-        QDoubleSpinBox *one_euro_beta_edit = settings_dialog__float_input(dialog, formLayout, "Beta", one_euro_filter_beta, 0.001f);
+        one_euro_beta_edit = settings_dialog__float_input(dialog, formLayout, "Beta", "Higher is smoother", one_euro_filter_beta, 0.1f, 0.0f, 10000.0f);
         QObject::connect(one_euro_beta_edit, &QDoubleSpinBox::textChanged, [=]() {
             float float_value = (float)(one_euro_beta_edit->value());
             obs_data_set_double(settings, SETTING_ONE_EURO_BETA, float_value);
@@ -280,14 +286,30 @@ static void show_settings_dialog() {
         });
     }
 
+    QDoubleSpinBox *one_euro_derivcutoff_edit;
     {
         float one_euro_filter_derivcutoff = (float)obs_data_get_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF);
-        QDoubleSpinBox *one_euro_derivcutoff_edit = settings_dialog__float_input(dialog, formLayout, "Deriv Cutoff", one_euro_filter_derivcutoff, 0.0001f);
+        one_euro_derivcutoff_edit = settings_dialog__float_input(dialog, formLayout, "Deriv Cutoff", "Lower is smoother", one_euro_filter_derivcutoff, 0.0001f, 0.0f, 20.0f);
         QObject::connect(one_euro_derivcutoff_edit, &QDoubleSpinBox::textChanged, [=]() {
             float float_value = (float)(one_euro_derivcutoff_edit->value());
             obs_data_set_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF, float_value);
             apply_settings(settings);
         });
+    }
+
+    {
+        QPushButton *oneEuroDefaultsButton = new QPushButton("Defaults");
+        QObject::connect(oneEuroDefaultsButton, &QPushButton::clicked, [=]() {
+            one_euro_min_cutoff_edit->setValue(obs_data_get_default_double(settings, SETTING_ONE_EURO_MIN_CUTOFF));
+            one_euro_beta_edit->setValue(obs_data_get_default_double(settings, SETTING_ONE_EURO_BETA));
+            //one_euro_derivcutoff_edit->setValue(obs_data_get_default_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF));
+            apply_settings(settings);
+        });
+        QHBoxLayout *inputLayout = new QHBoxLayout;
+        QLabel *label = new QLabel(QString("⚗️ Experimental: use this to apply a smoothing effect on the face tracking feature."));
+        inputLayout->addWidget(label);
+        inputLayout->addWidget(oneEuroDefaultsButton);
+        formLayout->addRow(inputLayout);
     }
 
     // Separator

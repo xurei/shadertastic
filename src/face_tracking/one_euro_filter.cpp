@@ -4,12 +4,12 @@
  *
  * OneEuroFilter.cpp -
  *
- * Authors: 
+ * Authors:
  * Nicolas Roussel (nicolas.roussel@inria.fr)
  * Géry Casiez https://gery.casiez.net
  *
  * Copyright 2019 Inria
- * 
+ *
  * BSD License https://opensource.org/licenses/BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -20,21 +20,22 @@
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions
  * and the following disclaimer in the documentation and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or
  * promote products derived from this software without specific prior written permission.
 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
 #include "one_euro_filter.h"
+#include "../logging_functions.hpp"
 
 // Math constants are not always defined.
 #ifndef M_PI2
@@ -54,7 +55,7 @@ void LowPassFilter::setAlpha(float alpha_) {
 }
 
 LowPassFilter::LowPassFilter(float alpha, float initval) {
-    y = s = initval;
+    _lastRawValue = _lastFilteredValue = initval;
     setAlpha(alpha);
     initialized = false;
 }
@@ -62,14 +63,14 @@ LowPassFilter::LowPassFilter(float alpha, float initval) {
 float LowPassFilter::filterWithAlpha(float value, float alpha_) {
     float result;
     if (initialized) {
-        result = alpha_ * value + (1.0f - alpha_) * s;
+        result = alpha_ * value + (1.0f - alpha_) * _lastRawValue;
     }
     else {
         result = value;
         initialized = true;
     }
-    y = value;
-    s = result;
+    _lastRawValue = value;
+    _lastFilteredValue = result;
     return result;
 }
 
@@ -78,16 +79,16 @@ bool LowPassFilter::hasLastRawValue() const {
 }
 
 float LowPassFilter::lastRawValue() const {
-    return y;
+    return _lastRawValue;
 }
 
 float LowPassFilter::lastFilteredValue() const {
-    return s;
+    return _lastFilteredValue;
 }
 // ---------------------------------------------------------------------------------------------------------------------
 
-OneEuroFilter::OneEuroFilter(float freq, float mincutoff, float beta_, float dcutoff):
-x(alpha(mincutoff)), dx(alpha(mincutoff)) {
+OneEuroFilter::OneEuroFilter(float freq, float mincutoff, float beta_, float dcutoff) :
+    x(alpha(mincutoff)), dx(alpha(mincutoff)) {
     setFrequency(freq);
     setMinCutoff(mincutoff);
     setBeta(beta_);
@@ -140,7 +141,7 @@ void OneEuroFilter::setDerivateCutoff(float dc) {
     dcutoff = dc;
 }
 
-float OneEuroFilter::filter(float value, TimeStamp deltatime) {
+float OneEuroFilter::filter(float value, TimeStamp deltatime, bool do_debug) {
     // update the sampling frequency based on timestamps
     if (deltatime != UndefinedTime && deltatime > 0.0f) {
         freq = 1.0f / deltatime;
@@ -148,9 +149,24 @@ float OneEuroFilter::filter(float value, TimeStamp deltatime) {
     // estimate the current variation per second
     // Fixed in 08/23 to use lastFilteredValue
     float dvalue = x.hasLastRawValue() ? (value - x.lastFilteredValue()) * freq : 0.0f; // FIXME: 0.0 or value?
+
+    //if (dvalue)
+
     float edvalue = dx.filterWithAlpha(dvalue, alpha(dcutoff));
     // use it to update the cutoff frequency
     float cutoff = mincutoff + beta_ * fabsf(edvalue);
+
+    //cutoff = std::min(0.5f, cutoff);
+
+    float alpha_cutoff = alpha(cutoff);
+    alpha_cutoff = std::min(0.5f, alpha_cutoff);
+
+    alpha_cutoff = 0.5f;
+
+    if (do_debug) {
+        debug("dvalue=%f   edvalue=%f   cutoff=%f   alpha(cutoff)=%f", dvalue, edvalue, cutoff, alpha_cutoff);
+    }
+
     // filter the given value
-    return x.filterWithAlpha(value, alpha(cutoff));
+    return x.filterWithAlpha(value, alpha_cutoff);
 }
