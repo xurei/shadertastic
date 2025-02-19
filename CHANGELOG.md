@@ -7,16 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - Vignette in bundled filters
+- Face tracking, EXPERIMENTAL: add one-euro filter for smoother points detection 
 
 ### Changed
-- Improved face tracking performance
+- Massivley Improved face tracking performance (~2.5x faster)
 - Avoid multiple loading of the face tracking models
 - Added eye points in the face tracking texture, changed 468 → 478 in built-in shaders 
 - Face Detection Reference: add "Show texture" option
-- Various internal improvements
+- Various internal improvements and rewrites
+- Rewritten GLSL fract() function to match frac() in HLSL and reversed
+- Face Detection reference: add toggles for finer checks
+- Added eye points in the face tracking texture, changed 468 → 478 in built-in shaders
 
 ### Fixed
 - Fixed crash due to incorrect char[] size with face detection filters
+- Fixed glitches with HLSL due to rand_seed being updated every frame
 
 ## [0.1.0] - 2024-08-23
 ### Added
