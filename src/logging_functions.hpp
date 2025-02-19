@@ -1,3 +1,8 @@
+#include <obs-module.h>
+
+#ifndef SHADERTASTIC_LOGGING_FUNCTIONS_H
+#define SHADERTASTIC_LOGGING_FUNCTIONS_H
+
 #define do_log(level, format, ...) \
     blog(level, "[shadertastic] " format, ##__VA_ARGS__)
 #define info(format, ...) do_log(LOG_INFO, format, ##__VA_ARGS__)
@@ -9,3 +14,5 @@
 #else
     #define debug(format, ...)
 #endif
+
+#endif /* SHADERTASTIC_LOGGING_FUNCTIONS_H */

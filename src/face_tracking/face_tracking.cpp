@@ -77,7 +77,7 @@ void face_tracking_create(face_tracking_state *s) {
     s->created = true;
 
     for (size_t i = 0; i < refined_landmarks_num_points * 3; ++i) {
-        s->filters[i].setFrequency(30.0f);
+        s->filters[i].setFrequency((float)obs_get_active_fps());
         s->filters[i].setMinCutoff(10.0f);
         s->filters[i].setBeta(0.007f);
         s->filters[i].setDerivateCutoff(10.0f);
@@ -653,7 +653,7 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
             s->facelandmark_results_display_results = false;
         }
         else {
-            s->facelandmark_results_display_results = facemesh->Run(imageBGR, (int)cx, (int)cy, s->facelandmark_results[0]);
+            s->facelandmark_results_display_results = facemesh->Run(imageBGR, (int)cx, (int)cy, s->facelandmark_results[s->facelandmark_results_counter % FACEDETECTION_NB_ITERATIONS]);
         }
 
         if (!s->facelandmark_results_display_results) {
@@ -666,27 +666,46 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
     }
     else {
         if (shadertastic_settings().one_euro_enabled) {
+            float fps = (float)std::max(0.1, obs_get_active_fps());
             for (size_t i = 0; i < refined_landmarks_num_points; ++i) {
                 s->filters[i * 3 + 0].setMinCutoff(std::max(0.00001f, shadertastic_settings().one_euro_min_cutoff));
-                s->filters[i * 3 + 0].setBeta(std::max(0.01f, shadertastic_settings().one_euro_beta));
+                s->filters[i * 3 + 0].setBeta(std::max(0.0001f, shadertastic_settings().one_euro_beta));
                 s->filters[i * 3 + 0].setDerivateCutoff(std::max(0.01f, shadertastic_settings().one_euro_deriv_cutoff));
                 s->filters[i * 3 + 1].setMinCutoff(std::max(0.00001f, shadertastic_settings().one_euro_min_cutoff));
-                s->filters[i * 3 + 1].setBeta(std::max(0.01f, shadertastic_settings().one_euro_beta));
+                s->filters[i * 3 + 1].setBeta(std::max(0.0001f, shadertastic_settings().one_euro_beta));
                 s->filters[i * 3 + 1].setDerivateCutoff(std::max(0.01f, shadertastic_settings().one_euro_deriv_cutoff));
                 s->filters[i * 3 + 2].setMinCutoff(std::max(0.00001f, shadertastic_settings().one_euro_min_cutoff));
-                s->filters[i * 3 + 2].setBeta(std::max(0.01f, shadertastic_settings().one_euro_beta));
+                s->filters[i * 3 + 2].setBeta(std::max(0.0001f, shadertastic_settings().one_euro_beta));
                 s->filters[i * 3 + 2].setDerivateCutoff(std::max(0.01f, shadertastic_settings().one_euro_deriv_cutoff));
-                s->average_results.refined_landmarks[i].x = s->filters[i * 3 + 0].filter(s->facelandmark_results[0].refined_landmarks[i].x, deltatime);
+                s->average_results.refined_landmarks[i].x = s->filters[i * 3 + 0].filter(s->facelandmark_results[0].refined_landmarks[i].x, deltatime, i==0);
                 s->average_results.refined_landmarks[i].y = s->filters[i * 3 + 1].filter(s->facelandmark_results[0].refined_landmarks[i].y, deltatime);
                 s->average_results.refined_landmarks[i].z = s->filters[i * 3 + 2].filter(s->facelandmark_results[0].refined_landmarks[i].z, deltatime);
             }
         }
         else {
-            for (size_t i = 0; i < refined_landmarks_num_points; ++i) {
-                s->average_results.refined_landmarks[i].x = s->facelandmark_results[0].refined_landmarks[i].x;
-                s->average_results.refined_landmarks[i].y = s->facelandmark_results[0].refined_landmarks[i].y;
-                s->average_results.refined_landmarks[i].z = s->facelandmark_results[0].refined_landmarks[i].z;
+            for (size_t i = 0; i < facial_surface_num_points; ++i) {
+                s->average_results.facial_surface[i].x = 0.0;
+                s->average_results.facial_surface[i].y = 0.0;
+                s->average_results.facial_surface[i].z = 0.0;
+                size_t count = 0;
+                for (size_t j = 0; j < FACEDETECTION_NB_ITERATIONS; ++j) {
+                    s->average_results.facial_surface[i] += s->facelandmark_results[j].facial_surface[i];
+                    ++count;
+                }
+                s->average_results.facial_surface[i] /= (float) count;
             }
+            for (size_t i = 0; i < refined_landmarks_num_points; ++i) {
+                s->average_results.refined_landmarks[i].x = 0.0;
+                s->average_results.refined_landmarks[i].y = 0.0;
+                s->average_results.refined_landmarks[i].z = 0.0;
+                size_t count = 0;
+                for (size_t j = 0; j < FACEDETECTION_NB_ITERATIONS; ++j) {
+                    s->average_results.refined_landmarks[i] += s->facelandmark_results[j].refined_landmarks[i];
+                    ++count;
+                }
+                s->average_results.refined_landmarks[i] /= (float) count;
+            }
+
         }
 
         float points[refined_landmarks_num_points * 4];

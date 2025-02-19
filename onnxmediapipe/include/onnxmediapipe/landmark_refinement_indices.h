@@ -2,11 +2,11 @@
 // SPDX - License - Identifier: Apache - 2.0
 #pragma once
 
-const size_t facial_surface_num_points = 468;
-const size_t refined_landmarks_num_points = 478;
-const size_t lips_refined_region_num_points = 80;
-const size_t eye_refined_region_num_points = 71;
-const size_t iris_refined_region_num_points = 5;
+constexpr size_t facial_surface_num_points = 468;
+constexpr size_t refined_landmarks_num_points = 478;
+constexpr size_t lips_refined_region_num_points = 80;
+constexpr size_t eye_refined_region_num_points = 71;
+constexpr size_t iris_refined_region_num_points = 5;
 
 const unsigned short lips_refinement_indices[lips_refined_region_num_points] = {
     61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 185, 40, 39, 37, 0,
