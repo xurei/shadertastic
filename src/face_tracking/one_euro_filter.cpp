@@ -63,7 +63,7 @@ LowPassFilter::LowPassFilter(float alpha, float initval) {
 float LowPassFilter::filterWithAlpha(float value, float alpha_) {
     float result;
     if (initialized) {
-        result = alpha_ * value + (1.0f - alpha_) * _lastRawValue;
+        result = alpha_ * value + (1.0f - alpha_) * _lastFilteredValue;
     }
     else {
         result = value;
@@ -159,9 +159,6 @@ float OneEuroFilter::filter(float value, TimeStamp deltatime, bool do_debug) {
     //cutoff = std::min(0.5f, cutoff);
 
     float alpha_cutoff = alpha(cutoff);
-    alpha_cutoff = std::min(0.5f, alpha_cutoff);
-
-    alpha_cutoff = 0.5f;
 
     if (do_debug) {
         debug("dvalue=%f   edvalue=%f   cutoff=%f   alpha(cutoff)=%f", dvalue, edvalue, cutoff, alpha_cutoff);

@@ -67,7 +67,7 @@ OBS_MODULE_USE_DEFAULT_LOCALE("shadertastic", "en-US")
 bool module_loaded = false;
 //----------------------------------------------------------------------------------------------------------------------
 
-void load_effects(shadertastic_common *s, obs_data_t *settings, const std::string effects_dir, const std::string effects_type) {
+void load_effects(shadertastic_common *s, obs_data_t *settings, const std::string &effects_dir, const std::string &effects_type) {
     std::vector<std::string> dirs = list_directories((effects_dir + "/" + effects_type + "s").c_str());
 
     for (const auto &dir : dirs) {
@@ -147,9 +147,8 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
 static QDoubleSpinBox * settings_dialog__float_input(QDialog *dialog, QFormLayout* layout, std::string input_label, std::string comments, float value, float step, const float min_val, const float max_val) {
     QHBoxLayout *inputLayout = new QHBoxLayout;
 
-    QLabel *label = new QLabel(QString(input_label.c_str()), dialog);
+    QLabel *label = new QLabel(QString((input_label + " (" + comments + ")").c_str()), dialog);
     QDoubleSpinBox *spinBox = new QDoubleSpinBox(dialog);
-    QLabel *label2 = new QLabel(QString(comments.c_str()), dialog);
 
     // Set a placeholder and a double validator for the input
     spinBox->setRange(0, 9999.0);
@@ -162,7 +161,6 @@ static QDoubleSpinBox * settings_dialog__float_input(QDialog *dialog, QFormLayou
     // Add widgets to the input layout
     inputLayout->addWidget(label);
     inputLayout->addWidget(spinBox);
-    inputLayout->addWidget(label2);
 
     // Add the input layout to the main layout
     layout->addRow(inputLayout);
@@ -254,7 +252,7 @@ static void show_settings_dialog() {
 
     // One Euro Filter params
     {
-        QCheckBox *oneEuroEnable = new QCheckBox("One Euro Filter");
+        QCheckBox *oneEuroEnable = new QCheckBox("Face tracking smoothing");
         oneEuroEnable->setChecked(obs_data_get_bool(settings, SETTING_ONE_EURO_ENABLED));
         QObject::connect(oneEuroEnable, &QCheckBox::clicked, [=]() {
             bool checked = oneEuroEnable->isChecked();
@@ -264,10 +262,16 @@ static void show_settings_dialog() {
         formLayout->addRow(oneEuroEnable);
     }
 
+    QHBoxLayout *infosLayout = new QHBoxLayout;
+    QLabel *infosLabel = new QLabel("Apply a smoothing effect on the face tracking feature, using the <a href=\"https://gery.casiez.net/1euro/\">1€ Filter</a>.<br>Disable this if you want the most precise detection, but some effects will be wobbly.");
+    infosLabel->setOpenExternalLinks(true);
+    infosLayout->addWidget(infosLabel);
+    formLayout->addRow(infosLayout);
+
     QDoubleSpinBox *one_euro_min_cutoff_edit;
     {
         float one_euro_filter_mincutoff = (float)obs_data_get_double(settings, SETTING_ONE_EURO_MIN_CUTOFF);
-        one_euro_min_cutoff_edit = settings_dialog__float_input(dialog, formLayout, "Min Cutoff", "Lower is smoother", one_euro_filter_mincutoff, 0.001f, 0.0f, 20.0f);
+        one_euro_min_cutoff_edit = settings_dialog__float_input(dialog, formLayout, "Min Cutoff", "Lower is smoother", one_euro_filter_mincutoff, 0.000f, 0.0f, 20.0f);
         QObject::connect(one_euro_min_cutoff_edit, &QDoubleSpinBox::textChanged, [=]() {
             float float_value = (float)(one_euro_min_cutoff_edit->value());
             obs_data_set_double(settings, SETTING_ONE_EURO_MIN_CUTOFF, float_value);
@@ -278,7 +282,7 @@ static void show_settings_dialog() {
     QDoubleSpinBox *one_euro_beta_edit;
     {
         float one_euro_filter_beta = (float)obs_data_get_double(settings, SETTING_ONE_EURO_BETA);
-        one_euro_beta_edit = settings_dialog__float_input(dialog, formLayout, "Beta", "Higher is smoother", one_euro_filter_beta, 0.1f, 0.0f, 10000.0f);
+        one_euro_beta_edit = settings_dialog__float_input(dialog, formLayout, "Beta", "Lower is smoother", one_euro_filter_beta, 0.1f, 0.0f, 10000.0f);
         QObject::connect(one_euro_beta_edit, &QDoubleSpinBox::textChanged, [=]() {
             float float_value = (float)(one_euro_beta_edit->value());
             obs_data_set_double(settings, SETTING_ONE_EURO_BETA, float_value);
@@ -286,16 +290,16 @@ static void show_settings_dialog() {
         });
     }
 
-    QDoubleSpinBox *one_euro_derivcutoff_edit;
-    {
-        float one_euro_filter_derivcutoff = (float)obs_data_get_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF);
-        one_euro_derivcutoff_edit = settings_dialog__float_input(dialog, formLayout, "Deriv Cutoff", "Lower is smoother", one_euro_filter_derivcutoff, 0.0001f, 0.0f, 20.0f);
-        QObject::connect(one_euro_derivcutoff_edit, &QDoubleSpinBox::textChanged, [=]() {
-            float float_value = (float)(one_euro_derivcutoff_edit->value());
-            obs_data_set_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF, float_value);
-            apply_settings(settings);
-        });
-    }
+//    QDoubleSpinBox *one_euro_derivcutoff_edit;
+//    {
+//        float one_euro_filter_derivcutoff = (float)obs_data_get_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF);
+//        one_euro_derivcutoff_edit = settings_dialog__float_input(dialog, formLayout, "Deriv Cutoff", "Lower is smoother", one_euro_filter_derivcutoff, 0.0001f, 0.0f, 20.0f);
+//        QObject::connect(one_euro_derivcutoff_edit, &QDoubleSpinBox::textChanged, [=]() {
+//            float float_value = (float)(one_euro_derivcutoff_edit->value());
+//            obs_data_set_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF, float_value);
+//            apply_settings(settings);
+//        });
+//    }
 
     {
         QPushButton *oneEuroDefaultsButton = new QPushButton("Defaults");
@@ -305,11 +309,12 @@ static void show_settings_dialog() {
             //one_euro_derivcutoff_edit->setValue(obs_data_get_default_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF));
             apply_settings(settings);
         });
-        QHBoxLayout *inputLayout = new QHBoxLayout;
-        QLabel *label = new QLabel(QString("⚗️ Experimental: use this to apply a smoothing effect on the face tracking feature."));
-        inputLayout->addWidget(label);
-        inputLayout->addWidget(oneEuroDefaultsButton);
-        formLayout->addRow(inputLayout);
+        QHBoxLayout *defaultsLayout = new QHBoxLayout;
+        QLabel *spacer = new QLabel(QString(""));
+        defaultsLayout->addWidget(spacer);
+        defaultsLayout->addWidget(oneEuroDefaultsButton);
+        oneEuroDefaultsButton->setMaximumWidth(100);
+        formLayout->addRow(defaultsLayout);
     }
 
     // Separator

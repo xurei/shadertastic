@@ -14,9 +14,9 @@ obs_data_t * load_settings() {
     obs_data_t *settings = obs_data_create_from_json_file(path_abs);
     obs_data_set_default_bool(settings, SETTING_DEV_MODE_ENABLED, false);
 
-    obs_data_set_default_bool(settings, SETTING_ONE_EURO_ENABLED, false);
-    obs_data_set_default_double(settings, SETTING_ONE_EURO_MIN_CUTOFF, 6.0);
-    obs_data_set_default_double(settings, SETTING_ONE_EURO_BETA, 0.006);
+    obs_data_set_default_bool(settings, SETTING_ONE_EURO_ENABLED, true);
+    obs_data_set_default_double(settings, SETTING_ONE_EURO_MIN_CUTOFF, 0.0);
+    obs_data_set_default_double(settings, SETTING_ONE_EURO_BETA, 32.0);
     obs_data_set_default_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF, 1.0);
 
     if (!settings) {

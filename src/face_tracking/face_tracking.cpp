@@ -27,8 +27,6 @@
 #include "../try_gs_effect_set.h"
 #include "../settings.h"
 
-#define FACEDETECTION_NB_ITERATIONS 2
-
 // Globals
 face_tracking_bounding_box no_bounding_box{
     -1.0f, -1.0f
@@ -77,7 +75,7 @@ void face_tracking_create(face_tracking_state *s) {
     s->created = true;
 
     for (size_t i = 0; i < refined_landmarks_num_points * 3; ++i) {
-        s->filters[i].setFrequency((float)obs_get_active_fps());
+        s->filters[i].setFrequency((float)std::max(1.0, obs_get_active_fps()));
         s->filters[i].setMinCutoff(10.0f);
         s->filters[i].setBeta(0.007f);
         s->filters[i].setDerivateCutoff(10.0f);
@@ -614,6 +612,7 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
     }
 
     s->facelandmark_results_counter++;
+    size_t results_index = s->facelandmark_results_counter % FACEDETECTION_NB_ITERATIONS;
 
     bool face_found = true;
 
@@ -653,7 +652,7 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
             s->facelandmark_results_display_results = false;
         }
         else {
-            s->facelandmark_results_display_results = facemesh->Run(imageBGR, (int)cx, (int)cy, s->facelandmark_results[s->facelandmark_results_counter % FACEDETECTION_NB_ITERATIONS]);
+            s->facelandmark_results_display_results = facemesh->Run(imageBGR, (int)cx, (int)cy, s->facelandmark_results[results_index]);
         }
 
         if (!s->facelandmark_results_display_results) {
@@ -677,9 +676,9 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
                 s->filters[i * 3 + 2].setMinCutoff(std::max(0.00001f, shadertastic_settings().one_euro_min_cutoff));
                 s->filters[i * 3 + 2].setBeta(std::max(0.0001f, shadertastic_settings().one_euro_beta));
                 s->filters[i * 3 + 2].setDerivateCutoff(std::max(0.01f, shadertastic_settings().one_euro_deriv_cutoff));
-                s->average_results.refined_landmarks[i].x = s->filters[i * 3 + 0].filter(s->facelandmark_results[0].refined_landmarks[i].x, deltatime, i==0);
-                s->average_results.refined_landmarks[i].y = s->filters[i * 3 + 1].filter(s->facelandmark_results[0].refined_landmarks[i].y, deltatime);
-                s->average_results.refined_landmarks[i].z = s->filters[i * 3 + 2].filter(s->facelandmark_results[0].refined_landmarks[i].z, deltatime);
+                s->average_results.refined_landmarks[i].x = s->filters[i * 3 + 0].filter(s->facelandmark_results[results_index].refined_landmarks[i].x, deltatime);
+                s->average_results.refined_landmarks[i].y = s->filters[i * 3 + 1].filter(s->facelandmark_results[results_index].refined_landmarks[i].y, deltatime);
+                s->average_results.refined_landmarks[i].z = s->filters[i * 3 + 2].filter(s->facelandmark_results[results_index].refined_landmarks[i].z, deltatime);
             }
         }
         else {

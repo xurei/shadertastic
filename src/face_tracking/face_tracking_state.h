@@ -18,6 +18,8 @@
 #ifndef SHADERTASTIC_FACE_TRACKING_STATE_H
 #define SHADERTASTIC_FACE_TRACKING_STATE_H
 
+constexpr size_t FACEDETECTION_NB_ITERATIONS = 2;
+
 #include <onnxruntime_cxx_api.h>
 #include "onnxmediapipe/face_mesh.h"
 #include "one_euro_filter.h"
@@ -29,7 +31,7 @@ struct face_tracking_state {
     gs_texture_t *fd_points_texture;
     gs_stagesurf_t *staging_texture_detection = nullptr;
     std::shared_ptr<onnxmediapipe::FaceMesh> facemesh;
-    onnxmediapipe::FaceLandmarksResults facelandmark_results[2];
+    onnxmediapipe::FaceLandmarksResults facelandmark_results[FACEDETECTION_NB_ITERATIONS];
     onnxmediapipe::FaceLandmarksResults average_results;
     //LowPassFilter filters[3 * refined_landmarks_num_points];
     OneEuroFilter filters[3 * refined_landmarks_num_points];
