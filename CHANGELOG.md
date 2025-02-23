@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - Vignette in bundled filters
-- Face tracking, EXPERIMENTAL: add one-euro filter for smoother points detection 
+- Zoom to face in bundled filters
+- Face tracking: add one-euro filter for smoother points detection
+- Added `devmode` meta-attribute for all parameters
 
 ### Changed
 - Face tracking is now considered stable. The warning message has been removed from the params 

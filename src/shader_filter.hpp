@@ -294,7 +294,9 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
 
         for (auto param: effect.effect_params) {
             std::string full_param_name = param->get_full_param_name(effect_name);
-            param->render_property_ui(full_param_name.c_str(), effect_group);
+            if (!param->is_dev_mode() || shadertastic_settings().dev_mode_enabled) {
+                param->render_property_ui(full_param_name.c_str(), effect_group);
+            }
         }
         if (warning_group) {
             obs_properties_add_group(props, (effect_name + "__warning").c_str(), "⚠ Warning", OBS_GROUP_NORMAL, warning_group);

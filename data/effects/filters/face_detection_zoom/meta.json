@@ -17,9 +17,9 @@
     },
     {
       "name": "show_ref_points",
-      "label": "Show ref. points",
+      "label": "Show ref. points (devmode)",
       "type": "bool",
-      "default": true
+      "devmode": true,
       "default": false
     },
     {

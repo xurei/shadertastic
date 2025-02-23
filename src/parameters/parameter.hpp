@@ -21,7 +21,7 @@
 #include "parameter_datatype.hpp"
 #include "../try_gs_effect_set.h"
 
-static std::string get_full_param_name_static(std::string effect_name, std::string param_name) {
+static std::string get_full_param_name_static(const std::string &effect_name, const std::string param_name) {
     return effect_name + '.' + param_name;
 }
 
@@ -31,6 +31,7 @@ class effect_parameter {
         gs_eparam_t *shader_param;
         std::string name;
         std::string label;
+        bool devmode{};
         std::string description;
         size_t data_size;
 
@@ -47,16 +48,23 @@ class effect_parameter {
 
         virtual effect_param_datatype type() = 0;
 
+        [[nodiscard]] inline bool is_dev_mode() const {
+            return devmode;
+        }
+
         void load_common_fields(obs_data_t *metadata) {
             name = std::string(obs_data_get_string(metadata, "name"));
             label = std::string(obs_data_get_string(metadata, "label"));
             const char *description_c_str = obs_data_get_string(metadata, "description");
-            if (description_c_str != NULL) {
+            if (description_c_str != nullptr) {
                 description = std::string(description_c_str);
             }
             else {
                 description = std::string("");
             }
+
+            obs_data_set_default_bool(metadata, "devmode", false);
+            devmode = obs_data_get_bool(metadata, "devmode");
         }
 
         virtual void initialize_params(obs_data_t *metadata, const std::string &effect_path) = 0;
@@ -77,7 +85,7 @@ class effect_parameter {
             std::string effect_name_str = std::string(effect_name);
             return get_full_param_name(effect_name_str);
         }
-        std::string get_full_param_name(std::string effect_name) {
+        std::string get_full_param_name(const std::string &effect_name) {
             return get_full_param_name_static(effect_name, this->name);
         }
 
