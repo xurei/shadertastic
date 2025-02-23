@@ -277,15 +277,15 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
         //obs_properties_add_text(effect_group, "", effect_name, OBS_TEXT_INFO);
 
         if (effect.input_facedetection) {
-            if (!warning_group) {
-                warning_group = obs_properties_create();
-            }
-            obs_properties_add_text(
-                warning_group,
-                (effect_name + "__warning__message").c_str(),
-                "⚗️ This effect uses the Face Detection feature, which is still in an experimental state. Use at your own risk.",
-                OBS_TEXT_INFO
-            );
+//            if (!warning_group) {
+//                warning_group = obs_properties_create();
+//            }
+//            obs_properties_add_text(
+//                warning_group,
+//                (effect_name + "__warning__message").c_str(),
+//                "⚗️ This effect uses the Face Detection feature, which is still in an experimental state. Use at your own risk.",
+//                OBS_TEXT_INFO
+//            );
         }
         if (effect.input_time) {
             obs_properties_add_float_slider(effect_group, get_full_param_name_static(effect_name, std::string("speed")).c_str(), "Speed", 0.0, 1.0, 0.01);
