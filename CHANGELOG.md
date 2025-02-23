@@ -10,14 +10,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Face tracking, EXPERIMENTAL: add one-euro filter for smoother points detection 
 
 ### Changed
-- Massivley Improved face tracking performance (~2.5x faster)
-- Avoid multiple loading of the face tracking models
-- Added eye points in the face tracking texture, changed 468 → 478 in built-in shaders 
+- Face tracking is now considered stable. The warning message has been removed from the params 
+- Face tracking: Massivley improved performance (~2.5x faster)
+- Face tracking: Avoid multiple loading of the MediaPipe models
+- Face tracking: Added eye points in the texture sent to the shaders, changed 468 → 478 in built-in shaders 
 - Face Detection Reference: add "Show texture" option
+- Face Detection reference: add toggles for finer checks
 - Various internal improvements and rewrites
 - Rewritten GLSL fract() function to match frac() in HLSL and reversed
-- Face Detection reference: add toggles for finer checks
-- Added eye points in the face tracking texture, changed 468 → 478 in built-in shaders
 
 ### Fixed
 - Fixed crash due to incorrect char[] size with face detection filters
