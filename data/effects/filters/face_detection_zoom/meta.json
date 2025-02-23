@@ -1,0 +1,32 @@
+{
+  "label": "[Face Detection] Zoom to face",
+  "steps": 1,
+  "input_time": false,
+  "input_facedetection": true,
+  "parameters": [
+    {
+      "name": "zoom_level",
+      "label": "Zoom level",
+      "description": "prout",
+      "type": "double",
+      "slider": true,
+      "min": 0,
+      "max": 3.0,
+      "default": 0.9,
+      "step": 0.001
+    },
+    {
+      "name": "show_ref_points",
+      "label": "Show ref. points",
+      "type": "bool",
+      "default": true
+      "default": false
+    },
+    {
+      "name": "preserve_aspect_ratio",
+      "label": "Preserve aspect ratio",
+      "type": "bool",
+      "default": true
+    }
+  ]
+}
