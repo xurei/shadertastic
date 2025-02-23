@@ -621,6 +621,8 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
     // Scaling down cx and cy to make them fit in 192x192
     uint2 texrender_size_for_detection = scaledown_aspectratio(cx, cy, 192);
 
+    bool prev_facelandmark_results_display_results = s->facelandmark_results_display_results;
+
     if (facemesh->IsFaceDetectionNeeded()) {
         cv::Mat imageBGR = face_tracking_get_image_for_detection(s, target_source, texrender_size_for_detection);
 
@@ -654,10 +656,10 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
         else {
             s->facelandmark_results_display_results = facemesh->Run(imageBGR, (int)cx, (int)cy, s->facelandmark_results[results_index]);
         }
+    }
 
-        if (!s->facelandmark_results_display_results) {
-            debug("lost track !");
-        }
+    if (!s->facelandmark_results_display_results && prev_facelandmark_results_display_results) {
+        debug("lost track !");
     }
 
     if (s->facelandmark_results_counter <= FACEDETECTION_NB_ITERATIONS || !s->facelandmark_results_display_results) {
@@ -704,7 +706,6 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
                 }
                 s->average_results.refined_landmarks[i] /= (float) count;
             }
-
         }
 
         float points[refined_landmarks_num_points * 4];
@@ -793,6 +794,7 @@ cv::Mat face_tracking_get_image_for_mesh(face_tracking_state *s, obs_source_t *t
 
 void face_tracking_render(face_tracking_state *s, effect_shader *main_shader) {
     if (s->facelandmark_results_counter <= FACEDETECTION_NB_ITERATIONS || !s->facelandmark_results_display_results) {
+        try_gs_effect_set_bool("fd_face_found", main_shader->param_fd_face_found, false);
         try_gs_effect_set_vec2("fd_leye_1", main_shader->param_fd_leye_1, &no_bounding_box.point1);
         try_gs_effect_set_vec2("fd_leye_2", main_shader->param_fd_leye_2, &no_bounding_box.point2);
         try_gs_effect_set_vec2("fd_reye_1", main_shader->param_fd_reye_1, &no_bounding_box.point1);
@@ -801,6 +803,7 @@ void face_tracking_render(face_tracking_state *s, effect_shader *main_shader) {
         try_gs_effect_set_vec2("fd_face_2", main_shader->param_fd_face_2, &no_bounding_box.point2);
     }
     else {
+        try_gs_effect_set_bool("fd_face_found", main_shader->param_fd_face_found, true);
         {
             auto bbox = face_tracking_get_bounding_box(&s->average_results, left_iris_refinement_indices, iris_refined_region_num_points);
             try_gs_effect_set_vec2("fd_leye_1", main_shader->param_fd_leye_1, &bbox.point1);

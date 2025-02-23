@@ -78,6 +78,7 @@ bool effect_shader::load(const char *shader_path) {
             param_current_step = gs_effect_get_param_by_name(gs_effect, "current_step");
             param_nb_steps = gs_effect_get_param_by_name(gs_effect, "nb_steps");
 
+            param_fd_face_found = gs_effect_get_param_by_name(gs_effect, "fd_face_found");
             param_fd_leye_1 = gs_effect_get_param_by_name(gs_effect, "fd_leye_1");
             param_fd_leye_2 = gs_effect_get_param_by_name(gs_effect, "fd_leye_2");
             param_fd_reye_1 = gs_effect_get_param_by_name(gs_effect, "fd_reye_1");
