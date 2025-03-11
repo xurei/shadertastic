@@ -112,7 +112,7 @@ failure to follow the guidelines.
 ## Feedback
 
 Suggestions for changes can be made by submitting a pull request on the
-[xurei/obs-shadertastic](https://github.com/xurei/obs-shadertastic)
+[xurei/shadertastic](https://github.com/xurei/shadertastic)
 repo, or if you wish to privately discuss your concerns, you can instead
 email [coc@shadertastic.com](mailto:coc@shadertastic.com).
 
