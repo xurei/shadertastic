@@ -208,7 +208,6 @@ else()
     target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/UI/obs-frontend-api")
     set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "plugins/xurei")
 endif()
-#setup_plugin_target(${PROJECT_NAME})
 
 #set_target_properties_obs(shadertastic PROPERTIES FOLDER plugins PREFIX "")
 #target_enable_feature(shadertastic "Shadertastic" LIBSHADERTASTIC_ENABLED)
@@ -219,4 +218,6 @@ file(GLOB_RECURSE shaders_HLSL
     "**/*.hlsl"
 )
 set_source_files_properties(SOURCE ${shaders_HLSL} PROPERTIES VS_SETTINGS "ExcludedFromBuild=true")
+
+setup_plugin_target(${PROJECT_NAME})
 
