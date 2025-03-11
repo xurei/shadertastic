@@ -23,7 +23,6 @@ typedef std::map<std::string, shadertastic_effect_t> shadertastic_effects_map_t;
 struct shadertastic_common {
     shadertastic_effects_map_t *effects;
     shadertastic_effect_t *selected_effect = nullptr;
-    float rand_seed{};
 };
 //----------------------------------------------------------------------------------------------------------------------
 

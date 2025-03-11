@@ -103,7 +103,6 @@ FaceTrackingCropShader::~FaceTrackingCropShader() {
 }
 
 cv::Mat FaceTrackingCropShader::getCroppedImage(obs_source_t *target_source, float2 &roi_center, float2 &roi_size, float rotation) {
-    //UNUSED_PARAMETER(texrender_size);
     const enum gs_color_space preferred_spaces[] = {
         GS_CS_SRGB,
         GS_CS_SRGB_16F,

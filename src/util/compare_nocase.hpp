@@ -15,10 +15,10 @@ Copyright (C) 2023 by xurei <xureilab@gmail.com>
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-// Comparison, not case sensitive.
 #ifndef SHADERTASTIC_COMPARE_NOCASE_HPP
 #define SHADERTASTIC_COMPARE_NOCASE_HPP
 
+// String comparison, not case sensitive.
 static bool compare_nocase(const std::string& first, const std::string& second) {
     unsigned int i=0;
     while ( (i<first.length()) && (i<second.length()) )

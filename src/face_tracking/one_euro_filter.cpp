@@ -150,13 +150,9 @@ float OneEuroFilter::filter(float value, TimeStamp deltatime, bool do_debug) {
     // Fixed in 08/23 to use lastFilteredValue
     float dvalue = x.hasLastRawValue() ? (value - x.lastFilteredValue()) * freq : 0.0f; // FIXME: 0.0 or value?
 
-    //if (dvalue)
-
     float edvalue = dx.filterWithAlpha(dvalue, alpha(dcutoff));
     // use it to update the cutoff frequency
     float cutoff = mincutoff + beta_ * fabsf(edvalue);
-
-    //cutoff = std::min(0.5f, cutoff);
 
     float alpha_cutoff = alpha(cutoff);
 

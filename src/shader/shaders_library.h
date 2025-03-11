@@ -15,8 +15,8 @@ Copyright (C) 2023 by xurei <xureilab@gmail.com>
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#ifndef SHADERTASTIC_SHADERS_LIBRARY_HPP
-#define SHADERTASTIC_SHADERS_LIBRARY_HPP
+#ifndef SHADERTASTIC_SHADERS_LIBRARY_H
+#define SHADERTASTIC_SHADERS_LIBRARY_H
 
 #include <map>
 #include <memory>
@@ -43,4 +43,4 @@ class shaders_library_t {
 
 inline shaders_library_t shaders_library;
 
-#endif /* SHADERTASTIC_SHADERS_LIBRARY_HPP */
+#endif /* SHADERTASTIC_SHADERS_LIBRARY_H */

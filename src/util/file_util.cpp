@@ -28,6 +28,12 @@
 #include <vector>
 #include <zip.h>
 #include <fstream>
+#include <string>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 #include "file_util.h"
 #include "../logging_functions.hpp"
 namespace fs = std::filesystem;
@@ -247,53 +253,42 @@ std::vector<std::string> list_directories(const char* folderPath) {
     return files;
 }
 
-#include <iostream>
-#include <fstream>
-#include <string>
-
-#ifdef _WIN32
-    #include <windows.h>
-#else
-    #include <unistd.h>
-#endif
-
 std::string create_temp_file() {
-#ifdef _WIN32
-    char temp_path[MAX_PATH];
-    char temp_file[MAX_PATH];
+    #ifdef _WIN32
+        char temp_path[MAX_PATH];
+        char temp_file[MAX_PATH];
 
-    // Get the path to the temp directory
-    if (GetTempPathA(MAX_PATH, temp_path) == 0) {
-        throw std::runtime_error("Failed to get temp path");
-    }
+        // Get the path to the temp directory
+        if (GetTempPathA(MAX_PATH, temp_path) == 0) {
+            throw std::runtime_error("Failed to get temp path");
+        }
 
-    // Generate a temporary file name
-    if (GetTempFileNameA(temp_path, "TMP", 0, temp_file) == 0) {
-        throw std::runtime_error("Failed to create temp file name");
-    }
+        // Generate a temporary file name
+        if (GetTempFileNameA(temp_path, "TMP", 0, temp_file) == 0) {
+            throw std::runtime_error("Failed to create temp file name");
+        }
 
-    // Create an empty file
-    std::ofstream file(temp_file);
-    if (!file) {
-        throw std::runtime_error("Failed to create temp file");
-    }
-    file.close();
+        // Create an empty file
+        std::ofstream file(temp_file);
+        if (!file) {
+            throw std::runtime_error("Failed to create temp file");
+        }
+        file.close();
 
-    return std::string(temp_file);
+        return std::string(temp_file);
+    #else
+        char temp_file[] = "/tmp/shadertastic-tmpfileXXXXXX";
 
-#else
-    char temp_file[] = "/tmp/shadertastic-tmpfileXXXXXX";
+        // Create a unique temporary file
+        int fd = mkstemp(temp_file);
+        if (fd == -1) {
+            throw std::runtime_error("Failed to create temp file");
+        }
 
-    // Create a unique temporary file
-    int fd = mkstemp(temp_file);
-    if (fd == -1) {
-        throw std::runtime_error("Failed to create temp file");
-    }
+        // Close the file descriptor immediately, leaving the file for later use
+        close(fd);
 
-    // Close the file descriptor immediately, leaving the file for later use
-    close(fd);
-
-    return temp_file;
-#endif
+        return temp_file;
+    #endif
 }
 

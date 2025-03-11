@@ -1,5 +1,5 @@
-#ifndef SHADERTASTIC_SETTING_CONSTANTS_H
-#define SHADERTASTIC_SETTING_CONSTANTS_H
+#ifndef SHADERTASTIC_SETTINGS_H
+#define SHADERTASTIC_SETTINGS_H
 
 #define SETTING_EFFECTS_PATH "effects_path"
 #define SETTING_DEV_MODE_ENABLED "dev_mode_enabled"
@@ -29,4 +29,4 @@ void apply_settings(obs_data_t *settings);
 
 const shadertastic_settings_t & shadertastic_settings();
 
-#endif /* SHADERTASTIC_SETTING_CONSTANTS_H */
+#endif /* SHADERTASTIC_SETTINGS_H */

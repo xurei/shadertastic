@@ -23,7 +23,7 @@
 #include "shader.h"
 
 effect_shader::~effect_shader() {
-    debug ("DELETE effect_shader %s", path.c_str());
+    debug("DELETE effect_shader %s", path.c_str());
     this->release();
 }
 

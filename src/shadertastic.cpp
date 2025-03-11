@@ -42,8 +42,6 @@
 #include "logging_functions.hpp"
 #include "is_module_loaded.h"
 
-#include "try_gs_effect_set.h"
-
 #ifdef DEV_MODE
 #include "util/enum_util.hpp"
 #include "util/debug_util.hpp"
@@ -51,7 +49,6 @@
 #include "util/file_util.h"
 #include "util/time_util.hpp"
 #include "shader/shaders_library.h"
-#include "parameters/parameter.hpp"
 #include "effect.h"
 
 #include "settings.h"

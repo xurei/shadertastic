@@ -33,7 +33,6 @@ struct face_tracking_state {
     std::shared_ptr<onnxmediapipe::FaceMesh> facemesh;
     onnxmediapipe::FaceLandmarksResults facelandmark_results[FACEDETECTION_NB_ITERATIONS];
     onnxmediapipe::FaceLandmarksResults average_results;
-    //LowPassFilter filters[3 * refined_landmarks_num_points];
     OneEuroFilter filters[3 * refined_landmarks_num_points];
     size_t facelandmark_results_counter = 0;
     bool facelandmark_results_display_results = false;

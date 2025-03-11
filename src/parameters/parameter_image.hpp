@@ -29,7 +29,6 @@ class effect_parameter_image : public effect_parameter {
         std::vector<effect_parameter_image_value> values;
         obs_data_array *default_array{};
         bool allow_custom{};
-        //bool is_custom{};
 
         std::string path;
         gs_texture_t * texture;
@@ -104,8 +103,6 @@ class effect_parameter_image : public effect_parameter {
         void set_default(obs_data_t *settings, const char *full_param_name) override {
             UNUSED_PARAMETER(settings);
             UNUSED_PARAMETER(full_param_name);
-            //obs_data_set_default_double(settings, full_param_name, default_value);
-            //obs_data_set_default_string(settings, nullptr);
         }
 
         void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
