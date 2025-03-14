@@ -536,12 +536,12 @@ jobs:
 #          name: '${{ env.FILE_NAME_X86 }}'
 #          path: ./package
       - name: Retrieve x64 build
-        uses: actions/download-artifact@v3.0.1
+        uses: actions/download-artifact@v4
         with:
           name: '${{ env.FILE_NAME_X64 }}'
           path: ./package
       - name: Retrieve installer files
-        uses: actions/download-artifact@v3.0.1
+        uses: actions/download-artifact@v4
         with:
           name: 'installer-files'
           path: .
