@@ -2,10 +2,9 @@
 #define SHADERTASTIC_TRY_GS_EFFECT_SET_H
 
 #include "logging_functions.hpp"
-#include <unistd.h>
 
 // Uncomment this and comment the duplicate #define to print the param assignation (this will spam the logs)
-//#define debug_try_gs_effect(format, ...) debug(format, ##__VA_ARGS__); usleep(100)
+//#define debug_try_gs_effect(format, ...) debug(format, ##__VA_ARGS__)
 #define debug_try_gs_effect(format, ...)
 
 #define try_gs_effect_set_val(param_name, param, data, data_size) if (param) { debug_try_gs_effect("try_gs_effect_set_val %s", param_name); gs_effect_set_val(param, data, data_size); debug_try_gs_effect("try_gs_effect_set_val %s DONE", param_name); }
