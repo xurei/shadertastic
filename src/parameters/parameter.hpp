@@ -21,7 +21,7 @@
 #include "parameter_datatype.hpp"
 #include "../try_gs_effect_set.h"
 
-static std::string get_full_param_name_static(const std::string &effect_name, const std::string param_name) {
+static std::string get_full_param_name_static(const std::string &effect_name, const std::string &param_name) {
     return effect_name + '.' + param_name;
 }
 

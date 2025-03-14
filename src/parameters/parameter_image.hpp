@@ -29,6 +29,7 @@ class effect_parameter_image : public effect_parameter {
         std::vector<effect_parameter_image_value> values;
         obs_data_array *default_array{};
         bool allow_custom{};
+        bool hidden{};
 
         std::string path;
         gs_texture_t * texture;
@@ -72,15 +73,21 @@ class effect_parameter_image : public effect_parameter {
         }
 
         void initialize_params(obs_data_t *metadata, const std::string &effect_path) override {
-            UNUSED_PARAMETER(effect_path);
-
             obs_data_set_default_string(metadata, "default", "");
             obs_data_set_default_bool(metadata, "allow_custom", true);
             default_array = obs_data_array_create();
             obs_data_set_default_array(metadata, "values", default_array);
 
-            default_value = std::string(obs_data_get_string(metadata, "default"));
+            auto default_file = std::string(obs_data_get_string(metadata, "default"));
+            if (!default_file.empty()) {
+                default_value = std::string("bundle://") + std::string(effect_path) + '/' + std::string(obs_data_get_string(metadata, "default"));
+            }
+            else {
+                default_value = "";
+            }
+
             allow_custom = obs_data_get_bool(metadata, "allow_custom");
+            hidden = obs_data_get_bool(metadata, "hidden");
 
             obs_data_array_t *array = obs_data_get_array(metadata, "values");
             size_t array_count = obs_data_array_count(array);
@@ -97,46 +104,74 @@ class effect_parameter_image : public effect_parameter {
                 }
                 obs_data_release(item);
             }
+            if (values.empty()) {
+                allow_custom = true;
+            }
             obs_data_array_release(array);
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {
-            UNUSED_PARAMETER(settings);
-            UNUSED_PARAMETER(full_param_name);
+            std::string full_param_name_list = std::string(full_param_name) + "__list";
+            obs_data_set_default_string(settings, full_param_name, default_value.c_str());
+            obs_data_set_default_string(settings, full_param_name_list.c_str(), default_value.c_str());
         }
 
         void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
-            if (!values.empty()) {
+            bool with_values = !values.empty();
+
+            // If values are present, show a list widget to select them
+            if (with_values) {
                 obs_property_t *list_ui = obs_properties_add_list(
-                    props, full_param_name, label.c_str(),
-                    OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING
+                    props,
+                    full_param_name,
+                    label.c_str(),
+                    OBS_COMBO_TYPE_LIST,
+                    OBS_COMBO_FORMAT_STRING
                 );
+                obs_property_set_visible(list_ui, !hidden);
+
                 for (size_t i=0; i < values.size(); ++i) {
                     obs_property_list_add_string(list_ui, values[i].label.c_str(), values[i].value.c_str());
                 }
-            }
+                if (allow_custom) {
+                    obs_property_list_add_string(list_ui, "Use custom file", "__CUSTOM__");
+                    obs_property_set_modified_callback(list_ui, [](obs_properties_t *props, obs_property_t *property, obs_data_t *settings) {
+                        const char *full_param_name = obs_property_name(property);
 
-            if (allow_custom) {
-                // Custom path
-                auto prop = obs_properties_add_path(props, full_param_name, label.c_str(), OBS_PATH_FILE, "Image (*.jpg *.jpeg *.png *.bmp)", nullptr);
-//                obs_property_set_modified_callback2(prop, [](void *priv, obs_properties_t *props, obs_property_t *property, obs_data_t *settings) {
-//                    UNUSED_PARAMETER(props);
-//                    effect_parameter_image *this_ = (effect_parameter_image *)priv;
-//                    const char *full_param_name = obs_property_name(property);
-//                    const char *value = obs_data_get_string(settings, full_param_name);
-//                    if (!value) {
-//                        this_->is_custom = false;
-//                    }
-//                    else {
-//                        this_->is_custom = true;
-//                    }
-//                    return true; // TODO maybe a false is okay, to be confirmed
-//                }, this);
+                        std::string new_value = std::string(obs_data_get_string(settings, full_param_name));
 
-                if (!description.empty()) {
-                    obs_property_set_long_description(prop, obs_module_text(description.c_str()));
+                        std::string full_param_name_filepicker = std::string(full_param_name) + "__custom";
+                        obs_property_t *filepicker = obs_properties_get(props, full_param_name_filepicker.c_str());
+
+                        if (new_value == "__CUSTOM__") {
+                            obs_property_set_visible(filepicker, true);
+                        }
+                        else {
+                            obs_property_set_visible(filepicker, false);
+                        }
+                        return true; // TODO maybe a false is okay, to be confirmed
+                    });
                 }
             }
+
+            // If custom value is allowed, add a file picker widget
+            // It will be masked if values are present and the "Select File..." item is not selected
+            if (allow_custom) {
+                std::string full_param_name_filepicker = std::string(full_param_name) + "__custom";
+                obs_properties_add_path(
+                    props,
+                    with_values ? full_param_name_filepicker.c_str() : full_param_name,
+                    with_values ? "∟ Custom file" : label.c_str(),
+                    OBS_PATH_FILE,
+                    "Image (*.jpg *.jpeg *.png *.bmp)",
+                    nullptr
+                );
+            }
+
+            // TODO description si not user-friendly in the UI now, commented-out for now
+            //if (!description.empty()) {
+            //    obs_property_set_long_description(filepicker, obs_module_text(description.c_str()));
+            //}
         }
 
         void set_data_from_default() override {
@@ -144,6 +179,21 @@ class effect_parameter_image : public effect_parameter {
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
+            bool with_values = !values.empty();
+
+            if (with_values) {
+                const char *path_ = obs_data_get_string(settings, full_param_name);
+                if (strcmp(path_, "__CUSTOM__") == 0) {
+                    std::string full_param_name_filepicker = std::string(full_param_name) + "__custom";
+                    set_data_from_settings_sub(settings, full_param_name_filepicker.c_str());
+                    return;
+                }
+            }
+
+            set_data_from_settings_sub(settings, full_param_name);
+        }
+
+        void set_data_from_settings_sub(obs_data_t *settings, const char *full_param_name) {
             const char *path_ = obs_data_get_string(settings, full_param_name);
             if (path_ != nullptr) {
                 std::string path_str = std::string(path_);

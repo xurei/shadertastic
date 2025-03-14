@@ -2,6 +2,7 @@
 #include "face_tracking_crop_shader.h"
 #include "../util/rgba_to_rgb.h"
 #include "../logging_functions.hpp"
+#include "../try_gs_effect_set.h"
 //----------------------------------------------------------------------------------------------------------------------
 
 static inline gs_texture_t * prepare_source_texture(gs_texrender_t *source_texrender, obs_source_t *target, uint32_t cx, uint32_t cy, enum gs_color_space space) {
@@ -39,10 +40,10 @@ static inline void render_filter_texture(gs_texture_t *source_tex, gs_effect_t *
 
 
 //	if (linear_srgb) {
-        gs_effect_set_texture_srgb(image, source_tex);
+        try_gs_effect_set_texture_srgb("source_tex", image, source_tex);
 //    }
 //	else {
-//        gs_effect_set_texture(image, tex);
+//        try_gs_effect_set_texture("source_tex", image, tex);
 //    }
 
 	passes = gs_technique_begin(tech);
@@ -141,10 +142,10 @@ cv::Mat FaceTrackingCropShader::getCroppedImage(obs_source_t *target_source, flo
             .x=roi_size.x,
             .y=roi_size.y,
         };
-        gs_effect_set_vec2(this->gs_crop_param_center, &center);
-        gs_effect_set_vec2(this->gs_crop_param_crop_size, &crop_size);
-        gs_effect_set_float(this->gs_crop_param_rotation, rotation);
-        gs_effect_set_float(this->gs_crop_param_aspect_ratio, aspect_ratio);
+        try_gs_effect_set_vec2("center", this->gs_crop_param_center, &center);
+        try_gs_effect_set_vec2("crop_size", this->gs_crop_param_crop_size, &crop_size);
+        try_gs_effect_set_float("rotation", this->gs_crop_param_rotation, rotation);
+        try_gs_effect_set_float("aspect_ratio", this->gs_crop_param_aspect_ratio, aspect_ratio);
 
         gs_blend_state_push();
         gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA, GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);

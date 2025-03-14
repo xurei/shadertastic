@@ -23,11 +23,11 @@ typedef std::map<std::string, shadertastic_effect_t> shadertastic_effects_map_t;
 struct shadertastic_common {
     shadertastic_effects_map_t *effects;
     shadertastic_effect_t *selected_effect = nullptr;
+    obs_source_t *source{};
 };
 //----------------------------------------------------------------------------------------------------------------------
 
 struct shadertastic_transition : public shadertastic_common {
-    obs_source_t *source{};
     bool transition_started{};
     bool transitioning{};
     float transition_point{};
@@ -43,10 +43,10 @@ struct shadertastic_transition : public shadertastic_common {
     float transition_b_mul{};
 
     void release() {
-        for (auto& [key, effect] : *this->effects) {
-            effect.release();
-        }
         if (this->effects != nullptr) {
+            for (auto& [key, effect] : *this->effects) {
+                effect.release();
+            }
             delete this->effects;
         }
     }
@@ -54,7 +54,6 @@ struct shadertastic_transition : public shadertastic_common {
 //----------------------------------------------------------------------------------------------------------------------
 
 struct shadertastic_filter : public shadertastic_common {
-    obs_source_t *source{};
     gs_texrender_t *interm_texrender[2]{};
     int interm_texrender_buffer = 0;
     gs_texture_t *transparent_texture{};
@@ -74,10 +73,12 @@ struct shadertastic_filter : public shadertastic_common {
     face_tracking_state face_tracking;
 
     void release() {
-        for (auto& [key, effect] : *this->effects) {
-            effect.release();
+        if (this->effects != nullptr) {
+            for (auto &[key, effect]: *this->effects) {
+                effect.release();
+            }
+            delete this->effects;
         }
-        delete this->effects;
     }
 };
 //----------------------------------------------------------------------------------------------------------------------

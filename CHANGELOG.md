@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Face tracking: Added eye points in the texture sent to the shaders, changed 468 → 478 in built-in shaders 
 - Face Detection Reference: add "Show texture" option
 - Face Detection reference: add toggles for finer checks
+- Parameter type `image`: added the possibility to use bundled images in the effect
 - Various internal improvements and rewrites
 - Rewritten GLSL fract() function to match frac() in HLSL and reversed
 

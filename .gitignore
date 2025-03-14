@@ -5,6 +5,9 @@
 # Generated files
 src/version.h
 
+# Lab files
+lab/
+
 # Built files
 cmake-build-*/
 build/
