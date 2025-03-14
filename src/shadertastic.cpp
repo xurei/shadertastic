@@ -64,8 +64,7 @@ OBS_MODULE_USE_DEFAULT_LOCALE("shadertastic", "en-US")
 bool module_loaded = false;
 //----------------------------------------------------------------------------------------------------------------------
 
-void load_effects(shadertastic_common *s, obs_data_t *settings, const std::string &effects_dir, const std::string &effects_type) {
-    UNUSED_PARAMETER(settings);
+void load_effects(shadertastic_common *s, const std::string &effects_dir, const std::string &effects_type) {
     std::vector<std::string> dirs = list_directories((effects_dir + "/" + effects_type + "s").c_str());
 
     for (const auto &dir : dirs) {

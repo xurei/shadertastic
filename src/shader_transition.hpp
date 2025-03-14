@@ -36,9 +36,9 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     s->transition_texrender[0] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
     s->transition_texrender[1] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
 
-    load_effects(s, settings, transitions_dir, "transition");
+    load_effects(s, transitions_dir, "transition");
     if (shadertastic_settings().effects_path != nullptr) {
-        load_effects(s, settings, *(shadertastic_settings().effects_path), "transition");
+        load_effects(s, *(shadertastic_settings().effects_path), "transition");
     }
 
     obs_source_update(source, settings);

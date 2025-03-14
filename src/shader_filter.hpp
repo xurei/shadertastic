@@ -47,9 +47,9 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     std::string filters_dir(filters_dir_);
     bfree(filters_dir_);
 
-    load_effects(s, settings, filters_dir, "filter");
+    load_effects(s, filters_dir, "filter");
     if (shadertastic_settings().effects_path != nullptr) {
-        load_effects(s, settings, *(shadertastic_settings().effects_path), "filter");
+        load_effects(s, *(shadertastic_settings().effects_path), "filter");
     }
 
     // Set defaults for each effect
