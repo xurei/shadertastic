@@ -67,8 +67,4 @@ class effect_parameter_float : public effect_parameter {
             *((float*)this->data) = (float)obs_data_get_double(settings, full_param_name);
             //debug("%s = %f", full_param_name, *((float*)this->data));
         }
-
-        void set_data_from_default() override {
-            *((float*)this->data) = (float)default_value;
-        }
 };

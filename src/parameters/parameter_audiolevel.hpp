@@ -89,11 +89,6 @@ class effect_parameter_audiolevel : public effect_parameter {
             }
         }
 
-        void set_data_from_default() override {
-            // TODO check that we should not decrement the showing counter here ?
-            this->source = nullptr;
-        }
-
         void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
             if (this->source != nullptr) {
                 this->hide();

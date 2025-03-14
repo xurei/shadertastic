@@ -72,9 +72,4 @@ class effect_parameter_color_alpha : public effect_parameter {
             //debug("%s = %d", full_param_name, *((int*)this->data));
             vec4_from_rgba((vec4*) this->data, (uint32_t)obs_data_get_int(settings, full_param_name));
         }
-
-        void set_data_from_default() override {
-            vec4_from_rgba((vec4*) this->data, (uint32_t)default_value);
-            //*((int*)this->data) = (int)default_value;
-        }
 };

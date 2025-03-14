@@ -50,8 +50,4 @@ class effect_parameter_bool : public effect_parameter {
         void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
             *((int*)this->data) = obs_data_get_bool(settings, full_param_name) ? 1 : 0;
         }
-
-        void set_data_from_default() override {
-            *((int*)this->data) = default_value ? 1 : 0;
-        }
 };

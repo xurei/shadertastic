@@ -86,13 +86,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
             }
             else {
                 s->effects->insert(shadertastic_effects_map_t::value_type(dir, effect));
-
-                // Defaults must be set here and not in the transition_defaults() function.
-                // as the effects are not loaded yet in transition_defaults()
-                for (auto param: effect.effect_params) {
-                    std::string full_param_name = param->get_full_param_name(effect.name.c_str());
-                    param->set_default(settings, full_param_name.c_str());
-                }
+                shadertastic_effect_set_defaults(s, &effect);
             }
         }
         else {
@@ -121,13 +115,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
             }
             else {
                 s->effects->insert(shadertastic_effects_map_t::value_type(effect_name, effect));
-
-                // Defaults must be set here and not in the transition_defaults() function.
-                // as the effects are not loaded yet in transition_defaults()
-                for (auto param: effect.effect_params) {
-                    std::string full_param_name = param->get_full_param_name(effect.name.c_str());
-                    param->set_default(settings, full_param_name.c_str());
-                }
+                shadertastic_effect_set_defaults(s, &effect);
             }
         }
     }

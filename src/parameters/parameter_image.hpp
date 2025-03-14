@@ -174,10 +174,6 @@ class effect_parameter_image : public effect_parameter {
             //}
         }
 
-        void set_data_from_default() override {
-            this->path = default_value;
-        }
-
         void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
             bool with_values = !values.empty();
 

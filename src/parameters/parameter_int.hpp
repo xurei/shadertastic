@@ -67,8 +67,4 @@ class effect_parameter_int : public effect_parameter {
             *((int*)this->data) = (int)obs_data_get_int(settings, full_param_name);
             //debug("%s = %d", full_param_name, *((int*)this->data));
         }
-
-        void set_data_from_default() override {
-            *((int*)this->data) = (int)default_value;
-        }
 };

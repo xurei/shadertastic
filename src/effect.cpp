@@ -87,12 +87,6 @@ void shadertastic_effect_t::load() {
                         debug("Recycling data for %s (size: %i)", param_name_str.c_str(), (int)effect_param->get_data_size());
                         memcpy(effect_param->get_data(), previous_param->get_data(), effect_param->get_data_size());
                     }
-                    else {
-                        effect_param->set_data_from_default();
-                    }
-                }
-                else {
-                    effect_param->set_data_from_default();
                 }
 
                 effect_params.put(param_name_str, effect_param);

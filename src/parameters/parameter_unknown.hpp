@@ -48,8 +48,4 @@ class effect_parameter_unknown : public effect_parameter {
             UNUSED_PARAMETER(full_param_name);
             *((int*)this->data) = 0;
         }
-
-        void set_data_from_default() override {
-            *((int*)this->data) = 0;
-        }
 };

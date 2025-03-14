@@ -75,8 +75,6 @@ class effect_parameter {
 
         virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) = 0;
 
-        virtual void set_data_from_default() = 0;
-
         std::string get_name() {
             return name;
         }

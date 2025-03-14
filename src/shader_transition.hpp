@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+obs_properties_t *shadertastic_transition_properties(void *data);
+//----------------------------------------------------------------------------------------------------------------------
+
 static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *source) {
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(bzalloc(sizeof(struct shadertastic_transition)));
     s->source = source;
@@ -250,8 +253,6 @@ static bool shadertastic_transition_audio_render(void *data, uint64_t *ts_out, s
     return true;
 }
 //----------------------------------------------------------------------------------------------------------------------
-
-obs_properties_t *shadertastic_transition_properties(void *data);
 
 bool shadertastic_transition_properties_change_effect_callback(void *priv, obs_properties_t *props, obs_property_t *p, obs_data_t *data) {
     UNUSED_PARAMETER(priv);

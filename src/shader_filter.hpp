@@ -15,11 +15,24 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+obs_properties_t *shadertastic_filter_properties(void *data);
+//----------------------------------------------------------------------------------------------------------------------
+
 static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *source) {
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(bzalloc(sizeof(struct shadertastic_filter)));
     s->source = source;
     s->effects = new shadertastic_effects_map_t();
 
+    // FIXME getting the root source doesn't work here :( it would be great for debugging, but obs_filter_get_parent() is not valid outside of video_render, filter_audio, filter_video, and filter_remove callbacks.
+    //#ifdef DEV_MODE
+    //    obs_source_t *root_source = obs_filter_get_parent(source);
+    //    debug("%s", obs_source_get_name(root_source));
+    //    while (obs_source_get_type(root_source) != OBS_SOURCE_TYPE_INPUT) {
+    //        debug("%s", obs_source_get_name(root_source));
+    //        root_source = obs_filter_get_parent(source);
+    //    }
+    //    debug("FILTER %s ON %s Settings : %s", obs_source_get_name(source), obs_source_get_name(root_source), obs_data_get_json(settings));
+    //#endif
     debug("FILTER %s Settings : %s", obs_source_get_name(source), obs_data_get_json(settings));
 
     uint8_t transparent_tex_data[2 * 2 * 4] = {0};
@@ -211,8 +224,6 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-obs_properties_t *shadertastic_filter_properties(void *data);
-
 bool shadertastic_filter_properties_change_effect_callback(void *priv, obs_properties_t *props, obs_property_t *p, obs_data_t *data) {
     UNUSED_PARAMETER(priv);
     UNUSED_PARAMETER(p);
@@ -304,12 +315,6 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
     about_property(props);
 
     return props;
-}
-//----------------------------------------------------------------------------------------------------------------------
-
-void shadertastic_filter_defaults(void *data, obs_data_t *settings) {
-    UNUSED_PARAMETER(data);
-    UNUSED_PARAMETER(settings);
 }
 //----------------------------------------------------------------------------------------------------------------------
 
