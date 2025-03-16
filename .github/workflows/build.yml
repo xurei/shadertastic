@@ -551,6 +551,10 @@ jobs:
           New-Item -ItemType directory -Path certificate
           Set-Content -Path certificate\certificate.txt -Value '${{ secrets.WINDOWS_CERTIFICATE }}'
           certutil -decode certificate\certificate.txt certificate\certificate.pfx
+      - name: Print Code Signing details
+        if: success() && github.event_name != 'pull_request'
+        run: |
+          certutil -p "${{ secrets.WINDOWS_CERTIFICATE_PASS }}" -dump certificate\certificate.pfx
 #      - name: Code Sign 32
 #        if: success() && github.event_name != 'pull_request'
 #        run: |
