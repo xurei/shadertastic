@@ -101,8 +101,6 @@ void shadertastic_effect_t::load() {
             delete param;
         }
 
-        set_rand_seed();
-
         obs_data_array_release(parameters);
         obs_data_release(metadata);
         debug("Loaded effect %s from %s", name.c_str(), metadata_path.c_str());
@@ -114,12 +112,7 @@ void shadertastic_effect_t::reload() {
     load();
 }
 
-void shadertastic_effect_t::set_rand_seed() {
-    const float rand_seed = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-    try_gs_effect_set_float("rand_seed", main_shader->param_rand_seed, rand_seed);
-}
-
-void shadertastic_effect_t::set_params(gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy) {
+void shadertastic_effect_t::set_params(gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy, float rand_seed) {
     /* texture setters look reversed, but they aren't */
     if (gs_get_color_space() == GS_CS_SRGB) {
         /* users want nonlinear effect */
@@ -136,6 +129,7 @@ void shadertastic_effect_t::set_params(gs_texture_t *a, gs_texture_t *b, float t
     try_gs_effect_set_float("time", main_shader->param_time, t);
     try_gs_effect_set_float("upixel", main_shader->param_upixel, (float)(1.0/cx));
     try_gs_effect_set_float("vpixel", main_shader->param_vpixel, (float)(1.0/cy));
+    try_gs_effect_set_float("rand_seed", main_shader->param_rand_seed, rand_seed);
     try_gs_effect_set_int("nb_steps", main_shader->param_nb_steps, nb_steps);
     //debug("common params set");
 

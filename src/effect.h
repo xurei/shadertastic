@@ -35,13 +35,11 @@ struct shadertastic_effect_t {
 
     shadertastic_effect_t(std::string name_, std::string path_): name(std::move(name_)), path(std::move(path_)) {}
 
-    void set_rand_seed();
-
     void load();
 
     void reload();
 
-    void set_params(gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy);
+    void set_params(gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy, float rand_seed);
 
     void set_step_params(int current_step, gs_texture_t *interm) const;
 

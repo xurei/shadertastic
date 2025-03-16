@@ -22,6 +22,7 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(bzalloc(sizeof(struct shadertastic_transition)));
     s->source = source;
     s->effects = new shadertastic_effects_map_t();
+    s->rand_seed = (float)((double)rand() / (double)RAND_MAX);
 
     debug("TRANSITION %s Settings : %s", obs_source_get_name(source), obs_data_get_json(settings));
 
@@ -167,7 +168,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
                 gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
                 gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
 
-                effect->set_params(a, b, t, cx, cy);
+                effect->set_params(a, b, t, cx, cy, s->rand_seed);
                 effect->set_step_params(current_step, interm_texture);
                 effect->render_shader(cx, cy);
                 gs_texrender_end(s->transition_texrender[s->transition_texrender_buffer]);
@@ -181,7 +182,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
             GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
             GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
         );
-        effect->set_params(a, b, t, cx, cy);
+        effect->set_params(a, b, t, cx, cy, s->rand_seed);
         effect->set_step_params(effect->nb_steps - 1, interm_texture);
         effect->render_shader(cx, cy);
         gs_blend_state_pop();
@@ -333,13 +334,11 @@ void shadertastic_transition_defaults(void *data, obs_data_t *settings) {
 
 void shadertastic_transition_start(void *data) {
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    s->rand_seed = (float)((double)rand() / (double)RAND_MAX);
     //debug("rand_seed = %f", s->rand_seed);
 
     if (!s->transition_started) {
         s->transition_started = true;
-
-        shadertastic_effect_t *effect = s->selected_effect;
-        effect->set_rand_seed();
 
         debug("Started transition of %s", obs_source_get_name(s->source));
     }
