@@ -14,7 +14,7 @@ if (NOT DEFINED SHADERTASTIC_COMMIT)
     set(SHADERTASTIC_COMMIT "localbuild")
 endif()
 
-project(shadertastic VERSION 0.1.1)
+project(shadertastic VERSION 0.1.2)
 set(PROJECT_FULL_NAME "Shadertastic")
 
 #cmake_policy(SET CMP0135 NEW)

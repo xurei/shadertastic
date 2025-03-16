@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [0.1.1] - 2025-03-14
+## [0.1.2] - 2025-03-15
 ### Added
 - Vignette in bundled filters
 - Zoom to face in bundled filters
@@ -26,7 +26,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - Fixed crash due to incorrect char[] size with face detection filters
-- Fixed glitches with HLSL due to rand_seed being updated every frame
 
 ## [0.1.0] - 2024-08-23
 ### Added
