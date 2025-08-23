@@ -11,6 +11,9 @@ uniform int current_step;      // index of current step (for multistep effects)
 
 // Specific parameters of the shader. They must be defined in the meta.json file next to this one.
 uniform float ghost_strength;
+uniform texture2d prev_tex0;
+uniform texture2d prev_tex1;
+uniform texture2d prev_tex2;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -44,31 +47,21 @@ VertData VSDefault(VertData v_in)
 float4 EffectLinear(float2 uv)
 {
     if (current_step == 0) {
-        if (uv[0] > 0.5 && uv[1] > 0.5) {
-            return prev_tex.Sample(textureSampler, (uv-0.5)*2);
-        }
-        float4 result = float4(1.0, 0.0, 0.5, 1.0);
-        return result * image.Sample(textureSampler, uv);
-    }
-    else {
-        if (uv[0] > 0.5 && uv[1] > 0.5) {
-            return prev_tex.Sample(textureSampler, (uv-0.5)*2);
-        }
         return image.Sample(textureSampler, uv);
     }
-    /*float t2 = fmod(time, 0.2);
-    if (t2 < 0.01) {
-        return image.Sample(textureSampler, uv);
+    else if (current_step == 1) {
+        return prev_tex0.Sample(textureSampler, uv);
+    }
+    else if (current_step == 2) {
+        return prev_tex1.Sample(textureSampler, uv);
     }
     else {
-        return prev_tex.Sample(textureSampler, uv );
+        float4 imgr = prev_tex0.Sample(textureSampler, uv);
+        float4 imgg = prev_tex1.Sample(textureSampler, uv);
+        float4 imgb = prev_tex2.Sample(textureSampler, uv);
+        float4 result = float4(imgr.r, imgg.g, imgb.b, 1.0);
+        return result;
     }
-
-    return lerp(
-        image.Sample(textureSampler, uv),
-        prev_tex.Sample(textureSampler, uv),
-        ghost_strength
-    );*/
 }
 //----------------------------------------------------------------------------------------------------------------------
 

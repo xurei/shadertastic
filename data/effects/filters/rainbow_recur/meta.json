@@ -1,0 +1,22 @@
+{
+  "label": "Rainbow Recur",
+  "steps": 4,
+  "input_time": true,
+  "parameters": [
+    {
+      "name": "prev_tex0",
+      "type": "prev_frame",
+      "step": 0
+    },
+    {
+      "name": "prev_tex1",
+      "type": "prev_frame",
+      "step": 1
+    },
+    {
+      "name": "prev_tex2",
+      "type": "prev_frame",
+      "step": 2
+    }
+  ]
+}

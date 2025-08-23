@@ -67,12 +67,39 @@ class effect_parameter {
             devmode = obs_data_get_bool(metadata, "devmode");
         }
 
+        /**
+         * Called in the factory, after creation of the parameter.
+         * This is where you should set the attributes of the parameter and their default values.
+         * BE CAREFUL : they are NOT the default values that you see in the meta files, but the
+         *   default values of the attributes that a parameter must have. For example, a int parameter
+         *   has a "slider" attribute, and by default it's not enabled. Hence, the default value of "slider"
+         *   is false if it's not mentioned in the metadata file of the effect.
+         * @param metadata
+         * @param effect_path
+         */
         virtual void initialize_params(obs_data_t *metadata, const std::string &effect_path) = 0;
 
+        /**
+         * This is where you should set the defaults specified in the metadata.
+         * See also initialize_params for details about the defaults
+         * @param settings
+         * @param full_param_name
+         */
         virtual void set_default(obs_data_t *settings, const char *full_param_name) = 0;
 
+        /**
+         * Renders the UI in the OBS view
+         * @param effect_name
+         * @param props
+         */
         virtual void render_property_ui(const char *effect_name, obs_properties_t *props) = 0;
 
+        /**
+         * Update function of the parameter, will be called when a filter is laoded or when the
+         * value is changed through the UI or some OBS internal call.
+         * @param settings
+         * @param full_param_name
+         */
         virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) = 0;
 
         std::string get_name() {
@@ -97,6 +124,9 @@ class effect_parameter {
             return data;
         }
 
+        /**
+         * Send the data to the matching fields in the HLSL shader.
+         */
         virtual void try_gs_set_val() {
             try_gs_effect_set_val(name.c_str(), shader_param, data, data_size);
         }

@@ -55,8 +55,6 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     s->transparent_texture = gs_texture_create(2, 2, GS_RGBA, 1, &transparent_tex, 0);
     s->interm_texrender[0] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
     s->interm_texrender[1] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
-    s->prev_texrender[0] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-    s->prev_texrender[1] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
     obs_leave_graphics();
 
     char *filters_dir_ = obs_module_file("effects");
@@ -88,8 +86,6 @@ void shadertastic_filter_destroy(void *data) {
     gs_texture_destroy(s->transparent_texture);
     gs_texrender_destroy(s->interm_texrender[0]);
     gs_texrender_destroy(s->interm_texrender[1]);
-    gs_texrender_destroy(s->prev_texrender[0]);
-    gs_texrender_destroy(s->prev_texrender[1]);
     obs_leave_graphics();
     face_tracking_destroy(&s->face_tracking);
     s->release();
@@ -141,9 +137,9 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
 //----------------------------------------------------------------------------------------------------------------------
 
 static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
+    UNUSED_PARAMETER(deltatime_seconds);
     struct shadertastic_filter *s = shadertastic_filter_cast(data);
     obs_source_t *target = obs_filter_get_target(s->source);
-    s->delta_time = deltatime_seconds;
 
     s->width = obs_source_get_base_width(target);
     s->height = obs_source_get_base_height(target);
@@ -188,8 +184,6 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     const enum gs_color_format format = gs_get_format_from_space(source_space);
 
     shadertastic_effect_t *selected_effect = s->selected_effect;
-    gs_texture_t *prev_tex = s->prev_texture;
-    gs_texture_t *new_prev_tex = nullptr;
 
     if (selected_effect != nullptr && selected_effect->main_shader != nullptr) {
         if (selected_effect->input_facedetection && s->face_tracking.created) {
@@ -211,7 +205,10 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                 bool texrender_ok = true;
                 bool is_interm_step = (current_step < selected_effect->nb_steps - 1);
 
-                if (is_interm_step) {
+                if (selected_effect->prev_frames_to_keep[current_step]) {
+                    texrender_ok = selected_effect->prev_frames_to_keep[current_step]->attach(cx, cy);
+                }
+                else if (is_interm_step) {
                     s->interm_texrender_buffer = (s->interm_texrender_buffer+1) & 1;
                     gs_texrender_reset(s->interm_texrender[s->interm_texrender_buffer]);
                     texrender_ok = gs_texrender_begin(s->interm_texrender[s->interm_texrender_buffer], cx, cy);
@@ -221,24 +218,24 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                         gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
                     }
                 }
-                else {
-                    s->prev_texrender_buffer = (s->prev_texrender_buffer + 1) & 1;
-                    gs_texrender_reset(s->prev_texrender[s->prev_texrender_buffer]);
-                    texrender_ok = gs_texrender_begin(s->prev_texrender[s->prev_texrender_buffer], cx, cy);
-                }
+//                else {
+//                    s->prev_texrender_buffer = (s->prev_texrender_buffer + 1) & 1;
+//                    gs_texrender_reset(s->prev_texrender[s->prev_texrender_buffer]);
+//                    texrender_ok = gs_texrender_begin(s->prev_texrender[s->prev_texrender_buffer], cx, cy);
+//                }
 
                 if (texrender_ok) {
-                    selected_effect->set_params(nullptr, nullptr, prev_tex, filter_time, s->delta_time, cx, cy, s->rand_seed);
+                    selected_effect->set_params(nullptr, nullptr, filter_time, s->delta_time, cx, cy, s->rand_seed);
                     selected_effect->set_step_params(current_step, interm_texture);
 
                     selected_effect->main_shader->render(s->source, cx, cy);
-                    if (is_interm_step) {
+
+                    if (selected_effect->prev_frames_to_keep[current_step]) {
+                        selected_effect->prev_frames_to_keep[current_step]->detach(s->source, cx, cy);
+                    }
+                    else if (is_interm_step) {
                         gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
                         interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
-                    }
-                    else {
-                        gs_texrender_end(s->prev_texrender[s->prev_texrender_buffer]);
-                        new_prev_tex = gs_texrender_get_texture(s->prev_texrender[s->prev_texrender_buffer]);
                     }
                 }
                 else {
@@ -248,7 +245,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
             }
             gs_blend_state_pop();
 
-            if (new_prev_tex) {
+            /*if (new_prev_tex) {
                 gs_blend_state_push();
                 gs_blend_function(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
                 if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
@@ -261,7 +258,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                 }
                 gs_blend_state_pop();
             }
-            s->prev_texture = new_prev_tex;
+            s->prev_texture = new_prev_tex;*/
         }
     }
     else {

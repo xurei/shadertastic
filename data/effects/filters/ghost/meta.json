@@ -1,8 +1,7 @@
 {
   "label": "Ghost",
-  "steps": 1,
+  "steps": 2,
   "input_time": true,
-  "input_prev_frame": 1,
   "parameters": [
     {
       "name": "ghost_strength",
@@ -13,6 +12,11 @@
       "max": 1,
       "default": 0.01,
       "step": 0.01
+    },
+    {
+      "name": "prev_tex",
+      "type": "prev_frame",
+      "step": 0
     }
   ]
 }

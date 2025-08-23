@@ -25,12 +25,13 @@
 #include "parameter_bool.hpp"
 #include "parameter_color_alpha.hpp"
 #include "parameter_float.hpp"
+#include "parameter_image.hpp"
 #include "parameter_int.hpp"
 #include "parameter_list_int.hpp"
-#include "parameter_unknown.hpp"
-#include "parameter_image.hpp"
+#include "parameter_prev_frame.hpp"
 #include "parameter_source.hpp"
 #include "parameter_text.hpp"
+#include "parameter_unknown.hpp"
 #include "parameter_factory.h"
 
 effect_parameter * effect_parameter_factory::create(const std::string &effect_name, const std::string &effect_path, gs_eparam_t *shader_param, obs_data_t *param_metadata) {
@@ -80,6 +81,10 @@ effect_parameter * effect_parameter_factory::create(const std::string &effect_na
                 out = new effect_parameter_color_alpha(shader_param);
                 break;
             }
+            case PARAM_DATATYPE_PREV_FRAME: {
+                out = new effect_parameter_prev_frame(shader_param);
+                break;
+            }
             case PARAM_DATATYPE_TEXT: {
                 out = new effect_parameter_text(shader_param);
                 break;
@@ -119,6 +124,9 @@ effect_param_datatype effect_parameter_factory::effect_parse_datatype(const char
     }
     else if (strcmp(datatype_str, "color") == 0) {
         return PARAM_DATATYPE_COLOR_ALPHA;
+    }
+    else if (strcmp(datatype_str, "prev_frame") == 0) {
+        return PARAM_DATATYPE_PREV_FRAME;
     }
     else if (strcmp(datatype_str, "text") == 0) {
         return PARAM_DATATYPE_TEXT;

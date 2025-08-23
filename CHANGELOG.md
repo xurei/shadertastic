@@ -28,8 +28,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Face tracking is now considered stable. The warning message has been removed from the params 
 - Face tracking: Massivley improved performance (~2.5x faster)
 - Face tracking: Avoid multiple loading of the MediaPipe models
-- Face tracking: Added eye points in the texture sent to the shaders, changed 468 → 478 in built-in shaders 
-- Face Detection Reference: add "Show texture" option
+- Face tracking: Added eye points in the prev_texture sent to the shaders, changed 468 → 478 in built-in shaders 
+- Face Detection Reference: add "Show prev_texture" option
 - Face Detection reference: add toggles for finer checks
 - Parameter type `image`: added the possibility to use bundled images in the effect
 - Various internal improvements and rewrites
@@ -50,7 +50,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Set default speed of 0.1 on `input_time` parameters
 - Improved Burn transition
-- Float parameter: changed the default step from 0.1 to 0.01
+- Float parameter: changed the default step_ from 0.1 to 0.01
 - Development mode: Reworked the fallback effect to show "ERR", for clarify
 
 ### Removed
@@ -131,9 +131,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Filters : reset rand_seed on reload
 
 ### Fixed
-- Fixed multi-step rendering of filter and transitions when the source is not full-screen
+- Fixed multi-step_ rendering of filter and transitions when the source is not full-screen
 - Rewritten `shadertastic_filter_get_color_space` to match a filter, not a transition
-- Fixed transparent texture not created correctly
+- Fixed transparent prev_texture not created correctly
 - Filter reload should update the filter UI without the need to switch filters
 
 ### Removed

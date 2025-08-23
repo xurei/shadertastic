@@ -60,9 +60,6 @@ struct shadertastic_filter : public shadertastic_common {
     gs_texrender_t *interm_texrender[2]{};
     int interm_texrender_buffer = 0;
     gs_texture_t *transparent_texture{};
-    gs_texrender_t *prev_texrender[2];
-    int prev_texrender_buffer = 0;
-    gs_texture_t *prev_texture = nullptr;
     float rand_seed{};
     uint32_t width{}, height{};
     bool should_reload = false;
