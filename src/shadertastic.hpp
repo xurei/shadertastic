@@ -24,6 +24,8 @@ struct shadertastic_common {
     shadertastic_effects_map_t *effects;
     shadertastic_effect_t *selected_effect = nullptr;
     obs_source_t *source{};
+    float delta_time = 0.0;
+    float prev_time = 0.0;
 };
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -58,6 +60,9 @@ struct shadertastic_filter : public shadertastic_common {
     gs_texrender_t *interm_texrender[2]{};
     int interm_texrender_buffer = 0;
     gs_texture_t *transparent_texture{};
+    gs_texrender_t *prev_texrender[2];
+    int prev_texrender_buffer = 0;
+    gs_texture_t *prev_texture = nullptr;
     float rand_seed{};
     uint32_t width{}, height{};
     bool should_reload = false;
@@ -69,7 +74,6 @@ struct shadertastic_filter : public shadertastic_common {
     double speed = 1.0;
     bool reset_time_on_show = false;
     double time = 0.0;
-    float deltatime = 0.0;
 
     // Face detection state
     face_tracking_state face_tracking;

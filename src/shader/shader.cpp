@@ -44,10 +44,12 @@ bool effect_shader::load(const char *shader_path) {
         shader_source = (std::string("") +
             "uniform float4x4 ViewProj;\n" +
             "uniform texture2d image;\n" +
+            "uniform texture2d prev_tex;\n" +
             "uniform texture2d tex_a;\n" +
             "uniform texture2d tex_b;\n" +
             "uniform texture2d tex_interm;\n" +
             "uniform float time;\n" +
+            "uniform float delta_time;\n" +
             "uniform float upixel;\n" +
             "uniform float vpixel;\n" +
             "uniform float rand_seed;\n" +
@@ -68,10 +70,12 @@ bool effect_shader::load(const char *shader_path) {
             return false;
         }
         else {
+            param_prev_tex = gs_effect_get_param_by_name(gs_effect, "prev_tex");
             param_tex_a = gs_effect_get_param_by_name(gs_effect, "tex_a");
             param_tex_b = gs_effect_get_param_by_name(gs_effect, "tex_b");
             param_tex_interm = gs_effect_get_param_by_name(gs_effect, "tex_interm");
             param_time = gs_effect_get_param_by_name(gs_effect, "time");
+            param_delta_time = gs_effect_get_param_by_name(gs_effect, "delta_time");
             param_upixel = gs_effect_get_param_by_name(gs_effect, "upixel");
             param_vpixel = gs_effect_get_param_by_name(gs_effect, "vpixel");
             param_rand_seed = gs_effect_get_param_by_name(gs_effect, "rand_seed");

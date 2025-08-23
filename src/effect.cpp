@@ -61,6 +61,11 @@ void shadertastic_effect_t::load() {
 
         obs_data_set_default_bool(metadata, "input_time", false);
         input_time = obs_data_get_bool(metadata, "input_time");
+
+        obs_data_set_default_bool(metadata, "input_prev_frame", false);
+        input_prev_frame = obs_data_get_bool(metadata, "input_prev_frame");
+
+        obs_data_set_default_bool(metadata, "input_facedetection", false);
         input_facedetection = obs_data_get_bool(metadata, "input_facedetection");
 
         obs_data_array_t *parameters = obs_data_get_array(metadata, "parameters");
@@ -112,21 +117,25 @@ void shadertastic_effect_t::reload() {
     load();
 }
 
-void shadertastic_effect_t::set_params(gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy, float rand_seed) {
+void shadertastic_effect_t::set_params(gs_texture_t *a, gs_texture_t *b, gs_texture_t *prev_tex, float t, float delta_t, uint32_t cx, uint32_t cy, float rand_seed) {
+    UNUSED_PARAMETER(prev_tex);
     /* texture setters look reversed, but they aren't */
     if (gs_get_color_space() == GS_CS_SRGB) {
         /* users want nonlinear effect */
+        try_gs_effect_set_texture("prev_tex", main_shader->param_prev_tex, prev_tex);
         try_gs_effect_set_texture("tex_a", main_shader->param_tex_a, a);
         try_gs_effect_set_texture("tex_b", main_shader->param_tex_b, b);
     }
     else {
         /* nonlinear effect is too wrong, so use linear effect */
+        try_gs_effect_set_texture_srgb("prev_tex", main_shader->param_prev_tex, prev_tex);
         try_gs_effect_set_texture_srgb("tex_a", main_shader->param_tex_a, a);
         try_gs_effect_set_texture_srgb("tex_b", main_shader->param_tex_b, b);
     }
     //debug("input textures set");
 
     try_gs_effect_set_float("time", main_shader->param_time, t);
+    try_gs_effect_set_float("delta_time", main_shader->param_delta_time, delta_t);
     try_gs_effect_set_float("upixel", main_shader->param_upixel, (float)(1.0/cx));
     try_gs_effect_set_float("vpixel", main_shader->param_vpixel, (float)(1.0/cy));
     try_gs_effect_set_float("rand_seed", main_shader->param_rand_seed, rand_seed);

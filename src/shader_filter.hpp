@@ -55,6 +55,8 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     s->transparent_texture = gs_texture_create(2, 2, GS_RGBA, 1, &transparent_tex, 0);
     s->interm_texrender[0] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
     s->interm_texrender[1] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
+    s->prev_texrender[0] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
+    s->prev_texrender[1] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
     obs_leave_graphics();
 
     char *filters_dir_ = obs_module_file("effects");
@@ -86,6 +88,8 @@ void shadertastic_filter_destroy(void *data) {
     gs_texture_destroy(s->transparent_texture);
     gs_texrender_destroy(s->interm_texrender[0]);
     gs_texrender_destroy(s->interm_texrender[1]);
+    gs_texrender_destroy(s->prev_texrender[0]);
+    gs_texrender_destroy(s->prev_texrender[1]);
     obs_leave_graphics();
     face_tracking_destroy(&s->face_tracking);
     s->release();
@@ -139,7 +143,7 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
 static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
     struct shadertastic_filter *s = shadertastic_filter_cast(data);
     obs_source_t *target = obs_filter_get_target(s->source);
-    s->deltatime = deltatime_seconds;
+    s->delta_time = deltatime_seconds;
 
     s->width = obs_source_get_base_width(target);
     s->height = obs_source_get_base_height(target);
@@ -168,6 +172,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     UNUSED_PARAMETER(effect);
     struct shadertastic_filter *s = shadertastic_filter_cast(data);
     float filter_time = (float)s->time;
+    s->delta_time = filter_time - s->prev_time;
 
     const enum gs_color_space preferred_spaces[] = {
         GS_CS_SRGB,
@@ -183,12 +188,15 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     const enum gs_color_format format = gs_get_format_from_space(source_space);
 
     shadertastic_effect_t *selected_effect = s->selected_effect;
+    gs_texture_t *prev_tex = s->prev_texture;
+    gs_texture_t *new_prev_tex = nullptr;
+
     if (selected_effect != nullptr && selected_effect->main_shader != nullptr) {
         if (selected_effect->input_facedetection && s->face_tracking.created) {
-            face_tracking_tick(&s->face_tracking, target_source, s->deltatime);
+            face_tracking_tick(&s->face_tracking, target_source, s->delta_time);
         }
         gs_texture_t *interm_texture = s->transparent_texture;
-        if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_ALLOW_DIRECT_RENDERING)) {
+        if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
             gs_blend_state_push();
             gs_blend_function_separate(
                 GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
@@ -213,9 +221,14 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                         gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
                     }
                 }
+                else {
+                    s->prev_texrender_buffer = (s->prev_texrender_buffer + 1) & 1;
+                    gs_texrender_reset(s->prev_texrender[s->prev_texrender_buffer]);
+                    texrender_ok = gs_texrender_begin(s->prev_texrender[s->prev_texrender_buffer], cx, cy);
+                }
 
                 if (texrender_ok) {
-                    selected_effect->set_params(nullptr, nullptr, filter_time, cx, cy, s->rand_seed);
+                    selected_effect->set_params(nullptr, nullptr, prev_tex, filter_time, s->delta_time, cx, cy, s->rand_seed);
                     selected_effect->set_step_params(current_step, interm_texture);
 
                     selected_effect->main_shader->render(s->source, cx, cy);
@@ -223,18 +236,40 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                         gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
                         interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
                     }
+                    else {
+                        gs_texrender_end(s->prev_texrender[s->prev_texrender_buffer]);
+                        new_prev_tex = gs_texrender_get_texture(s->prev_texrender[s->prev_texrender_buffer]);
+                    }
                 }
                 else {
+                    debug("texrender_ok IS FALSE");
                     break;
                 }
             }
             gs_blend_state_pop();
+
+            if (new_prev_tex) {
+                gs_blend_state_push();
+                gs_blend_function(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
+                if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
+                    gs_effect_t *default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
+                    gs_eparam_t *image = gs_effect_get_param_by_name(default_effect, "image");
+                    gs_effect_set_texture(image, new_prev_tex);
+                    while (gs_effect_loop(default_effect, "Draw")) {
+                        gs_draw_sprite(new_prev_tex, 0, cx, cy);
+                    }
+                }
+                gs_blend_state_pop();
+            }
+            s->prev_texture = new_prev_tex;
         }
     }
     else {
         //debug("%s : No effect selected", obs_source_get_name(s->source));
         obs_source_skip_video_filter(s->source);
     }
+
+    s->prev_time = filter_time;
 }
 //----------------------------------------------------------------------------------------------------------------------
 

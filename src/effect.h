@@ -29,6 +29,7 @@ struct shadertastic_effect_t {
     std::string label;
     int nb_steps{};
     bool input_time = false;
+    bool input_prev_frame = false;
     bool input_facedetection = false;
     params_list effect_params;
     std::shared_ptr<effect_shader> main_shader = nullptr;
@@ -39,7 +40,7 @@ struct shadertastic_effect_t {
 
     void reload();
 
-    void set_params(gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy, float rand_seed);
+    void set_params(gs_texture_t *a, gs_texture_t *b, gs_texture_t *prev_tex, float t, float delta_t, uint32_t cx, uint32_t cy, float rand_seed);
 
     void set_step_params(int current_step, gs_texture_t *interm) const;
 
