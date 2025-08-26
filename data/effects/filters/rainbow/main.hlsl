@@ -1,4 +1,4 @@
-uniform float random_amount;
+uniform int mode;
 //----------------------------------------------------------------------------------------------------------------------
 
 sampler_state textureSampler {
@@ -35,10 +35,37 @@ float4 HueShift (float4 pixel, float Shift)
     return float4(pixel.xyz, pixel.a);
 }
 
+
+float sinplus1(float v) {
+    return (1.0 + sin(v)) / 2.0;
+}
+float cosplus1(float v) {
+    return (1.0 + cos(v)) / 2.0;
+}
+
+float sinwaves(float val) {
+    return (
+        0.2*sinplus1(8.0*val) +
+        0.1*cosplus1(13.0*val) +
+        0.2*sinplus1(27.0*val + 0.2) +
+        0.15*sinplus1(41.0*val) +
+        0.05*cosplus1(87.0*val) +
+        0.01*sinplus1(107.0*val)
+    ) / (0.2+0.1+0.2+0.15+0.05+0.01);
+}
+
 float4 EffectLinear(float2 uv)
 {
     float4 pixel = image.Sample(textureSampler, uv);
-    pixel = HueShift(pixel, time - int(time));
+    if (mode == 0) {
+        // Linear
+        pixel = HueShift(pixel, time - int(time));
+    }
+    if (mode == 1) {
+        // Random
+        pixel = HueShift(pixel, sinwaves(time - int(time)));
+    }
+
     return pixel;
 }
 //----------------------------------------------------------------------------------------------------------------------

@@ -4,5 +4,14 @@
   "steps": 1,
   "input_time": true,
   "parameters": [
+    {
+      "name": "mode",
+      "label": "Rainbow Mode",
+      "type": "list_int",
+      "values": [
+        {"label": "Linear", "value": 0},
+        {"label": "Random", "value": 1}
+      ]
+    }
   ]
 }
