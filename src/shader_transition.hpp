@@ -172,41 +172,63 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
         struct vec4 clear_color{};
         vec4_zero(&clear_color);
 
-        for (int current_step=0; current_step < effect->nb_steps - 1; ++current_step) {
-            //debug("%d", current_step);
-            s->transition_texrender_buffer = (s->transition_texrender_buffer+1) & 1;
-            gs_texrender_reset(s->transition_texrender[s->transition_texrender_buffer]);
-            if (gs_texrender_begin(s->transition_texrender[s->transition_texrender_buffer], cx, cy)) {
+        const enum gs_color_space preferred_spaces[] = {
+            GS_CS_SRGB,
+            GS_CS_SRGB_16F,
+            GS_CS_709_EXTENDED,
+        };
+        obs_source_t *target_source = obs_filter_get_target(s->source);
+
+        const enum gs_color_space source_space = obs_source_get_color_space(target_source, OBS_COUNTOF(preferred_spaces), preferred_spaces);
+
+        for (int current_step=0; current_step < effect->nb_steps; ++current_step) {
+            bool is_final_step = current_step == effect->nb_steps - 1;
+            bool is_interm_step = !is_final_step;
+            bool texrender_ok = true;
+            bool is_saved_step = effect->prev_frames_to_keep[current_step] != nullptr;
+
+            if (is_interm_step) {
+                s->transition_texrender_buffer = (s->transition_texrender_buffer + 1) & 1;
+                gs_texrender_reset(s->transition_texrender[s->transition_texrender_buffer]);
+                texrender_ok = gs_texrender_begin(s->transition_texrender[s->transition_texrender_buffer], cx, cy);
+
+                if (texrender_ok) {
+                    gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
+                    gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
+                }
+            }
+            if (texrender_ok && is_saved_step) {
+                texrender_ok = effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space);
+            }
+
+            if (texrender_ok) {
                 gs_blend_state_push();
                 gs_blend_function_separate(
                     GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
                     GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
                 );
-                gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
-                gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
-
                 effect->set_params(a, b, t, s->delta_time, cx, cy, s->rand_seed);
                 effect->set_step_params(current_step, interm_texture);
-                effect->render_shader(cx, cy);
-                gs_texrender_end(s->transition_texrender[s->transition_texrender_buffer]);
+                effect->render_shader(cx, cy, !is_final_step && !is_saved_step);
+
+                if (is_saved_step) {
+                    //bool is_non_linear = !is_interm_step;
+                    effect->prev_frames_to_keep[current_step]->detach(s->source, cx, cy, is_final_step);
+                }
+                if (is_interm_step) {
+                    gs_texrender_end(s->transition_texrender[s->transition_texrender_buffer]);
+                    interm_texture = gs_texrender_get_texture(s->transition_texrender[s->transition_texrender_buffer]);
+                }
                 gs_blend_state_pop();
-                interm_texture = gs_texrender_get_texture(s->transition_texrender[s->transition_texrender_buffer]);
+            }
+            else {
+                debug("texrender_ok IS FALSE");
+                break;
             }
         }
-
-        gs_blend_state_push();
-        gs_blend_function_separate(
-            GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
-            GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
-        );
-        effect->set_params(a, b, t, s->delta_time, cx, cy, s->rand_seed);
-        effect->set_step_params(effect->nb_steps - 1, interm_texture);
-        effect->render_shader(cx, cy);
-        gs_blend_state_pop();
     }
 
     gs_enable_framebuffer_srgb(previous);
-
     s->prev_time = t;
 }
 //----------------------------------------------------------------------------------------------------------------------

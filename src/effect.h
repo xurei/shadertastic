@@ -49,7 +49,7 @@ struct shadertastic_effect_t {
 
     void set_step_params(int current_step, gs_texture_t *interm) const;
 
-    void render_shader(uint32_t cx, uint32_t cy) const;
+    void render_shader(uint32_t cx, uint32_t cy, bool is_linear) const;
 
     void show();
 

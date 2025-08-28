@@ -91,44 +91,46 @@ class effect_parameter_prev_frame : public effect_parameter {
             try_gs_effect_set_texture(name.c_str(), shader_param, this->prev_texture);
         }
 
-        bool attach(const uint32_t cx, const uint32_t cy) {
-            if (cur_texture != nullptr) {
-                prev_texture = cur_texture;
-            }
+        bool attach(const uint32_t cx, const uint32_t cy, const gs_color_space source_space) {
+            prev_texture = cur_texture;
             prev_texrender_buffer = (prev_texrender_buffer + 1) & 1;
             gs_texrender_reset(prev_texrender[prev_texrender_buffer]);
-            bool texrender_ok = gs_texrender_begin(prev_texrender[prev_texrender_buffer], cx, cy);
+            bool texrender_ok = gs_texrender_begin_with_color_space(prev_texrender[prev_texrender_buffer], cx, cy, source_space);
             if (texrender_ok) {
                 struct vec4 clear_color{0,0,0,0};
                 gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
-                gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
+                gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f);
+            }
+            else {
+                debug("effect_parameter_prev_frame: cannot begin texrender");
             }
             return texrender_ok;
         }
 
-        void detach(obs_source_t *source, const uint32_t cx, const uint32_t cy) {
+        void detach(obs_source_t *source, const uint32_t cx, const uint32_t cy, const bool is_srgb) {
+            UNUSED_PARAMETER(source);
+            UNUSED_PARAMETER(cx);
+            UNUSED_PARAMETER(cy);
+            UNUSED_PARAMETER(is_srgb);
             gs_texrender_end(prev_texrender[prev_texrender_buffer]);
             cur_texture = gs_texrender_get_texture(prev_texrender[prev_texrender_buffer]);
 
             if (cur_texture) {
                 gs_blend_state_push();
-                gs_blend_function(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
+                gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO); // copy exact*/
 
-                const enum gs_color_space preferred_spaces[] = {
-                    GS_CS_SRGB,
-                    GS_CS_SRGB_16F,
-                    GS_CS_709_EXTENDED,
-                };
-                obs_source_t *target_source = obs_filter_get_target(source);
-                const enum gs_color_space source_space = obs_source_get_color_space(target_source, OBS_COUNTOF(preferred_spaces), preferred_spaces);
-                const enum gs_color_format format = gs_get_format_from_space(source_space);
-
-                if (obs_source_process_filter_begin_with_color_space(source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
+                {
                     gs_effect_t *default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
+                    gs_technique_t *tech = gs_effect_get_technique(default_effect, is_srgb ? "DrawSrgbDecompress" : "Draw");
                     gs_eparam_t *image = gs_effect_get_param_by_name(default_effect, "image");
                     gs_effect_set_texture(image, cur_texture);
-                    while (gs_effect_loop(default_effect, "Draw")) {
-                        gs_draw_sprite(cur_texture, 0, cx, cy);
+
+                    if (gs_technique_begin(tech)) {
+                        if (gs_technique_begin_pass(tech, 0)) {
+                            gs_draw_sprite(nullptr, 0, cx, cy);
+                            gs_technique_end_pass(tech);
+                        }
+                        gs_technique_end(tech);
                     }
                 }
                 gs_blend_state_pop();

@@ -178,9 +178,13 @@ void shadertastic_effect_t::set_step_params(int current_step, gs_texture_t *inte
     try_gs_effect_set_int("current_step", main_shader->param_current_step, current_step);
 }
 
-void shadertastic_effect_t::render_shader(uint32_t cx, uint32_t cy) const {
+
+void shadertastic_effect_t::render_shader(uint32_t cx, uint32_t cy, bool use_linear) const {
     const char *tech_name = "Draw";
-    if (gs_get_color_space() == GS_CS_SRGB) {
+    if (use_linear) {
+        tech_name = "DrawLinear";
+    }
+    else if (gs_get_color_space() == GS_CS_SRGB) {
         /* users want nonlinear fade */
     }
     else {
