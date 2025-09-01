@@ -260,7 +260,7 @@ static void show_settings_dialog() {
     QDoubleSpinBox *one_euro_min_cutoff_edit;
     {
         float one_euro_filter_mincutoff = (float)obs_data_get_double(settings, SETTING_ONE_EURO_MIN_CUTOFF);
-        one_euro_min_cutoff_edit = settings_dialog__float_input(dialog, formLayout, "Min Cutoff", "Lower is smoother", one_euro_filter_mincutoff, 0.000f, 0.0f, 20.0f);
+        one_euro_min_cutoff_edit = settings_dialog__float_input(dialog, formLayout, "Min Cutoff", "Lower is smoother", one_euro_filter_mincutoff, 0.0001f, 0.0f, 20.0f);
         QObject::connect(one_euro_min_cutoff_edit, &QDoubleSpinBox::textChanged, [=]() {
             float float_value = (float)(one_euro_min_cutoff_edit->value());
             obs_data_set_double(settings, SETTING_ONE_EURO_MIN_CUTOFF, float_value);
