@@ -62,9 +62,7 @@ float4 EffectLinear(float2 uv) {
     );
     float2 uv_rotated = ortho_to_uv(uv_ortho_rotated);
 
-    float2 uv_out = uv_rotated;
-
-    float4 img_px = image.Sample(textureSampler, uv_out);
+    float4 img_px = image.Sample(textureSampler, uv_rotated);
     return img_px;
 }
 
