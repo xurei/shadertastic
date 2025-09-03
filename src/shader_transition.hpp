@@ -262,6 +262,7 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
     float t = obs_transition_get_time(s->source);
     if (t >= 1.0f) {
         s->transitioning = false;
+        s->prev_time = 0.0f;
     }
 
     if (s->transitioning) {

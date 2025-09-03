@@ -1,0 +1,19 @@
+{
+  "label": "Color flip",
+  "revision": 1,
+  "steps": 1,
+  "parameters": [
+    {
+      "name": "flip_type",
+      "label": "Flip type",
+      "type": "list_int",
+      "values": [
+        {"label": "R → G → B → R", "value": 0},
+        {"label": "R ← G ← B ← R", "value": 1},
+        {"label": "R ↔ G", "value": 2},
+        {"label": "R ↔ B", "value": 3},
+        {"label": "G ↔ B", "value": 4}
+      ]
+    }
+  ]
+}

@@ -154,6 +154,7 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
 
         if (s->reset_time_on_show) {
             s->time = 0.0;
+            s->prev_time = 0.0;
         }
     }
     uint64_t frame_interval = obs_get_frame_interval_ns();

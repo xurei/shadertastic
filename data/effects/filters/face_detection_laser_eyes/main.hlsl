@@ -100,40 +100,47 @@ float2 barycentricCoordinates(float2 p1, float2 p2, float2 p3, float2 point_to_c
 //----------------------------------------------------------------------------------------------------------------------
 
 int3 get_best_triangle(float2 uv) {
-    int3 triangles[28]; {
-        int k = 0;
+    #ifdef _D3D11
+    static const int3 triangles[28] = {
+    #else
+    const ivec3 triangles[28] = ivec3[28](
+    #endif
         // LEFT EYE
-        triangles[k++] = int3(  7, 163, 246);
-        triangles[k++] = int3(  7, 246,  33);
-        triangles[k++] = int3(144, 161, 163);
-        triangles[k++] = int3(144, 160, 161);
-        triangles[k++] = int3(145, 159, 160);
-        triangles[k++] = int3(161, 246, 163);
-        triangles[k++] = int3(144, 145, 160);
-        triangles[k++] = int3(145, 153, 159);
-        triangles[k++] = int3(153, 158, 159);
-        triangles[k++] = int3(153, 154, 158);
-        triangles[k++] = int3(154, 157, 158);
-        triangles[k++] = int3(154, 155, 157);
-        triangles[k++] = int3(155, 173, 157);
-        triangles[k++] = int3(133, 173, 155);
+        int3(  7, 163, 246),
+        int3(  7, 246,  33),
+        int3(144, 161, 163),
+        int3(144, 160, 161),
+        int3(145, 159, 160),
+        int3(161, 246, 163),
+        int3(144, 145, 160),
+        int3(145, 153, 159),
+        int3(153, 158, 159),
+        int3(153, 154, 158),
+        int3(154, 157, 158),
+        int3(154, 155, 157),
+        int3(155, 173, 157),
+        int3(133, 173, 155),
 
         // RIGHT EYE
-        triangles[k++] = int3(249, 263, 466);
-        triangles[k++] = int3(249, 466, 390);
-        triangles[k++] = int3(362, 382, 398);
-        triangles[k++] = int3(373, 387, 374);
-        triangles[k++] = int3(373, 388, 387);
-        triangles[k++] = int3(373, 390, 388);
-        triangles[k++] = int3(374, 386, 380);
-        triangles[k++] = int3(374, 387, 386);
-        triangles[k++] = int3(380, 385, 381);
-        triangles[k++] = int3(380, 386, 385);
-        triangles[k++] = int3(381, 384, 382);
-        triangles[k++] = int3(381, 385, 384);
-        triangles[k++] = int3(382, 384, 398);
-        triangles[k++] = int3(388, 390, 466);
-    }
+        int3(249, 263, 466),
+        int3(249, 466, 390),
+        int3(362, 382, 398),
+        int3(373, 387, 374),
+        int3(373, 388, 387),
+        int3(373, 390, 388),
+        int3(374, 386, 380),
+        int3(374, 387, 386),
+        int3(380, 385, 381),
+        int3(380, 386, 385),
+        int3(381, 384, 382),
+        int3(381, 385, 384),
+        int3(382, 384, 398),
+        int3(388, 390, 466)
+    #ifdef _D3D11
+    };
+    #else
+    );
+    #endif
 
     float2 best_uv = float2(-1.0, -1.0);
     float best_z = 10000.0;

@@ -56,9 +56,9 @@ float4 EffectLinear(float2 uv)
         return prev_tex1.Sample(textureSampler, uv);
     }
     else {
-        float4 imgr = prev_tex0.Sample(textureSampler, uv);
-        float4 imgg = prev_tex1.Sample(textureSampler, uv);
-        float4 imgb = prev_tex2.Sample(textureSampler, uv);
+        float4 imgr = prev_tex1.Sample(textureSampler, uv);
+        float4 imgg = prev_tex2.Sample(textureSampler, uv);
+        float4 imgb = image.Sample(textureSampler, uv);
         float4 result = float4(imgr.r, imgg.g, imgb.b, 1.0);
         return result;
     }
