@@ -18,14 +18,17 @@
 obs_properties_t *shadertastic_filter_properties(void *data);
 //----------------------------------------------------------------------------------------------------------------------
 
-static shadertastic_filter shadertastic_no_filter;
+static shadertastic_filter *shadertastic_no_filter = nullptr;
+
+static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *source);
 
 static inline shadertastic_filter* shadertastic_filter_cast(void *data) {
     if (data == nullptr) {
-        if (shadertastic_no_filter.effects == nullptr) {
-            shadertastic_no_filter.effects = new shadertastic_effects_map_t();
+        if (shadertastic_no_filter == nullptr) {
+            obs_data_t *no_filter_settings = obs_data_create();
+            shadertastic_no_filter = static_cast<shadertastic_filter *>(shadertastic_filter_create(no_filter_settings, nullptr));
         }
-        return &shadertastic_no_filter;
+        return shadertastic_no_filter;
     }
     return static_cast<shadertastic_filter*>(data);
 }
@@ -47,7 +50,7 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     //    }
     //    debug("FILTER %s ON %s Settings : %s", obs_source_get_name(source), obs_source_get_name(root_source), obs_data_get_json(settings));
     //#endif
-    debug("FILTER %s Settings : %s", obs_source_get_name(source), obs_data_get_json(settings));
+    debug("FILTER %s Settings : %s", (source==nullptr) ? "null" : obs_source_get_name(source), obs_data_get_json(settings));
 
     uint8_t transparent_tex_data[2 * 2 * 4] = {0};
     const uint8_t *transparent_tex = transparent_tex_data;
@@ -61,9 +64,9 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     std::string filters_dir(filters_dir_);
     bfree(filters_dir_);
 
-    load_effects(s, filters_dir, "filter");
+    load_effects(s, settings, filters_dir, "filter");
     if (shadertastic_settings().effects_path != nullptr) {
-        load_effects(s, *(shadertastic_settings().effects_path), "filter");
+        load_effects(s, settings, *(shadertastic_settings().effects_path), "filter");
     }
 
     // Set defaults for each effect
@@ -73,7 +76,9 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
         }
     }
 
-    obs_source_update(source, settings);
+    if (source != nullptr) {
+        obs_source_update(source, settings);
+    }
 
     return s;
 }
@@ -346,11 +351,23 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
+void shadertastic_filter_get_defaults(obs_data_t *settings) {
+    if (shadertastic_no_filter == nullptr) {
+        obs_data_t *no_filter_settings = obs_data_create();
+        shadertastic_no_filter = static_cast<shadertastic_filter *>(shadertastic_filter_create(no_filter_settings, nullptr));
+    }
+
+    for (auto effect : *shadertastic_no_filter->effects) {
+        shadertastic_effect_set_defaults(settings, &effect.second);
+    }
+}
+
 static enum gs_color_space shadertastic_filter_get_color_space(void *data, size_t count, const enum gs_color_space *preferred_spaces) {
     struct shadertastic_filter *s = shadertastic_filter_cast(data);
     const enum gs_color_space source_space = obs_source_get_color_space(
         obs_filter_get_target(s->source),
-        count, preferred_spaces);
+        count, preferred_spaces
+    );
 
     return source_space;
 }

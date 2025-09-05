@@ -64,7 +64,7 @@ OBS_MODULE_USE_DEFAULT_LOCALE("shadertastic", "en-US")
 bool module_loaded = false;
 //----------------------------------------------------------------------------------------------------------------------
 
-void load_effects(shadertastic_common *s, const std::string &effects_dir, const std::string &effects_type) {
+void load_effects(shadertastic_common *s, obs_data_t *settings, const std::string &effects_dir, const std::string &effects_type) {
     std::vector<std::string> dirs = list_directories((effects_dir + "/" + effects_type + "s").c_str());
 
     for (const auto &dir : dirs) {
@@ -85,7 +85,7 @@ void load_effects(shadertastic_common *s, const std::string &effects_dir, const 
             }
             else {
                 s->effects->insert(shadertastic_effects_map_t::value_type(dir, effect));
-                shadertastic_effect_set_defaults(s, &effect);
+                shadertastic_effect_set_defaults(settings, &effect);
             }
         }
         else {
@@ -114,7 +114,7 @@ void load_effects(shadertastic_common *s, const std::string &effects_dir, const 
             }
             else {
                 s->effects->insert(shadertastic_effects_map_t::value_type(effect_name, effect));
-                shadertastic_effect_set_defaults(s, &effect);
+                shadertastic_effect_set_defaults(settings, &effect);
             }
         }
     }
@@ -393,6 +393,7 @@ static void show_settings_dialog() {
     shadertastic_filter_info.create = shadertastic_filter_create;
     shadertastic_filter_info.destroy = shadertastic_filter_destroy;
     shadertastic_filter_info.get_properties = shadertastic_filter_properties;
+    shadertastic_filter_info.get_defaults = shadertastic_filter_get_defaults;
     shadertastic_filter_info.video_tick = shadertastic_filter_tick;
     shadertastic_filter_info.update = shadertastic_filter_update;
     shadertastic_filter_info.get_width = shadertastic_filter_getwidth,
