@@ -117,3 +117,94 @@ jobs:
             ${{ github.workspace }}/*.deb
             ${{ github.workspace }}/*.ddeb
             ${{ github.workspace }}/*.tar.xz
+
+#  windows-package:
+#    name: 'Windows Package'
+#    runs-on: [windows-latest]
+#    needs: [ build-project ]
+#    permissions:
+#      contents: write # To allow the creation of a release
+#    if: true # startsWith(github.ref, 'refs/tags/')
+#    steps:
+#      - name: Init
+#        if: success()
+#        run: |
+#          mkdir ./package
+#          $env:FILE_DATE=(Get-Date -UFormat "%F")
+#          $env:FILE_NAME="${{ needs.build-project.outputs.pluginName }}-${env:FILE_DATE}-${{ github.sha }}-windows"
+#          echo "FILE_NAME=${env:FILE_NAME}" >> ${env:GITHUB_ENV}
+#          $env:FILE_NAME_X86="${{ needs.build-project.outputs.pluginName }}-${{ github.sha }}-windows-x86"
+#          echo "FILE_NAME_X86=${env:FILE_NAME_X86}" >> ${env:GITHUB_ENV}
+#          $env:FILE_NAME_X64="${{ needs.build-project.outputs.pluginName }}-${{ github.sha }}-windows-x64"
+#          echo "FILE_NAME_X64=${env:FILE_NAME_X64}" >> ${env:GITHUB_ENV}
+#          $env:RELEASE_FILE_NAME_X64="${{ needs.build-project.outputs.pluginName }}-${{ github.ref_name }}-windows-x64"
+#          echo "RELEASE_FILE_NAME_X64=${env:RELEASE_FILE_NAME_X64}" >> ${env:GITHUB_ENV}
+#      - name: Download Build Artifacts 📥
+#        uses: actions/download-artifact@v4
+#        # a remettre if: fromJSON(steps.check.outputs.validTag)
+#        id: download
+#      - name: Retrieve installer files
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: 'installer-files'
+#          path: .
+#      - name: Create Code Signing Certificate
+#        if: success() && github.event_name != 'pull_request'
+#        run: |
+#          New-Item -ItemType directory -Path certificate
+#          Set-Content -Path certificate\certificate.txt -Value '${{ secrets.WINDOWS_CERTIFICATE }}'
+#          certutil -decode certificate\certificate.txt certificate\certificate.pfx
+#      - name: Print Code Signing details
+#        if: success() && github.event_name != 'pull_request'
+#        run: |
+#          certutil -p "${{ secrets.WINDOWS_CERTIFICATE_PASS }}" -dump certificate\certificate.pfx
+#      #      - name: Code Sign 32
+#      #        if: success() && github.event_name != 'pull_request'
+#      #        run: |
+#      #          & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x86/signtool.exe' sign /fd certHash /f certificate\certificate.pfx /p '${{ secrets.WINDOWS_CERTIFICATE_PASS }}' /t http://timestamp.comodoca.com/authenticode .\package\obs-plugins\32bit\${{ env.PLUGIN_NAME }}.dll
+#      - name: Code Sign 64
+#        if: success() && github.event_name != 'pull_request'
+#        run: |
+#          & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x64/signtool.exe' sign /fd certHash /f certificate\certificate.pfx /p '${{ secrets.WINDOWS_CERTIFICATE_PASS }}' /t http://timestamp.comodoca.com/authenticode .\package\obs-plugins\64bit\${{ env.PLUGIN_NAME }}.dll
+#      - name: ZIP plugin files
+#        if: startsWith(github.ref, 'refs/tags/')
+#        run: |
+#          7z a "${{ env.RELEASE_FILE_NAME_X64 }}.zip" ".\package\*"
+#      - name: Publish zip
+#        if: success()
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: '${{ env.FILE_NAME }}'
+#          path: package/*
+#      - name: "Package Installer (Prereqs)"
+#        run: |
+#          curl "-kL" "https://github.com/Xaymar/msvc-redist-helper/releases/download/0.1/msvc-redist-helper-64.exe" "-f" "--retry" "5" "-o" "msvc-redist-helper.exe"
+#          curl "-kL" "https://files.jrsoftware.org/is/6/innosetup-6.2.2.exe" "-f" "--retry" "5" "-o" "inno.exe"
+#          .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
+#      - name: "Package Installer (Compile)"
+#        run: |
+#          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' /Qp ".\installer.iss"
+#      - name: Code Sign Installer
+#        if: success() && github.event_name != 'pull_request'
+#        run: |
+#          & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x64/signtool.exe' sign /fd certHash /f certificate\certificate.pfx /p '${{ secrets.WINDOWS_CERTIFICATE_PASS }}' /t http://timestamp.comodoca.com/authenticode .\package\${{ env.PLUGIN_NAME }}-installer.exe
+#          mv ".\package\${{ env.PLUGIN_NAME }}-installer.exe" ".\package\${{ env.RELEASE_FILE_NAME_X64 }}-installer.exe"
+#      - name: Publish installer
+#        if: success()
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: '${{ env.RELEASE_FILE_NAME_X64 }}-installer'
+#          path: package/*.exe
+#      - name: Release installer
+#        uses: softprops/action-gh-release@v1
+#        if: startsWith(github.ref, 'refs/tags/')
+#        with:
+#          draft: true
+#          fail_on_unmatched_files: true
+#          files: |
+#            package/*
+#            ${{ env.RELEASE_FILE_NAME_X64 }}.zip
+#      - name: Remove temp artifacts
+#        uses: geekyeggo/delete-artifact@v2.0.0
+#        with:
+#          name: "${{ env.FILE_NAME_X64 }}\ninstaller-files"
