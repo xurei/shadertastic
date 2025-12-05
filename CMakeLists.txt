@@ -84,6 +84,9 @@ endif ()
 
 if(OS_WINDOWS)
   #    message("Windows build")
+  configure_file("installer.iss.in"
+    "${PROJECT_BINARY_DIR}/installer.iss"
+  )
 elseif(OS_MACOS)
   # TODO
 elseif(OS_LINUX)
