@@ -308,8 +308,8 @@ jobs:
         if: success()
         run: |
           $env:FILE_NAME="${{ steps.setup.outputs.pluginName }}-windows-x64-${{ needs.check-event.outputs.commitHash }}"
-          copy .\build_x64\obs-studio\plugins\${{ env.PLUGIN_NAME }}\installer.iss .\installer\installer.iss
-          robocopy .\plugins\${{ env.PLUGIN_NAME}}\media\ .\installer\media\ /E /XF .gitignore
+          copy .\build_x64\installer.iss .\installer\installer.iss
+          robocopy .\media\ .\installer\media\ /E /XF .gitignore
           exit 0
 
       - name: Publish Installer Files
@@ -332,13 +332,13 @@ jobs:
         run: |
           mkdir ./package
           $env:FILE_DATE=(Get-Date -UFormat "%F")
-          $env:FILE_NAME="${{ env.PLUGIN_NAME }}-${env:FILE_DATE}-${{ github.sha }}-windows"
+          $env:FILE_NAME="${{ steps.setup.outputs.pluginName }}-${env:FILE_DATE}-${{ github.sha }}-windows"
           echo "FILE_NAME=${env:FILE_NAME}" >> ${env:GITHUB_ENV}
-          $env:FILE_NAME_X86="${{ env.PLUGIN_NAME }}-${{ github.sha }}-windows-x86"
+          $env:FILE_NAME_X86="${{ steps.setup.outputs.pluginName }}-${{ github.sha }}-windows-x86"
           echo "FILE_NAME_X86=${env:FILE_NAME_X86}" >> ${env:GITHUB_ENV}
-          $env:FILE_NAME_X64="${{ env.PLUGIN_NAME }}-${{ github.sha }}-windows-x64"
+          $env:FILE_NAME_X64="${{ steps.setup.outputs.pluginName }}-${{ github.sha }}-windows-x64"
           echo "FILE_NAME_X64=${env:FILE_NAME_X64}" >> ${env:GITHUB_ENV}
-          $env:RELEASE_FILE_NAME_X64="${{ env.PLUGIN_NAME }}-${{ github.ref_name }}-windows-x64"
+          $env:RELEASE_FILE_NAME_X64="${{ steps.setup.outputs.pluginName }}-${{ github.ref_name }}-windows-x64"
           echo "RELEASE_FILE_NAME_X64=${env:RELEASE_FILE_NAME_X64}" >> ${env:GITHUB_ENV}
       #      - name: Retrieve x86 build
       #        uses: actions/download-artifact@v3.0.1
