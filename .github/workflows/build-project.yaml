@@ -284,18 +284,16 @@ jobs:
           target: x64
           config: ${{ needs.check-event.outputs.config }}
 
-      - name: Create Code Signing Certificate 🪪
+      - name: Create Code Signing Certificate 📜
         if: success() && github.event_name != 'pull_request'
         run: |
           New-Item -ItemType directory -Path certificate
           Set-Content -Path certificate\certificate.txt -Value '${{ secrets.WINDOWS_CERTIFICATE }}'
           certutil -decode certificate\certificate.txt certificate\certificate.pfx
-      - name: Print Code Signing details 🪪
-        if: success() && github.event_name != 'pull_request'
-        run: |
           certutil -p "${{ secrets.WINDOWS_CERTIFICATE_PASS }}" -dump certificate\certificate.pfx
-      - name: Code Sign x64 🪪
+      - name: Code Sign x64 🔒
         if: success() && github.event_name != 'pull_request'
+        shell: cmd
         run: |
           & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x64/signtool.exe' sign /fd certHash /f certificate\certificate.pfx /p '${{ secrets.WINDOWS_CERTIFICATE_PASS }}' /t http://timestamp.comodoca.com/authenticode .\build_x64\RelWithDebInfo\${{ steps.setup.outputs.pluginName }}.dll
 
