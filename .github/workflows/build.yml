@@ -2,7 +2,7 @@ name: build obs plugin
 
 on:
   push:
-    branches: [ main, ci, dev, face_detection_final ]
+    branches: [ main, ci, dev, face_detection_final, lab/oldway ]
     tags: [ '*' ]
   #pull_request:
   #  branches: [ main ]

@@ -129,6 +129,7 @@ if(OS_WINDOWS)
     )
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/resource.rc.in ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.rc)
 
+
     include_directories(AFTER ${LIBZIP_INCLUDE})
     include_directories(AFTER ${LIBZIP_INCLUDE_CONF})
     target_link_libraries(${PROJECT_NAME}
