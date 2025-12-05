@@ -298,8 +298,8 @@ jobs:
 
       - name: Add ONNX
         run: |
-          mkdir -p "${{ github.workspace }}/release/shadertastic_lib"
-          cp "${{ github.workspace }}/build_x64/_deps/onnxruntime-src/lib/onnxruntime.dll" "${{ github.workspace }}/release/shadertastic_lib"
+          mkdir -p "${{ github.workspace }}/release/RelWithDebInfo/${{ steps.setup.outputs.pluginName }}/bin/64bit/shadertastic_lib"
+          cp "${{ github.workspace }}/build_x64/_deps/onnxruntime-src/lib/onnxruntime.dll" "${{ github.workspace }}/release/RelWithDebInfo/${{ steps.setup.outputs.pluginName }}/bin/64bit/shadertastic_lib"
 
       - name: Package Plugin 📀
         uses: ./.github/actions/package-plugin
@@ -312,21 +312,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.setup.outputs.pluginName }}-${{ steps.setup.outputs.pluginVersion }}-windows-x64-${{ needs.check-event.outputs.commitHash }}
-          path: ${{ github.workspace }}/release/**/*
-
-        #${{ steps.setup.outputs.pluginName }}-${{ steps.setup.outputs.pluginVersion }}-windows-x64*.*
-
-      - name: Prepare Installer files
-        if: success()
-        run: |
-          $env:FILE_NAME="${{ steps.setup.outputs.pluginName }}-windows-x64-${{ needs.check-event.outputs.commitHash }}"
-          copy .\build_x64\installer.iss .\installer\installer.iss
-          robocopy .\media\ .\installer\media\ /E /XF .gitignore
-          exit 0
-
-      - name: Publish Installer Files
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: 'installer-files'
-          path: installer/*
+          path: |
+            ${{ github.workspace }}/release/**/*
+            ${{ github.workspace }}/build_x64/installer.iss
+            ${{ github.workspace }}/media/**/*
