@@ -84,9 +84,6 @@ endif ()
 
 if(OS_WINDOWS)
   #    message("Windows build")
-  configure_file("installer.iss.in"
-    "${PROJECT_BINARY_DIR}/installer.iss"
-  )
 elseif(OS_MACOS)
   # TODO
 elseif(OS_LINUX)
@@ -149,3 +146,8 @@ set_source_files_properties(SOURCE ${shaders_HLSL} PROPERTIES VS_SETTINGS "Exclu
 if(MSVC)
   add_definitions(/std:c++20)
 endif()
+
+# Installer
+configure_file("installer.iss.in"
+        "${PROJECT_BINARY_DIR}/installer.iss"
+)
