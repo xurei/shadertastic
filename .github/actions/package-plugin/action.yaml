@@ -33,7 +33,7 @@ inputs:
     required: false
     default: ''
   codesignPass:
-    description: Apple ID password for notarization (macOS only)
+    description: Apple ID password for notarization (windows & macOS only)
     required: false
     default: ''
   package:
@@ -118,19 +118,11 @@ runs:
       run: |
         & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' /Qp ".\build_x86_64\installer.iss"
 
-    - name: Create Code Signing Certificate 📜
-      if: success() && github.event_name != 'pull_request'
-      shell: pwsh
-      run: |
-        New-Item -ItemType directory -Path certificate
-        Set-Content -Path certificate\certificate.txt -Value '${{ secrets.WINDOWS_CERTIFICATE }}'
-        certutil -decode certificate\certificate.txt certificate\certificate.pfx
-        certutil -p "${{ secrets.WINDOWS_CERTIFICATE_PASS }}" -dump certificate\certificate.pfx
     - name: Code Sign x64 🔒
       if: success() && github.event_name != 'pull_request'
       shell: pwsh
       run: |
-        & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/signtool.exe' sign /fd sha256 /f certificate\certificate.pfx /p '${{ secrets.WINDOWS_CERTIFICATE_PASS }}' /tr http://timestamp.sectigo.com /td sha256 .\release\RelWithDebInfo\${{ steps.setup.outputs.pluginName }}\bin\64bit\${{ steps.setup.outputs.pluginName }}.dll
+        & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/signtool.exe' sign /fd sha256 /f certificate\certificate.pfx /p '${{ inputs.codesignPass }}' /tr http://timestamp.sectigo.com /td sha256 .\release\RelWithDebInfo\${{ steps.setup.outputs.pluginName }}\bin\64bit\${{ steps.setup.outputs.pluginName }}.dll
 
 #  windows-package:
 #    name: 'Windows Package'

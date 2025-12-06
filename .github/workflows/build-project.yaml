@@ -307,6 +307,7 @@ jobs:
           target: x64
           config: ${{ needs.check-event.outputs.config }}
           package: ${{ fromJSON(needs.check-event.outputs.package) }}
+          codesignPass: ${{ secrets.WINDOWS_CERTIFICATE_PASS }}
 
       - name: Upload Artifacts 📡
         uses: actions/upload-artifact@v4
