@@ -123,10 +123,9 @@ runs:
       shell: pwsh
       run: |
         & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' /Qp ".\build_x64\installer.iss"
-        mv .\release\shadertastic-windows-installer.exe .\release\shadertastic-${GITHUB_REF_NAME}-windows-installer.exe
 
     - name: Code Sign Installer 🔒
-      if: success() && github.event_name != 'pull_request' && runner.os == 'Windows'
+      if: runner.os == 'Windows' && success() && github.event_name != 'pull_request'
       shell: pwsh
       run: |
-        & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/signtool.exe' sign /fd sha256 /f certificate\certificate.pfx /p '${{ inputs.codesignPass }}' /tr http://timestamp.sectigo.com /td sha256 .\release\shadertastic-${GITHUB_REF_NAME}-windows-installer.exe
+        & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/signtool.exe' sign /fd sha256 /f certificate\certificate.pfx /p '${{ inputs.codesignPass }}' /tr http://timestamp.sectigo.com /td sha256 .\release\shadertastic-${GITHUB_REF_NAME}-windows-x64.exe

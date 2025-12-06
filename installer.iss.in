@@ -29,7 +29,7 @@ DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 DisableProgramGroupPage=yes
 OutputDir="../release"
-OutputBaseFilename=@PROJECT_NAME@-windows-installer
+OutputBaseFilename=@PROJECT_NAME@-windows-x64
 DirExistsWarning=no
 ; Wizard Information
 WizardStyle=modern
