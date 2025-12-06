@@ -28,8 +28,8 @@ DefaultDirName={code:GetDirName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 DisableProgramGroupPage=yes
-OutputDir="package"
-OutputBaseFilename=@PROJECT_NAME@-installer
+OutputDir="../release"
+OutputBaseFilename=@PROJECT_NAME@-windows-installer
 DirExistsWarning=no
 ; Wizard Information
 WizardStyle=modern
