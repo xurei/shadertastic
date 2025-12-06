@@ -285,14 +285,14 @@ jobs:
           config: ${{ needs.check-event.outputs.config }}
 
       - name: Create Code Signing Certificate 📜
-        if: success() && github.event_name != 'pull_request'
+        if: success() && github.event_name != 'pull_request' && runner.os == 'Windows'
         run: |
           New-Item -ItemType directory -Path certificate
           Set-Content -Path certificate\certificate.txt -Value '${{ secrets.WINDOWS_CERTIFICATE }}'
           certutil -decode certificate\certificate.txt certificate\certificate.pfx
           certutil -p "${{ secrets.WINDOWS_CERTIFICATE_PASS }}" -dump certificate\certificate.pfx
       - name: Code Sign x64 🔒
-        if: success() && github.event_name != 'pull_request'
+        if: success() && github.event_name != 'pull_request' && runner.os == 'Windows'
         run: |
           & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/signtool.exe' sign /fd sha256 /f certificate\certificate.pfx /p '${{ secrets.WINDOWS_CERTIFICATE_PASS }}' /tr http://timestamp.sectigo.com /td sha256 .\release\RelWithDebInfo\${{ steps.setup.outputs.pluginName }}\bin\64bit\${{ steps.setup.outputs.pluginName }}.dll
 
@@ -313,7 +313,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.setup.outputs.pluginName }}-${{ steps.setup.outputs.pluginVersion }}-windows-x64-${{ needs.check-event.outputs.commitHash }}
-          path: |
-            ${{ github.workspace }}/release/**/*
-            ${{ github.workspace }}/build_x64/installer.iss
-            ${{ github.workspace }}/media/**/*
+          path: ${{ github.workspace }}/release/**/*
