@@ -113,10 +113,10 @@ runs:
         .github/scripts/Package-Windows.ps1 @PackageArgs
 
     - name: "Package Installer (Prereqs)"
-      shell: bash
+      shell: cmd
       run: |
         curl "-kL" "https://files.jrsoftware.org/is/6/innosetup-6.2.2.exe" "-f" "--retry" "5" "-o" "inno.exe"
-        ./inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
+        .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
     - name: Create Windows Installer
       if: runner.os == 'Windows'
       shell: pwsh
