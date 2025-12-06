@@ -121,7 +121,7 @@ runs:
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
-        & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' /Qp ".\build_x86_64\installer.iss"
+        & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' /Qp ".\build_x64\installer.iss"
 
     - name: Code Sign x64 🔒
       if: success() && github.event_name != 'pull_request'

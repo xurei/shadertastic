@@ -40,7 +40,8 @@ SetupIconFile="media/icon.ico"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "package/*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "../release/RelWithDebInfo/shadertastic/bin/*"; DestDir: "{app}/obs-plugins"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "../release/RelWithDebInfo/shadertastic/data/*"; DestDir: "{app}/data/obs-plugins/{#MyAppName}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
