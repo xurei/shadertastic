@@ -56,6 +56,8 @@ static inline void render_filter_texture(gs_texture_t *source_tex, gs_effect_t *
 	size_t passes, i;
 
 	const bool previous = gs_framebuffer_srgb_enabled();
+    const bool linear_srgb = gs_get_linear_srgb();
+    gs_set_linear_srgb(true);
 	gs_enable_framebuffer_srgb(true);
 
     gs_effect_set_texture_srgb(image, source_tex);
@@ -69,8 +71,7 @@ static inline void render_filter_texture(gs_texture_t *source_tex, gs_effect_t *
 	gs_technique_end(tech);
 
 	gs_enable_framebuffer_srgb(previous);
-
-    gs_set_linear_srgb(previous);
+    gs_set_linear_srgb(linear_srgb);
 }
 //----------------------------------------------------------------------------------------------------------------------
 

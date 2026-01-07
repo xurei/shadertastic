@@ -29,13 +29,16 @@ void render_texture(gs_texture_t *final_tex, const bool use_copy, const bool com
 
     const bool linear_srgb = gs_get_linear_srgb();
     const bool previous = gs_framebuffer_srgb_enabled();
+    gs_set_linear_srgb(true);
     gs_enable_framebuffer_srgb(linear_srgb);
-    if (linear_srgb) {
+
+//    if (linear_srgb) {
         gs_effect_set_texture_srgb(image, final_tex);
-    }
-    else {
-        gs_effect_set_texture(image, final_tex);
-    }
+//    }
+//    else {
+//        gs_effect_set_texture_srgb(image, final_tex);
+//        //gs_effect_set_texture(image, final_tex);
+//    }
 
     gs_technique_t *tech = gs_effect_get_technique(default_effect, compensate_alpha ? "DrawAlphaDivide" : "Draw");
     if (gs_technique_begin(tech)) {
