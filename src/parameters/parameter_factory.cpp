@@ -25,6 +25,7 @@
 #include "parameter_color_alpha.hpp"
 #include "parameter_facetracking.hpp"
 #include "parameter_float.hpp"
+#include "parameter_group.hpp"
 #include "parameter_image.hpp"
 #include "parameter_int.hpp"
 #include "parameter_list_int.hpp"
@@ -99,6 +100,10 @@ effect_parameter * effect_parameter_factory::create(const std::string &effect_na
                 out = new effect_parameter_time(shader_param);
                 break;
             }
+            case PARAM_DATATYPE_GROUP: {
+                out = new effect_parameter_group(shader_param);
+                break;
+            }
             case PARAM_DATATYPE_UNKNOWN: default: {
                 out = new effect_parameter_unknown(shader_param);
                 break;
@@ -146,6 +151,9 @@ effect_param_datatype effect_parameter_factory::effect_parse_datatype(const char
     }
     else if (strcmp(datatype_str, "time") == 0) {
         return PARAM_DATATYPE_TIME;
+    }
+    else if (strcmp(datatype_str, "group") == 0) {
+        return PARAM_DATATYPE_GROUP;
     }
     else {
         return PARAM_DATATYPE_UNKNOWN;
