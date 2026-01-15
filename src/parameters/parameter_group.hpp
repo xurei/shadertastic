@@ -143,42 +143,44 @@ class effect_parameter_group : public effect_parameter {
         }
 
         void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
-            bool res;
-            void* param_value_ptr = gs_effect_get_val(param);
-            double param_value;
-            switch (if_mode) {
-                case PARAM_GROUP_IF_BOOL:
-                    param_value = *(bool*)param_value_ptr ? 1 : 0;
-                    break;
-                case PARAM_GROUP_IF_INT:
-                    param_value = (double)*(int*)param_value_ptr;
-                    break;
-                case PARAM_GROUP_IF_FLOAT:
-                    param_value = *(double*)param_value_ptr;
-                    break;
+            bool res = true;
+            if (param) {
+                void* param_value_ptr = gs_effect_get_val(param);
+                double param_value;
+                switch (if_mode) {
+                    case PARAM_GROUP_IF_BOOL:
+                        param_value = *(bool*)param_value_ptr ? 1 : 0;
+                        break;
+                    case PARAM_GROUP_IF_INT:
+                        param_value = (double)*(int*)param_value_ptr;
+                        break;
+                    case PARAM_GROUP_IF_FLOAT:
+                        param_value = *(double*)param_value_ptr;
+                        break;
+                }
+                switch (condition) {
+                    case PARAM_GROUP_CONDITION_EQUAL:
+                        res = param_value == value;
+                    case PARAM_GROUP_CONDITION_NOT_EQUAL:
+                        res = param_value != value;
+                    case PARAM_GROUP_CONDITION_GREATER:
+                        res = param_value > value;
+                    case PARAM_GROUP_CONDITION_GREATER_OR_EQUAL:
+                        res = param_value >= value;
+                    case PARAM_GROUP_CONDITION_LESS:
+                        res = param_value < value;
+                    case PARAM_GROUP_CONDITION_LESS_OR_EQUAL:
+                        res = param_value <= value;
+                    default:
+                        res = true;
+                        break;
+                }
             }
-            switch (condition) {
-                case PARAM_GROUP_CONDITION_EQUAL:
-                    res = param_value == value;
-                case PARAM_GROUP_CONDITION_NOT_EQUAL:
-                    res = param_value != value;
-                case PARAM_GROUP_CONDITION_GREATER:
-                    res = param_value > value;
-                case PARAM_GROUP_CONDITION_GREATER_OR_EQUAL:
-                    res = param_value >= value;
-                case PARAM_GROUP_CONDITION_LESS:
-                    res = param_value < value;
-                case PARAM_GROUP_CONDITION_LESS_OR_EQUAL:
-                    res = param_value <= value;
-                default:
-                    res = true;
-                    break;
-            }
-
             if (res) {
                 for (auto param: effect_params) {
                     if (!param->is_dev_mode() || shadertastic_settings().dev_mode_enabled) {
-                        param->render_property_ui(full_param_name, props);
+                        std::string sub_full_param_name = param->get_full_param_name(full_param_name);
+                        param->render_property_ui(sub_full_param_name.c_str(), props);
                     }
                 }
             }
@@ -188,8 +190,8 @@ class effect_parameter_group : public effect_parameter {
             //*((int*)this->data) = (int)obs_data_get_int(settings, full_param_name);
             //debug("%s = %d", full_param_name, *((int*)this->data));
             for (auto param: effect_params) {
-                std::string full_param_name = param->get_full_param_name(full_param_name);
-                param->set_data_from_settings(settings, full_param_name.c_str());
+                std::string sub_full_param_name = param->get_full_param_name(full_param_name);
+                param->set_data_from_settings(settings, sub_full_param_name.c_str());
             }
         }
 
