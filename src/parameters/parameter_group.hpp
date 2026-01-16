@@ -140,10 +140,15 @@ class effect_parameter_group : public effect_parameter {
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {
+            for (auto param: effect_params) {
+                std::string sub_full_param_name = param->get_full_param_name(full_param_name);
+                param->set_default(settings, sub_full_param_name.c_str());
+            }
         }
 
         void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
             bool res = true;
+            info ("Render properties of group %s", full_param_name);
             if (param) {
                 void* param_value_ptr = gs_effect_get_val(param);
                 double param_value;
@@ -158,6 +163,7 @@ class effect_parameter_group : public effect_parameter {
                         param_value = *(double*)param_value_ptr;
                         break;
                 }
+                info ("Param value %s", std::to_string(param_value).c_str());
                 switch (condition) {
                     case PARAM_GROUP_CONDITION_EQUAL:
                         res = param_value == value;
@@ -175,6 +181,8 @@ class effect_parameter_group : public effect_parameter {
                         res = true;
                         break;
                 }
+            } else {
+                info ("Param of %s is null", full_param_name);
             }
             if (res) {
                 for (auto param: effect_params) {
@@ -195,6 +203,13 @@ class effect_parameter_group : public effect_parameter {
             }
         }
 
+
+        void try_gs_set_val() override {
+            
+                for (auto param: effect_params) {
+                    param->try_gs_set_val();
+                }
+        }
 };
 
 #endif // SHADERTASTIC_PARAMETER_GROUP_HPP
