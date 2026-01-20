@@ -206,12 +206,17 @@ class effect_parameter_group : public effect_parameter {
         void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
             if (check_condition()) {
                 condition_met = true;
+
+                obs_properties_t *params_group = obs_properties_create();
+
                 for (auto param: effect_params) {
                     if (!param->is_dev_mode() || shadertastic_settings().dev_mode_enabled) {
                         std::string sub_full_param_name = param->get_full_param_name(full_param_name);
-                        param->render_property_ui(sub_full_param_name.c_str(), props);
+                        param->render_property_ui(sub_full_param_name.c_str(), params_group);
                     }
                 }
+
+                obs_properties_add_group(props, full_param_name, label.c_str(), OBS_GROUP_NORMAL, params_group);
             }
         }
 
