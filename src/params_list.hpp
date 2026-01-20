@@ -25,7 +25,16 @@ class params_list {
     effect_parameter * get(std::string param_name) const {
         auto it = params_map.find(param_name);
         if (it == params_map.end()) {
-            return nullptr;
+            effect_parameter* found_param = nullptr;
+            for (auto param: this->params) {
+                found_param = param->get_subparam(param_name);
+                if (found_param != nullptr) {
+                    info("Found subparam %s", param_name.c_str());
+                    break;
+                }
+                info("Subparam %s not found in %s", param_name.c_str(), param->get_name().c_str());
+            }
+            return found_param;
         }
         else {
             return it->second;

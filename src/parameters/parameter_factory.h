@@ -22,7 +22,7 @@
 
 class effect_parameter_factory {
     public:
-        static effect_parameter *create(const shadertastic_effect_t *effect, const std::string &effect_name, const std::string &effect_path, const effect_shader *main_shader, obs_data_t *param_metadata);
+        static effect_parameter *create(const std::string &effect_name, const std::string &effect_path, const effect_shader *main_shader, obs_data_t *param_metadata);
 
     private:
         static effect_param_datatype effect_parse_datatype(const char *datatype_str);

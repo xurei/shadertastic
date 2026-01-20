@@ -113,7 +113,20 @@ class effect_parameter {
          * @param metadata
          * @param effect_path
          */
-        virtual void initialize_params(const shadertastic_effect_t *effect, const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) = 0;
+        virtual void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) = 0;
+
+        /**
+         * Called by the parent element (effect or parameter), after creation of the parameter by the factory.
+         * Used to get references to other parameters or to the effect or shader.
+         * @param effect
+         * @param shader
+         * @param effect_path
+         */
+        virtual void initialize_params_post(const shadertastic_effect_t *effect, const effect_shader *shader, const std::string &effect_path) {
+            UNUSED_PARAMETER(effect);
+            UNUSED_PARAMETER(shader);
+            UNUSED_PARAMETER(effect_path);
+        }
 
         /**
          * This is where you should set the defaults as explicitly specified in the metadata.
@@ -168,6 +181,12 @@ class effect_parameter {
          */
         virtual bool should_reload() {
             return false;
+        }
+        /**
+         * Get a subparameter if any
+         */
+        virtual effect_parameter* get_subparam(std::string param_name) {
+            return nullptr;
         }
 
         /**

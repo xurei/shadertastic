@@ -36,7 +36,7 @@
 #include "parameter_unknown.hpp"
 #include "parameter_factory.h"
 
-effect_parameter * effect_parameter_factory::create(const shadertastic_effect_t *effect, const std::string &effect_name, const std::string &effect_path, const effect_shader *main_shader, obs_data_t *param_metadata) {
+effect_parameter * effect_parameter_factory::create(const std::string &effect_name, const std::string &effect_path, const effect_shader *main_shader, obs_data_t *param_metadata) {
     const char *param_name = obs_data_get_string(param_metadata, "name");
     gs_eparam_t *shader_param = main_shader->get_param_by_name(param_name);
     const char *data_type = obs_data_get_string(param_metadata, "type");
@@ -110,7 +110,7 @@ effect_parameter * effect_parameter_factory::create(const shadertastic_effect_t 
             }
         }
         out->load_common_fields(param_metadata);
-        out->initialize_params(effect, main_shader, param_metadata, effect_path);
+        out->initialize_params(main_shader, param_metadata, effect_path);
         return out;
     }
 }

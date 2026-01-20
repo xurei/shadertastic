@@ -30,6 +30,7 @@
 
 class effect_parameter_group : public effect_parameter {
     private:
+        std::string param_name{};
         effect_parameter* param{};
         effect_parameter_group_condition condition{};
         effect_parameter_group_if if_mode{};
@@ -102,9 +103,9 @@ class effect_parameter_group : public effect_parameter {
                         return true;
                         break;
                 }
-            } else {
-                return true;
             }
+
+            return true;
         }
 
     public:
@@ -115,7 +116,7 @@ class effect_parameter_group : public effect_parameter {
             return PARAM_DATATYPE_GROUP;
         }
 
-        void initialize_params(const shadertastic_effect_t *effect, const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
             obs_data_set_default_string(metadata, "param", "");
@@ -124,7 +125,7 @@ class effect_parameter_group : public effect_parameter {
 
             if_mode = parse_if(obs_data_get_string(metadata, "if"));
             if (if_mode != PARAM_GROUP_IF_UNKNOWN) {
-                param = effect->effect_params.get(obs_data_get_string(metadata, "param"));
+                param_name = obs_data_get_string(metadata, "param");
                 condition = parse_condition(obs_data_get_string(metadata, "condition"));
                 switch (if_mode) {
                     case PARAM_GROUP_IF_BOOL:
@@ -154,7 +155,7 @@ class effect_parameter_group : public effect_parameter {
 
             for (size_t i=0; i < nb_parameters; i++) {
                 obs_data_t *param_metadata = obs_data_array_item(parameters, i);
-                effect_parameter *effect_param = effect_parameter_factory::create(effect, name, effect_path, shader, param_metadata);
+                effect_parameter *effect_param = effect_parameter_factory::create(name, effect_path, shader, param_metadata);
 
 
                 if (effect_param != nullptr) {
@@ -182,6 +183,17 @@ class effect_parameter_group : public effect_parameter {
             }
 
             obs_data_array_release(parameters);
+        }
+
+        void initialize_params_post(const shadertastic_effect_t *effect, const effect_shader *shader, const std::string &effect_path) override {
+            UNUSED_PARAMETER(shader);
+            UNUSED_PARAMETER(effect_path);
+
+            param = effect->effect_params.get(param_name);
+
+            for (auto param: effect_params) {
+                param->initialize_params_post(effect, shader, effect_path);
+            }
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {
@@ -230,6 +242,10 @@ class effect_parameter_group : public effect_parameter {
             }
 
             return false;
+        }
+        effect_parameter* get_subparam(std::string param_name) override {
+            info("Searching subparam %s in group %s", param_name.c_str(), name.c_str());
+            return effect_params.get(param_name);
         }
 };
 

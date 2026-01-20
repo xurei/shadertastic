@@ -51,8 +51,7 @@ class effect_parameter_facetracking : public effect_parameter {
             return PARAM_DATATYPE_FACETRACKING;
         }
 
-        void initialize_params(const shadertastic_effect_t *effect, const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
-            UNUSED_PARAMETER(effect);
+        void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
             UNUSED_PARAMETER(metadata);
             UNUSED_PARAMETER(effect_path);
 
