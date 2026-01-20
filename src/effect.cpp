@@ -155,6 +155,15 @@ void shadertastic_effect_t::reload() {
     load();
 }
 
+bool shadertastic_effect_t::should_reload() {
+    for (auto effect_param: effect_params) {
+        if (effect_param->should_reload()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void shadertastic_effect_t::set_params(
     gs_texture_t *a, gs_texture_t *b,
     int frame_index, bool is_studio_mode,

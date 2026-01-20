@@ -137,6 +137,11 @@ void shadertastic_transition_update(void *data, obs_data_t *settings) {
     }
 
     if (s->selected_effect != nullptr) {
+        
+        if (s->selected_effect->should_reload()) {
+            obs_source_update_properties(s->source);
+        }
+
         for (auto param: s->selected_effect->effect_params) {
             std::string full_param_name = param->get_full_param_name(selected_effect_name);
             param->set_data_from_settings(settings, full_param_name.c_str());

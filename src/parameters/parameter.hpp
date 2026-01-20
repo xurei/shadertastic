@@ -163,6 +163,12 @@ class effect_parameter {
         virtual void try_gs_set_val() {
             try_gs_effect_set_val(name.c_str(), shader_param, data, data_size);
         }
+        /**
+         * Check if the parameter needs to be re-rendered
+         */
+        virtual bool should_reload() {
+            return false;
+        }
 
         /**
          * Do something if the effect containing this parameter is shown

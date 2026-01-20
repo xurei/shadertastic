@@ -160,6 +160,9 @@ inline void shadertastic_filter_update(void *data, obs_data_t *settings) {
     }
 
     if (s->selected_effect != nullptr) {
+        if (s->selected_effect->should_reload()) {
+            obs_source_update_properties(s->source);
+        }
         //obs_data_set_string(settings, (std::string(selected_effect_name) + "__compile_error").c_str(), s->selected_effect->error_str.c_str());
         for (auto param: s->selected_effect->effect_params) {
             std::string full_param_name = param->get_full_param_name(selected_effect_name);

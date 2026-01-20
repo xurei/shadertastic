@@ -51,6 +51,8 @@ struct shadertastic_effect_t {
     void load();
 
     void reload();
+    
+    bool should_reload();
 
     void set_params(gs_texture_t *a, gs_texture_t *b, int frame_index, bool is_studio_mode, float t, float delta_t, uint32_t cx, uint32_t cy, float rand_seed);
 

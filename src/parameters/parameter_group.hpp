@@ -35,6 +35,7 @@ class effect_parameter_group : public effect_parameter {
         effect_parameter_group_if if_mode{};
         double value{};
         params_list effect_params;
+        bool condition_met{};
 
         effect_parameter_group_if parse_if(const char *if_str) {
             if (strcmp(if_str, "bool") == 0) {
@@ -60,6 +61,49 @@ class effect_parameter_group : public effect_parameter {
                 return PARAM_GROUP_CONDITION_LESS_OR_EQUAL;
             } else {
                 return PARAM_GROUP_CONDITION_EQUAL;
+            }
+        }
+
+        bool check_condition() {
+            if (param) {
+                void* param_value_ptr = param->get_data();
+                double param_value = -1;
+                switch (if_mode) {
+                    case PARAM_GROUP_IF_BOOL:
+                        param_value = *(bool*)param_value_ptr ? 1 : 0;
+                        break;
+                    case PARAM_GROUP_IF_INT:
+                        param_value = (double)*(int*)param_value_ptr;
+                        break;
+                    case PARAM_GROUP_IF_FLOAT:
+                        param_value = *(double*)param_value_ptr;
+                        break;
+                }
+                switch (condition) {
+                    case PARAM_GROUP_CONDITION_EQUAL:
+                        return param_value == value;
+                        break;
+                    case PARAM_GROUP_CONDITION_NOT_EQUAL:
+                        return param_value != value;
+                        break;
+                    case PARAM_GROUP_CONDITION_GREATER:
+                        return param_value > value;
+                        break;
+                    case PARAM_GROUP_CONDITION_GREATER_OR_EQUAL:
+                        return param_value >= value;
+                        break;
+                    case PARAM_GROUP_CONDITION_LESS:
+                        return param_value < value;
+                        break;
+                    case PARAM_GROUP_CONDITION_LESS_OR_EQUAL:
+                        return param_value <= value;
+                        break;
+                    default:
+                        return true;
+                        break;
+                }
+            } else {
+                return true;
             }
         }
 
@@ -148,52 +192,8 @@ class effect_parameter_group : public effect_parameter {
         }
 
         void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
-            bool res;
-            info ("Render properties of group %s", full_param_name);
-            if (param) {
-                void* param_value_ptr = param->get_data();
-                double param_value = -1;
-                switch (if_mode) {
-                    case PARAM_GROUP_IF_BOOL:
-                        param_value = *(bool*)param_value_ptr ? 1 : 0;
-                        break;
-                    case PARAM_GROUP_IF_INT:
-                        param_value = (double)*(int*)param_value_ptr;
-                        break;
-                    case PARAM_GROUP_IF_FLOAT:
-                        param_value = *(double*)param_value_ptr;
-                        break;
-                }
-                info ("Param value %s (Compared to %s)", std::to_string(param_value).c_str(), std::to_string(value).c_str());
-                switch (condition) {
-                    case PARAM_GROUP_CONDITION_EQUAL:
-                        res = param_value == value;
-                        break;
-                    case PARAM_GROUP_CONDITION_NOT_EQUAL:
-                        res = param_value != value;
-                        break;
-                    case PARAM_GROUP_CONDITION_GREATER:
-                        res = param_value > value;
-                        break;
-                    case PARAM_GROUP_CONDITION_GREATER_OR_EQUAL:
-                        res = param_value >= value;
-                        break;
-                    case PARAM_GROUP_CONDITION_LESS:
-                        res = param_value < value;
-                        break;
-                    case PARAM_GROUP_CONDITION_LESS_OR_EQUAL:
-                        res = param_value <= value;
-                        break;
-                    default:
-                        res = true;
-                        break;
-                }
-                info ("Compare %s : %s / %s", std::to_string(condition).c_str(), std::to_string(res).c_str(), std::to_string(param_value == value).c_str());
-            } else {
-                res = true;
-                info ("Param of %s is null", full_param_name);
-            }
-            if (res) {
+            if (check_condition()) {
+                condition_met = true;
                 for (auto param: effect_params) {
                     if (!param->is_dev_mode() || shadertastic_settings().dev_mode_enabled) {
                         std::string sub_full_param_name = param->get_full_param_name(full_param_name);
@@ -218,6 +218,18 @@ class effect_parameter_group : public effect_parameter {
                 for (auto param: effect_params) {
                     param->try_gs_set_val();
                 }
+        }
+        bool should_reload() override {
+
+            if (check_condition() != condition_met) return true;
+            
+            for (auto param: effect_params) {
+                if (param->should_reload()) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 };
 
