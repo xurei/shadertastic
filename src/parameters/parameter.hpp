@@ -113,7 +113,7 @@ class effect_parameter {
          * @param metadata
          * @param effect_path
          */
-        virtual void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) = 0;
+        virtual void initialize_params(const shadertastic_effect_t *effect, const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) = 0;
 
         /**
          * This is where you should set the defaults as explicitly specified in the metadata.

@@ -45,7 +45,8 @@ class effect_parameter_list_int : public effect_parameter {
             return PARAM_DATATYPE_LIST_INT;
         }
 
-        void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const shadertastic_effect_t *effect, const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
+            UNUSED_PARAMETER(effect);
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
             default_array = obs_data_array_create();

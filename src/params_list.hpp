@@ -22,7 +22,7 @@ class params_list {
         this->params_map.clear();
     }
 
-    effect_parameter * get(std::string param_name) {
+    effect_parameter * get(std::string param_name) const {
         auto it = params_map.find(param_name);
         if (it == params_map.end()) {
             return nullptr;

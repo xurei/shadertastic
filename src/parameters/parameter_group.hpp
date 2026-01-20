@@ -26,10 +26,11 @@
 #include "parameter_group_if.hpp"
 #include "../params_list.hpp"
 #include "../settings.h"
+#include "../effect.h"
 
 class effect_parameter_group : public effect_parameter {
     private:
-        gs_eparam_t* param{};
+        effect_parameter* param{};
         effect_parameter_group_condition condition{};
         effect_parameter_group_if if_mode{};
         double value{};
@@ -70,7 +71,7 @@ class effect_parameter_group : public effect_parameter {
             return PARAM_DATATYPE_GROUP;
         }
 
-        void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const shadertastic_effect_t *effect, const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
             obs_data_set_default_string(metadata, "param", "");
@@ -79,7 +80,7 @@ class effect_parameter_group : public effect_parameter {
 
             if_mode = parse_if(obs_data_get_string(metadata, "if"));
             if (if_mode != PARAM_GROUP_IF_UNKNOWN) {
-                param = shader->get_param_by_name(obs_data_get_string(metadata, "param"));
+                param = effect->effect_params.get(obs_data_get_string(metadata, "param"));
                 condition = parse_condition(obs_data_get_string(metadata, "condition"));
                 switch (if_mode) {
                     case PARAM_GROUP_IF_BOOL:
@@ -109,7 +110,7 @@ class effect_parameter_group : public effect_parameter {
 
             for (size_t i=0; i < nb_parameters; i++) {
                 obs_data_t *param_metadata = obs_data_array_item(parameters, i);
-                effect_parameter *effect_param = effect_parameter_factory::create(name, effect_path, shader, param_metadata);
+                effect_parameter *effect_param = effect_parameter_factory::create(effect, name, effect_path, shader, param_metadata);
 
 
                 if (effect_param != nullptr) {
@@ -147,11 +148,11 @@ class effect_parameter_group : public effect_parameter {
         }
 
         void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
-            bool res = true;
+            bool res;
             info ("Render properties of group %s", full_param_name);
             if (param) {
-                void* param_value_ptr = gs_effect_get_val(param);
-                double param_value;
+                void* param_value_ptr = param->get_data();
+                double param_value = -1;
                 switch (if_mode) {
                     case PARAM_GROUP_IF_BOOL:
                         param_value = *(bool*)param_value_ptr ? 1 : 0;
@@ -163,25 +164,33 @@ class effect_parameter_group : public effect_parameter {
                         param_value = *(double*)param_value_ptr;
                         break;
                 }
-                info ("Param value %s", std::to_string(param_value).c_str());
+                info ("Param value %s (Compared to %s)", std::to_string(param_value).c_str(), std::to_string(value).c_str());
                 switch (condition) {
                     case PARAM_GROUP_CONDITION_EQUAL:
                         res = param_value == value;
+                        break;
                     case PARAM_GROUP_CONDITION_NOT_EQUAL:
                         res = param_value != value;
+                        break;
                     case PARAM_GROUP_CONDITION_GREATER:
                         res = param_value > value;
+                        break;
                     case PARAM_GROUP_CONDITION_GREATER_OR_EQUAL:
                         res = param_value >= value;
+                        break;
                     case PARAM_GROUP_CONDITION_LESS:
                         res = param_value < value;
+                        break;
                     case PARAM_GROUP_CONDITION_LESS_OR_EQUAL:
                         res = param_value <= value;
+                        break;
                     default:
                         res = true;
                         break;
                 }
+                info ("Compare %s : %s / %s", std::to_string(condition).c_str(), std::to_string(res).c_str(), std::to_string(param_value == value).c_str());
             } else {
+                res = true;
                 info ("Param of %s is null", full_param_name);
             }
             if (res) {

@@ -99,7 +99,7 @@ void shadertastic_effect_t::load() {
 
         for (size_t i=0; i < nb_parameters; i++) {
             obs_data_t *param_metadata = obs_data_array_item(parameters, i);
-            effect_parameter *effect_param = effect_parameter_factory::create(name, this->path, main_shader.get(), param_metadata);
+            effect_parameter *effect_param = effect_parameter_factory::create(this, name, this->path, main_shader.get(), param_metadata);
 
             if (effect_param != nullptr) {
                 auto param_type = effect_param->type();
