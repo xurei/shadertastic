@@ -28,11 +28,7 @@ class params_list {
             effect_parameter* found_param = nullptr;
             for (auto param: this->params) {
                 found_param = param->get_subparam(param_name);
-                if (found_param != nullptr) {
-                    info("Found subparam %s", param_name.c_str());
-                    break;
-                }
-                info("Subparam %s not found in %s", param_name.c_str(), param->get_name().c_str());
+                if (found_param != nullptr) break;
             }
             return found_param;
         }

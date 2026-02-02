@@ -204,7 +204,8 @@ class effect_parameter_group : public effect_parameter {
         }
 
         void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
-            if (check_condition()) {
+            condition_met = check_condition();
+            if (condition_met) {
                 condition_met = true;
 
                 obs_properties_t *params_group = obs_properties_create();
@@ -221,8 +222,6 @@ class effect_parameter_group : public effect_parameter {
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
-            //*((int*)this->data) = (int)obs_data_get_int(settings, full_param_name);
-            //debug("%s = %d", full_param_name, *((int*)this->data));
             for (auto param: effect_params) {
                 std::string sub_full_param_name = param->get_full_param_name(full_param_name);
                 param->set_data_from_settings(settings, sub_full_param_name.c_str());
@@ -236,6 +235,7 @@ class effect_parameter_group : public effect_parameter {
                     param->try_gs_set_val();
                 }
         }
+
         bool should_reload() override {
 
             if (check_condition() != condition_met) return true;
@@ -248,8 +248,8 @@ class effect_parameter_group : public effect_parameter {
 
             return false;
         }
+
         effect_parameter* get_subparam(std::string param_name) override {
-            info("Searching subparam %s in group %s", param_name.c_str(), name.c_str());
             return effect_params.get(param_name);
         }
 };
