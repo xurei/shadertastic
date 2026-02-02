@@ -111,12 +111,17 @@ float4 EffectLinear(float2 uv)
         float lerp_ratio = sigmoid_centered(10, break_point, time);
         float4 px_a = tex_a.Sample(textureSampler, uv);
         float4 px_b = tex_b.Sample(textureSampler, uv);
-        float4 px = lerp(
+        float4 px_out = lerp(
             px_a,
             px_b,
             lerp_ratio
         );
-        return px;
+        px_out.rgb = lerp(
+            px_a.rgb * px_a.a,
+            px_b.rgb * px_b.a,
+            lerp_ratio
+        ) / px_out.a;
+        return px_out;
     }
     else {
         float t = time;

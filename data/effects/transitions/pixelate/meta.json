@@ -25,6 +25,26 @@
       "min": 0.1,
       "max": 10,
       "default": 5
+    },
+    {
+      "name": "center_x",
+      "label": "Center X",
+      "type": "float",
+      "min": 0.0,
+      "max": 1.0,
+      "step": 0.001,
+      "slider": true,
+      "default": 0.5
+    },
+    {
+      "name": "center_y",
+      "label": "Center Y",
+      "type": "float",
+      "min": 0.0,
+      "max": 1.0,
+      "step": 0.001,
+      "slider": true,
+      "default": 0.5
     }
   ]
 }

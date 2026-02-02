@@ -1,15 +1,4 @@
-// Common parameters for all shaders, as reference. Do not uncomment this (but you can remove it safely).
-/*
-uniform float time;            // Time since the shader is running. Goes from 0 to 1 for transition effects; goes from 0 to infinity for filter effects
-uniform texture2d tex_a;       // Texture of the previous frame (transitions only)
-uniform texture2d tex_b;       // Texture of the next frame (transitions only)
-uniform texture2d tex_interm;  // Intermediate texture where the previous step will be rendered (for multistep effects)
-uniform float upixel;          // Width of a pixel in the UV space
-uniform float vpixel;          // Height of a pixel in the UV space
-uniform float rand_seed;       // Seed for random functions
-uniform int current_step;      // index of current step (for multistep effects)
-uniform int nb_steps;          // number of steps (for multisteps effects)
-*/
+uniform bool do_color_displace;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -94,12 +83,47 @@ float4 EffectLinear( float2 uv_orig )
     float ink2 = fbm(p * (8.0+rand_seed), 4) + 1.5 - l;
     ink2 = 1.0 - clamp(ink2, 0.0, 1.0);
 
-    float2 displace = (1.0 - time) * ink2 * uv; //float2(cos(angle), sin(angle)); //(ink2 * p_orig);
+    float2 displace = (1.0 - time) * ink2 * uv;
 
     float4 px_a = tex_a.Sample(textureSampler, uv_orig);
     float4 px_b = tex_b.Sample(textureSampler, uv_orig + (3.0 * displace));
+    float4 px_out = lerp(px_a, px_b, ink1);
 
-    return lerp(px_a, px_b, ink1);
+    if (do_color_displace) {
+        float ink3 = fbm(float2(p.y, p.x) * (8.0+rand_seed), 4) + 1.5 - l;
+        ink3 = 1.0 - clamp(ink3, 0.0, 1.0);
+        float ink4 = fbm(float2(cos(angle+1.0), sin(angle+1.0)) * (8.0+rand_seed), 4) + 1.5 - l;
+        ink4 = 1.0 - clamp(ink4, 0.0, 1.0);
+        float2 displace2 = (1.0 - time) * ink3 * uv;
+        float2 displace3 = (1.0 - time) * ink4 * uv;
+
+        float4 px_b2 = tex_b.Sample(textureSampler, uv_orig + (3.0 * displace2));
+        float4 px_b3 = tex_b.Sample(textureSampler, uv_orig + (3.0 * displace3));
+        px_out.r = lerp(
+            px_a.r*px_a.a,
+            px_b.r*px_b.a,
+            ink1
+        ) / px_out.a;
+        px_out.g = lerp(
+            px_a.g*px_a.a,
+            px_b2.g*px_b.a,
+            ink1
+        ) / px_out.a;
+        px_out.b = lerp(
+            px_a.b*px_a.a,
+            px_b3.b*px_b.a,
+            ink1
+        ) / px_out.a;
+    }
+    else {
+        px_out.rgb = lerp(
+            px_a.rgb*px_a.a,
+            px_b.rgb*px_b.a,
+            ink1
+        ) / px_out.a;
+    }
+
+    return px_out;
 }
 //----------------------------------------------------------------------------------------------------------------------
 

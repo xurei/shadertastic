@@ -1,0 +1,19 @@
+{
+  "label": "AAA color",
+  "revision": 1,
+  "steps": 1,
+  "parameters": [
+    {
+      "name": "color",
+      "label": "Color",
+      "type": "color",
+      "default": "#42004f8b"
+    },
+    {
+      "name": "color2",
+      "label": "Color2",
+      "type": "color",
+      "default": "#87bfEA"
+    }
+  ]
+}

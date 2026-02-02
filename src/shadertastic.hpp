@@ -30,6 +30,8 @@ struct shadertastic_transition : public shadertastic_common {
     bool transition_started{};
     bool transitioning{};
     float transition_point{};
+    gs_texrender_t *source_a_texrender;
+    gs_texrender_t *source_b_texrender;
     gs_texrender_t *transition_texrender[2]{};
     int transition_texrender_buffer = 0;
     float rand_seed{};

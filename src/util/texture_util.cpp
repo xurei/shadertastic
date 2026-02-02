@@ -29,7 +29,6 @@ void render_texture(gs_texture_t *final_tex, const bool use_copy, const bool com
 
     const bool linear_srgb = gs_get_linear_srgb();
     const bool previous = gs_framebuffer_srgb_enabled();
-    gs_set_linear_srgb(true);
     gs_enable_framebuffer_srgb(linear_srgb);
 
 //    if (linear_srgb) {

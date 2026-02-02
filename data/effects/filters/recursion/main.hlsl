@@ -19,6 +19,7 @@ uniform float center_x;
 uniform float center_y;
 uniform bool show_debug_point;
 uniform int reset_on_toggle;
+uniform int superposition_mode;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -60,7 +61,7 @@ float4 EffectLinear(float2 uv)
         zoom_ratio = 1.0 - ( pow(100, zoom) - 1 ) / (100 - 1);  // Log scale magique : (a^x - 1) / (a - 1);
     }
     else {
-        zoom_ratio = 1.0 + ( pow(100, -zoom) - 1 ) / (100 - 1);  // Log scale magique : (a^x - 1) / (a - 1);
+        zoom_ratio = 1.0 + 16.0*abs( pow(100, -zoom) - 1 ) / (100 - 1);  // Log scale magique : (a^x - 1) / (a - 1)
     }
 
     if (current_step == 1) {
@@ -110,29 +111,41 @@ float4 EffectLinear(float2 uv)
         float r = length(uv2 * float2(vpixel/upixel, 1.0));
 
         float4 px = image.Sample(textureSampler, uv);
-        float4 prev_px = float4(0.0,0.0,0.0, 0.0); //prev_image.Sample(textureSampler, uv2);
+        float4 prev_px;
 
-        for (float du=-upixel; du <= upixel; du += upixel) {
-            for (float dv=-vpixel; dv <= vpixel; dv += vpixel) {
-                prev_px += prev_image.Sample(textureSampler, uv2 + float2(du,dv));
-            }
+        if (uv2.x < 0.0 || uv2.x > 1.0 || uv2.y < 0.0 || uv2.y > 1.0) {
+            prev_px = float4(0.0,0.0,0.0, 0.0);
         }
-        prev_px *= 1.0/9.0;
+        else {
+            #ifdef _D3D11
+            [loop]
+            #endif
+            for (float du=-upixel; du <= upixel; du += upixel) {
+                #ifdef _D3D11
+                [loop]
+                #endif
+                for (float dv=-vpixel; dv <= vpixel; dv += vpixel) {
+                    prev_px += prev_image.Sample(textureSampler, uv2 + float2(du,dv));
+                }
+            }
+            prev_px *= 0.111111110;
+        }
 
-        float4 px_small = image.Sample(textureSampler, uv2);
+        if (superposition_mode == 1) {
+            float4 tmp = prev_px;
+            prev_px = px;
+            px = tmp;
+        }
 
-        float alpha = px[3];
-        float prev_alpha_logscale = pow(prev_alpha, 0.1);
-        alpha = max(alpha, (prev_px[3])*prev_alpha_logscale);
-        alpha = max(alpha, (px_small[3])*prev_alpha_logscale);
+        float alpha = px.a;
+        alpha = max(alpha, lerp(prev_px.a*prev_alpha, px.a, px.a));
         alpha = clamp(alpha, 0.0, 1.0);
 
         float4 px_out = float4(0.0, 0.0, 0.0, alpha);
-
         px_out.rgb = lerp(
             prev_px.rgb,
             px.rgb,
-            px[3]
+            px.a
         );
 
         return px_out;

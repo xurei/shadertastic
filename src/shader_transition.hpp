@@ -59,6 +59,8 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     obs_enter_graphics();
     s->transition_texrender[0] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
     s->transition_texrender[1] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
+    s->source_a_texrender = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
+    s->source_b_texrender = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
     obs_leave_graphics();
 
     load_effects(s, settings, transitions_dir, "transition");
@@ -80,6 +82,8 @@ void shadertastic_transition_destroy(void *data) {
     obs_enter_graphics();
     gs_texrender_destroy(s->transition_texrender[0]);
     gs_texrender_destroy(s->transition_texrender[1]);
+    gs_texrender_destroy(s->source_a_texrender);
+    gs_texrender_destroy(s->source_b_texrender);
     obs_leave_graphics();
     debug_trace("Destroy2");
 
@@ -167,9 +171,11 @@ static void shadertastic_transition_tick(void *data, float deltatime_seconds) {
         debug_trace("shadertastic_transition_tick %i", s->frame_index);
         s->frame_index++;
 
-        for (effect_parameter* param : s->selected_effect->effect_params) {
-            if (param) {
-                param->tick(s);
+        if (s->selected_effect) {
+            for (effect_parameter* param : s->selected_effect->effect_params) {
+                if (param) {
+                    param->tick(s);
+                }
             }
         }
     }
@@ -178,10 +184,6 @@ static void shadertastic_transition_tick(void *data, float deltatime_seconds) {
 
 void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy) {
     struct shadertastic_transition *s = shadertastic_transition_cast(data);
-
-    const bool previous = gs_framebuffer_srgb_enabled();
-    gs_enable_framebuffer_srgb(true);
-
     shadertastic_effect_t *effect = s->selected_effect;
 
     bool is_studio_mode = false;
@@ -211,6 +213,28 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
 //        }
 
         bool render_ok = true;
+
+        const bool prev_linear_srgb = gs_set_linear_srgb(true);
+        gs_texrender_reset(s->source_a_texrender);
+        const uint32_t a_cx = gs_texture_get_width(a), a_cy = gs_texture_get_height(a);
+        gs_texrender_begin_with_color_space(s->source_a_texrender, a_cx, a_cy, source_space);
+        gs_ortho(0.0f, (float)a_cx, 0.0f, (float)a_cy, -100.0f, 100.0f);
+        render_texture(a, true, true);
+        gs_texrender_end(s->source_a_texrender);
+
+        gs_texrender_reset(s->source_b_texrender);
+        const uint32_t b_cx = gs_texture_get_width(b), b_cy = gs_texture_get_height(b);
+        gs_texrender_begin_with_color_space(s->source_b_texrender, b_cx, b_cy, source_space);
+        gs_ortho(0.0f, (float)b_cx, 0.0f, (float)b_cy, -100.0f, 100.0f);
+        render_texture(b, true, true);
+        gs_texrender_end(s->source_b_texrender);
+        gs_set_linear_srgb(prev_linear_srgb);
+
+//        auto matA0 = extractImage(a);
+//        auto matB0 = extractImage(b);
+//        auto matA = extractImage(gs_texrender_get_texture(s->source_a_texrender));
+//        auto matB = extractImage(gs_texrender_get_texture(s->source_b_texrender));
+
         for (int current_step=0; current_step < effect->nb_steps; ++current_step) {
             bool is_saved_step = effect->prev_frames_to_keep[current_step] != nullptr;
 
@@ -239,7 +263,11 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
                 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
                 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
             );
-            effect->set_params(a, b, s->frame_index, is_studio_mode, t, s->delta_time, cx, cy, s->rand_seed);
+            effect->set_params(
+                gs_texrender_get_texture(s->source_a_texrender),
+                gs_texrender_get_texture(s->source_b_texrender),
+                s->frame_index, is_studio_mode, t, s->delta_time, cx, cy, s->rand_seed
+            );
             effect->set_step_params(current_step, interm_texture);
             effect->render_shader(cx, cy, true);
 
@@ -257,11 +285,17 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
 
 //        if (s->frame_index == 0) {
 //            auto mat = extractImage(interm_texture);
-//            saveMat(mat, "/home/olivier/obs-plugins/obs-shadertastic/plugin/lab/debug_images/tex_interm.png");
+//            saveMat(mat, "/home/olivier/obs-plugins/obs-shadertastic/plugin/lab/debug_images/tex_interm0.png");
+//        }
+//        if (s->frame_index == 1) {
+//            auto mat = extractImage(interm_texture);
+//            saveMat(mat, "/home/olivier/obs-plugins/obs-shadertastic/plugin/lab/debug_images/tex_interm1.png");
 //        }
 
         if (render_ok) {
+            gs_set_linear_srgb(true);
             render_texture(interm_texture, false, false);
+            gs_set_linear_srgb(prev_linear_srgb);
         }
 
         for (auto *prev_frame : effect->prev_frames_to_keep) {
@@ -271,7 +305,6 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
         }
     }
 
-    gs_enable_framebuffer_srgb(previous);
     s->prev_t = t;
 }
 //----------------------------------------------------------------------------------------------------------------------

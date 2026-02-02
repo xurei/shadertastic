@@ -5,7 +5,7 @@
     "author_url": "http://about.xurei.io"
   },
   "label": "Recursion",
-  "revision": 1,
+  "revision": 2,
   "steps": 2,
   "parameters": [
     {
@@ -58,6 +58,22 @@
       "step": 0.001,
       "slider": true,
       "default": 0.5
+    },
+    {
+      "type": "list_int",
+      "name": "superposition_mode",
+      "label": "Mode:",
+      "values": [
+        {
+          "value": 0,
+          "label": "Source above"
+        },
+        {
+          "value": 1,
+          "label": "Source below"
+        }
+      ],
+      "default": 0
     },
     {
       "type": "list_int",

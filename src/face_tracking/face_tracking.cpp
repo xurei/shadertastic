@@ -803,6 +803,7 @@ void face_tracking_destroy(std::unique_ptr<face_tracking_state> &s) {
             gs_texture_destroy(s->fd_points_texture);
             if (s->staging_texture_detection) {
                 gs_stagesurface_destroy(s->staging_texture_detection);
+                s->staging_texture_detection = nullptr;
             }
         }
         obs_leave_graphics();

@@ -6,5 +6,11 @@
   "metafileVersion": 1,
   "label": "Ink Drop",
   "parameters": [
+    {
+      "name": "do_color_displace",
+      "label": "Color displacement",
+      "type": "bool",
+      "default": true
+    }
   ]
 }

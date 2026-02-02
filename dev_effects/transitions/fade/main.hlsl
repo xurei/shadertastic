@@ -1,9 +1,19 @@
-uniform float break_point;
-uniform float max_pixelation_level;
-uniform float center_x;
-uniform float center_y;
+// Common parameters for all shaders, as reference. Do not uncomment this (but you can remove it safely).
+/*
+uniform float time;            // Time since the shader is running. Goes from 0 to 1 for transition effects; goes from 0 to infinity for filter effects
+uniform texture2d image;       // Texture of the source (filters only)
+uniform texture2d tex_interm;  // Intermediate texture where the previous step will be rendered (for multistep effects)
+uniform float upixel;          // Width of a pixel in the UV space
+uniform float vpixel;          // Height of a pixel in the UV space
+uniform float rand_seed;       // Seed for random functions
+uniform int current_step;      // index of current step (for multistep effects)
+*/
+
+// Specific parameters of the shader. They must be defined in the meta.json file next to this one.
 //----------------------------------------------------------------------------------------------------------------------
 
+// These are required objects for the shader to work.
+// You don't need to change anything here, unless you know what you are doing
 sampler_state textureSampler {
     Filter    = Linear;
     AddressU  = Clamp;
@@ -28,58 +38,25 @@ VertData VSDefault(VertData v_in)
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-float sigmoid(float strength, float n) {
-    // Vanilla sigmoid ; this is not symetric between 0 and 1
-    //return (1 / (1 + exp(-n)));
-
-    n = strength * (n*2 - 1);
-    float v0 = (1 / (1 + exp(strength)));
-    float v1 = 1 - v0; // simplified from v1 = (1 / (1 + exp(-1 * strength)));
-
-    return (1 / (1 + exp(-n)) - v0) / (v1-v0);
-}
+//Here goes your implementation !
 
 float4 EffectLinear(float2 uv)
 {
-    float size_ratio = (time < break_point) ? time / break_point : (1.0-time) / (1.0-break_point);
-
-    float min_squares = 100.0 / max_pixelation_level;
-
-    float u_width = min_squares + (1.0/upixel - min_squares) * (1.0 - pow(size_ratio, 0.05));
-    float v_width = u_width / vpixel * upixel;
-
-    uv -= float2(center_x, center_y);
-
-    uv.x = (floor(uv.x * u_width) + 0.5) / u_width;
-    uv.y = (floor(uv.y * v_width) + 0.5) / v_width;
-
-    uv += float2(center_x, center_y);
-
     float4 px_a = tex_a.Sample(textureSampler, uv);
     float4 px_b = tex_b.Sample(textureSampler, uv);
 
-    float lerp_t = sigmoid(30, (time+0.5-break_point));
+//    px_a.rgb *= (px_a.a > 0.0) ? 1.0/px_a.a : 0.0;
+//    px_b.rgb *= (px_b.a > 0.0) ? 1.0/px_b.a : 0.0;
 
-    px_a.r = lerp(px_a.r, 1.0, 0.1*lerp_t);
-    px_a.g = lerp(px_a.g, 1.0, 0.1*lerp_t);
-    px_a.b = lerp(px_a.b, 1.0, 0.1*lerp_t);
-    px_b.r = lerp(px_b.r, 1.0, 0.1*(1-lerp_t));
-    px_b.g = lerp(px_b.g, 1.0, 0.1*(1-lerp_t));
-    px_b.b = lerp(px_b.b, 1.0, 0.1*(1-lerp_t));
-
-    float4 px_out = lerp(
+    return lerp(
         px_a,
         px_b,
-        lerp_t
+        time
     );
-    px_out.rgb = lerp(
-        px_a.rgb*px_a.a,
-        px_b.rgb*px_b.a,
-        lerp_t
-    ) / px_out.a;
-    return px_out;
 }
 //----------------------------------------------------------------------------------------------------------------------
+
+// You probably don't want to change anything from this point.
 
 float4 PSEffect(FragData f_in) : TARGET
 {

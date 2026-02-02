@@ -59,15 +59,25 @@ function Package {
 
     Remove-Item @RemoveArgs
 
+    Log-Group "Reorganizing files for ${ProductName}..."
+    Remove-Item -Path "${ProjectRoot}/release/${Configuration}/package" -Recurse -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Path "${ProjectRoot}/release/${Configuration}/package" -Force
+    New-Item -ItemType Directory -Path "${ProjectRoot}/release/${Configuration}/package/obs-plugins" -Force
+    New-Item -ItemType Directory -Path "${ProjectRoot}/release/${Configuration}/package/data/obs-plugins/${ProductName}" -Force
+    Copy-Item -Recurse "${ProjectRoot}/release/${Configuration}/${ProductName}/bin/*" -Destination "${ProjectRoot}/release/${Configuration}/package/obs-plugins"
+    Copy-Item -Recurse "${ProjectRoot}/release/${Configuration}/${ProductName}/data/*" -Destination "${ProjectRoot}/release/${Configuration}/package/data/obs-plugins/${ProductName}"
+
     Log-Group "Archiving ${ProductName}..."
     $CompressArgs = @{
-        Path = (Get-ChildItem -Path "${ProjectRoot}/release/${Configuration}" -Exclude "${OutputName}*.*")
+        Path = (Get-ChildItem -Path "${ProjectRoot}/release/${Configuration}/package" -Exclude "${OutputName}.*")
         CompressionLevel = 'Optimal'
         DestinationPath = "${ProjectRoot}/release/${OutputName}.zip"
         Verbose = ($Env:CI -ne $null)
     }
     Compress-Archive -Force @CompressArgs
     Log-Group
+
+    Remove-Item -Path "${ProjectRoot}/release/${Configuration}/package" -Recurse -ErrorAction SilentlyContinue
 }
 
 Package

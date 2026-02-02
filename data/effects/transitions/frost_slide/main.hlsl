@@ -84,11 +84,13 @@ float gaussian(float x) {
 }
 
 float4 getGaussianU(float2 uv, int nb_samples) {
-    float gaussian_sum = gaussian(0);
-    float4 px_out = tex_interm.Sample(textureSampler, uv) * gaussian_sum;
+    float4 px_out = tex_interm.Sample(textureSampler, uv);
+    float gaussian_sum_alpha = gaussian(0);
+    float gaussian_sum = gaussian_sum_alpha * px_out[3];
+    px_out.rgb *= px_out[3];
     float nb_samples_f = float(nb_samples);
     #ifdef _D3D11
-    [loop]
+    [unroll(50)]
     #endif
     for (int i=1; i<nb_samples; ++i) {
         float du = i*upixel;
@@ -96,18 +98,25 @@ float4 getGaussianU(float2 uv, int nb_samples) {
         float4 px_left = tex_interm.Sample(textureSampler, float2(uv[0]-du, uv[1]));
 
         float k = gaussian(float(i) / nb_samples_f);
-        px_out += (px_right + px_left)*k;
-        gaussian_sum += 2*k;
+        float alpha_impact = k * (px_right.a + px_left.a);
+        px_out.rgb += k * (px_right.rgb*px_right.a + px_left.rgb*px_left.a);
+        px_out.a += alpha_impact;
+        gaussian_sum += alpha_impact;
+        gaussian_sum_alpha += 2*k;
     }
-    return px_out / gaussian_sum;
+    px_out.rgb /= gaussian_sum;
+    px_out[3] /= gaussian_sum_alpha;
+    return px_out;
 }
 
 float4 getGaussianV(float2 uv, int nb_samples) {
-    float gaussian_sum = gaussian(0);
-    float4 px_out = tex_interm.Sample(textureSampler, uv) * gaussian_sum;
+    float4 px_out = tex_interm.Sample(textureSampler, uv);
+    float gaussian_sum_alpha = gaussian(0);
+    float gaussian_sum = gaussian_sum_alpha * px_out[3];
+    px_out.rgb *= px_out[3];
     float nb_samples_f = float(nb_samples);
     #ifdef _D3D11
-    [loop]
+    [unroll(50)]
     #endif
     for (int i=1; i<nb_samples; ++i) {
         float dv = i*vpixel;
@@ -115,10 +124,15 @@ float4 getGaussianV(float2 uv, int nb_samples) {
         float4 px_left = tex_interm.Sample(textureSampler, float2(uv[0], uv[1]-dv));
 
         float k = gaussian(float(i) / nb_samples_f);
-        px_out += (px_right + px_left)*k;
-        gaussian_sum += 2*k;
+        float alpha_impact = k * (px_right.a + px_left.a);
+        px_out.rgb += k * (px_right.rgb*px_right.a + px_left.rgb*px_left.a);
+        px_out.a += alpha_impact;
+        gaussian_sum += alpha_impact;
+        gaussian_sum_alpha += 2*k;
     }
-    return px_out / gaussian_sum;
+    px_out.rgb /= gaussian_sum;
+    px_out[3] /= gaussian_sum_alpha;
+    return px_out;
 }
 
 bool isFrost(float2 uv, float2 bar_orig, float2 bar_vec) {
@@ -166,18 +180,8 @@ float4 EffectLinear(FragData f_in)
     float2 uv = f_in.uv;
     float u = f_in.uv[0];
     float v = f_in.uv[1];
-    //float angle_rad = angle * 0.017453293;
 
     float2 bar_vec = rotate(float2(1.0, 0.0), angle);
-
-//    if (uv[0] < 0.1 && uv[1] < 0.1) {
-//        float4 result = float4(bar_vec[0], -bar_vec[0], 0.0, 1.0);
-//        return result;
-//    }
-//    else if (uv[0] < 0.1 && uv[1] < 0.2) {
-//        float4 result = float4(0.0, -bar_vec[1], bar_vec[1], 1.0);
-//        return result;
-//    }
 
     float bar_displace_for_v = bar_vec[0]/bar_vec[1];
     float bar_orig_initial;
@@ -203,9 +207,6 @@ float4 EffectLinear(FragData f_in)
         return result;
     }
     else if (isFrost(uv, bar_orig, bar_vec)) {
-//        float4 result = float4(0.0, 0.7, 0.0, 1.0);
-//        return result;
-
         int nb_samples = int(max(1, max_blur_level*10));
 
         float u2 = round(u*0.1/upixel)/(0.1/upixel) + sinwaves(u*0.0001);
@@ -218,18 +219,13 @@ float4 EffectLinear(FragData f_in)
 
         if (current_step == 0) {
             float4 result = tex_a.Sample(textureSampler, uv + displace);
-//            result[0] = min(1.0, result[0] + white_mask);
-//            result[1] = min(1.0, result[1] + white_mask);
-//            result[2] = min(1.0, result[2] + white_mask);
             return result; //lerp(result, px_frost, frost_strength/100.0);
         }
         else if (current_step == 1) {
             float4 result = getGaussianV(uv, nb_samples);
             return result;
-            //return DrawCurve(u, v, gaussian(ratio*(u-0.5), nb_samples));
         }
         else {
-            //return DrawCurve(u, v, gaussian(ratio*(u-0.5), nb_samples));
             float2 uv2 = uv + displace;
             uv2[0] = min(uv2[0], bar_orig[0] + frost_width/100.0 - frost_strength*upixel);
             float4 result = getGaussianU(uv2, nb_samples);

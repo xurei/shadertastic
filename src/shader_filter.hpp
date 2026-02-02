@@ -246,7 +246,9 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
 
     if (!s->must_render) {
         gs_texture_t *final_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
+        const bool prev_linear_srgb = gs_set_linear_srgb(true);
         render_texture(final_texture, false, false);
+        gs_set_linear_srgb(prev_linear_srgb);
         return;
     }
     s->must_render = false;
@@ -270,6 +272,8 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
         GS_BLEND_ONE, GS_BLEND_ZERO
     );
     constexpr vec4 clear_color{0,0,0,0};
+
+    const bool prev_linear_srgb = gs_set_linear_srgb(true);
 
     bool render_ok = true;
     for (int current_step=0; current_step < selected_effect->nb_steps; ++current_step) {
@@ -316,6 +320,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
         debug("huh?");
     }
 
+    gs_set_linear_srgb(prev_linear_srgb);
     gs_blend_state_pop();
 }
 //----------------------------------------------------------------------------------------------------------------------

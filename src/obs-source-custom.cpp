@@ -120,7 +120,10 @@ bool shadertastic_source_process_filter_begin_with_color_space(obs_source_t *fil
 		gs_texrender_reset(s->filter_texrender);
 		if (gs_texrender_begin_with_color_space(s->filter_texrender, cx, cy, space)) {
 			gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f);
+            const bool prev_linear_srgb = gs_get_linear_srgb();
+            gs_set_linear_srgb(true);
 			render_texture(gs_texrender_get_texture(s->filter_texrender_pre), true, true);
+            gs_set_linear_srgb(prev_linear_srgb);
 			gs_texrender_end(s->filter_texrender);
             //auto mat2 = extractImage(gs_texrender_get_texture(s->filter_texrender_pre));
 			gs_texrender_reset(s->filter_texrender_pre);

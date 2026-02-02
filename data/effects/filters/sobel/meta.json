@@ -1,0 +1,55 @@
+{
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io",
+    "description": "Everything looks more interesting with a Sobel filter"
+  },
+  "metafileVersion": 1,
+  "label": "Sobel",
+  "revision": 1,
+  "steps": 1,
+  "parameters": [
+    {
+      "name": "kernel_size",
+      "label": "Size",
+      "type": "list_int",
+      "values": [
+        {"label": "3x3", "value": 3},
+        {"label": "5x5", "value": 5}
+      ],
+      "default": 0
+    },
+    {
+      "name": "filter_mode",
+      "label": "Filter mode",
+      "type": "list_int",
+      "values": [
+        {"label": "RGB", "value": 1},
+        {"label": "YUV", "value": 4},
+        {"label": "Luminance Only", "value": 3},
+        {"label": "Add Luminance", "value": 2}
+      ],
+      "default": 0
+    },
+    {
+      "name": "lightness",
+      "label": "Lightness",
+      "type": "float",
+      "slider": true,
+      "min": 0,
+      "max": 1,
+      "default": 0.85,
+      "step": 0.001
+    },
+    {
+      "name": "orig_ratio",
+      "label": "Original image amount",
+      "type": "float",
+      "slider": true,
+      "min": 0,
+      "max": 1,
+      "default": 0.0,
+      "step": 0.001
+    }
+  ]
+}
