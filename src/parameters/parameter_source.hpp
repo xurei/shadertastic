@@ -43,6 +43,8 @@ class effect_parameter_source : public effect_parameter {
         obs_weak_source_t *source = nullptr;
         struct vec4 clear_color{0,0,0,0};
         bool source_rendered = false;
+        gs_eparam_t *param_source_upixel{};
+        gs_eparam_t *param_source_vpixel{};
 
     public:
         explicit effect_parameter_source(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
@@ -78,9 +80,11 @@ class effect_parameter_source : public effect_parameter {
         }
 
         void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
-            UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(metadata);
             UNUSED_PARAMETER(effect_path);
+
+            param_source_upixel = shader->get_param_by_name(get_full_subparam_name_static(name, "upixel").c_str());
+            param_source_vpixel = shader->get_param_by_name(get_full_subparam_name_static(name, "vpixel").c_str());
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {
@@ -94,6 +98,7 @@ class effect_parameter_source : public effect_parameter {
             obs_enum_sources(effect_parameter_source_add, &sources_list);
             obs_enum_scenes(effect_parameter_source_add, &sources_list);
             sources_list.sort(compare_nocase);
+            obs_property_list_add_string(p, "-- Choose one --", "");
             for (const std::string &str: sources_list) {
                 obs_property_list_add_string(p, str.c_str(), str.c_str());
             }
@@ -166,6 +171,8 @@ class effect_parameter_source : public effect_parameter {
             else {
                 try_gs_effect_set_texture(name.c_str(), shader_param, texture);
             }
+            try_gs_effect_set_float(get_full_subparam_name_static(name, "upixel").c_str(), param_source_upixel, 1.0 / (float)gs_texture_get_width(texture));
+            try_gs_effect_set_float(get_full_subparam_name_static(name, "vpixel").c_str(), param_source_vpixel, 1.0 / (float)gs_texture_get_height(texture));
         }
 
         void show() override {
