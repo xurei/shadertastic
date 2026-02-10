@@ -250,6 +250,8 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     }
     s->must_render = false;
 
+    const bool prev_linear_srgb = gs_set_linear_srgb(true);
+
     // Facetracking
     if (selected_effect->use_facetracking && s->face_tracking != nullptr) {
         #ifdef DEV_MODE
@@ -269,8 +271,6 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
         GS_BLEND_ONE, GS_BLEND_ZERO
     );
     constexpr vec4 clear_color{0,0,0,0};
-
-    const bool prev_linear_srgb = gs_set_linear_srgb(true);
 
     bool render_ok = true;
     for (int current_step=0; current_step < selected_effect->nb_steps; ++current_step) {

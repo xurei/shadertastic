@@ -27,50 +27,49 @@ static const cv::Mat failed(0, 0, CV_8UC1);
 static inline gs_texture_t * prepare_source_texture(gs_texrender_t *source_texrender, obs_source_t *target, uint32_t cx, uint32_t cy, enum gs_color_space space) {
     gs_texrender_reset(source_texrender);
     if (gs_texrender_begin_with_color_space(source_texrender, cx, cy, space)) {
-		gs_blend_state_push();
-		gs_blend_function_separate(
-		    GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
-		    GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
-		);
+        gs_blend_state_push();
+        gs_blend_function_separate(
+            GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
+            GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
+        );
 
-		vec4 clear_color{};
+        vec4 clear_color{};
 
-		gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
-		gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f);
+        gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
+        gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f);
 
         obs_source_video_render(target);
 
-		gs_blend_state_pop();
+        gs_blend_state_pop();
 
-		gs_texrender_end(source_texrender);
+        gs_texrender_end(source_texrender);
 
         gs_texture_t *source_tex = gs_texrender_get_texture(source_texrender);
         return source_tex;
-	}
+    }
     return nullptr;
 }
 
 static inline void render_filter_texture(gs_texture_t *source_tex, gs_effect_t *effect, uint32_t width, uint32_t height) {
-	gs_technique_t *tech = gs_effect_get_technique(effect, "DrawLinear");
-	gs_eparam_t *image = gs_effect_get_param_by_name(effect, "image");
-	size_t passes, i;
+    gs_technique_t *tech = gs_effect_get_technique(effect, "DrawLinear");
+    gs_eparam_t *image = gs_effect_get_param_by_name(effect, "image");
+    size_t passes, i;
 
-	const bool previous = gs_framebuffer_srgb_enabled();
+    const bool previous = gs_framebuffer_srgb_enabled();
     const bool linear_srgb = gs_get_linear_srgb();
-    gs_set_linear_srgb(true);
-	gs_enable_framebuffer_srgb(true);
+    gs_enable_framebuffer_srgb(linear_srgb);
 
     gs_effect_set_texture_srgb(image, source_tex);
 
-	passes = gs_technique_begin(tech);
-	for (i = 0; i < passes; i++) {
-		gs_technique_begin_pass(tech, i);
-		gs_draw_sprite(source_tex, 0, width, height);
-		gs_technique_end_pass(tech);
-	}
-	gs_technique_end(tech);
+    passes = gs_technique_begin(tech);
+    for (i = 0; i < passes; i++) {
+        gs_technique_begin_pass(tech, i);
+        gs_draw_sprite(source_tex, 0, width, height);
+        gs_technique_end_pass(tech);
+    }
+    gs_technique_end(tech);
 
-	gs_enable_framebuffer_srgb(previous);
+    gs_enable_framebuffer_srgb(previous);
     gs_set_linear_srgb(linear_srgb);
 }
 //----------------------------------------------------------------------------------------------------------------------
