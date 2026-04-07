@@ -107,16 +107,13 @@ void shadertastic_effect_t::load() {
                     effect_parameter_prev_frame *effect_param_prev_frame = dynamic_cast<effect_parameter_prev_frame *>(effect_param);
 
                     int step_to_keep = effect_param_prev_frame->step();
+                    if (step_to_keep < 0) {
+                        step_to_keep = nb_steps - 1;
+                    }
                     if (step_to_keep >= nb_steps) {
                         log_error("Trying to use a prev frame on a step higher than the maximum steps : %s\n", name.c_str());
                     }
                     else {
-                        if (step_to_keep < 0) {
-                            step_to_keep = nb_steps - 1;
-                        }
-                        else if (step_to_keep >= nb_steps) {
-                            log_error("Trying to use a prev frame on a step higher than the maximum steps : %s\n", name.c_str());
-                        }
                         prev_frames_to_keep[step_to_keep] = effect_param_prev_frame;
                     }
                 }
