@@ -79,16 +79,23 @@ float2 applyBorders(float2 uv) {
 float4 EffectLinearSingle(float2 uv) {
     float2 displacement_strength = float2(displacement_strength_x, displacement_strength_y);
     if (color_space == 0) { // RGB
-        float4 mask = displacement_map.Sample(textureSampler, uv);
+        float3 mask = displacement_map.Sample(textureSampler, uv).xyz;
+        mask = srgb_linear_to_nonlinear(mask);
+        /*if (uv.x < 0.1) {
+            if (uv.y < mask.x) {
+                return displacement_map.Sample(textureSampler, uv); //float4(1.0, 0.0, 0.0, 1.0);
+            }
+        }*/
         float2 uv2 = uv - displacement_strength*float2((mask.x - 0.5)/0.5, (mask.y - 0.5)/0.5);
         uv2 = applyBorders(uv2);
         float4 px = image.Sample(textureSampler, uv2);
         return px;
     }
     else if (color_space == 1) { // YUV
-        float4 mask = displacement_map.Sample(textureSampler, uv);
-        float3 mask_yuv = rgbToYuv(mask.rgb);
-        float2 uv2 = uv - displacement_strength*float2(mask_yuv.y, mask_yuv.z);
+        float3 mask = displacement_map.Sample(textureSampler, uv).xyz;
+        mask = srgb_linear_to_nonlinear(mask);
+        mask = rgbToYuv(mask);
+        float2 uv2 = uv - displacement_strength*float2(mask.y, mask.z);
         uv2 = applyBorders(uv2);
         float4 px = image.Sample(textureSampler, uv2);
         return px;
@@ -105,6 +112,7 @@ float4 EffectLinearDual(float2 uv) {
     float4 px;
     float4 mask = displacement_map.Sample(textureSampler, uv_mask);
     mask.xyz *= mask[3];
+    mask.xyz = srgb_linear_to_nonlinear(mask.xyz);
     if (color_space == 0) { // RGB
         float2 uv2 = uv - displacement_strength*mask[3]*float2((mask.x - 0.5)/0.5, (mask.y - 0.5)/0.5);
         uv2 = applyBorders(uv2);
