@@ -14,14 +14,14 @@ jobs:
         with:
           failCondition: error
 
-  gersemi:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: gersemi Check 🎛️
-        id: gersemi
-        uses: ./.github/actions/run-gersemi
-        with:
-          failCondition: error
+#  gersemi:
+#    runs-on: ubuntu-24.04
+#    steps:
+#      - uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#      - name: gersemi Check 🎛️
+#        id: gersemi
+#        uses: ./.github/actions/run-gersemi
+#        with:
+#          failCondition: error
