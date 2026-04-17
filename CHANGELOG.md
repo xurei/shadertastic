@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
-- Source parameter: added _upixel and _vpixel suffixes
+- Source/Image parameters : added `_size` sub parameter as float2 (#ST-21)
 
 ## [1.0.2] - 2026-01-25
 ### Added

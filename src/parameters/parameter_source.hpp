@@ -39,12 +39,13 @@ static bool effect_parameter_source_add(void *data, obs_source_t *source) {
 
 class effect_parameter_source : public effect_parameter {
     private:
+        static constexpr char PARAM_STR_SIZE[] = "size";
+
         gs_texrender_t *source_texrender = nullptr;
         obs_weak_source_t *source = nullptr;
         struct vec4 clear_color{0,0,0,0};
         bool source_rendered = false;
-        gs_eparam_t *param_source_upixel{};
-        gs_eparam_t *param_source_vpixel{};
+        gs_eparam_t *param_texture_size{};
 
     public:
         explicit effect_parameter_source(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
@@ -83,8 +84,7 @@ class effect_parameter_source : public effect_parameter {
             UNUSED_PARAMETER(metadata);
             UNUSED_PARAMETER(effect_path);
 
-            param_source_upixel = shader->get_param_by_name(get_full_subparam_name_static(name, "upixel").c_str());
-            param_source_vpixel = shader->get_param_by_name(get_full_subparam_name_static(name, "vpixel").c_str());
+            param_texture_size = shader->get_param_by_name(get_full_subparam_name_static(name, PARAM_STR_SIZE).c_str());
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {
@@ -171,8 +171,12 @@ class effect_parameter_source : public effect_parameter {
             else {
                 try_gs_effect_set_texture(name.c_str(), shader_param, texture);
             }
-            try_gs_effect_set_float(get_full_subparam_name_static(name, "upixel").c_str(), param_source_upixel, 1.0 / (float)gs_texture_get_width(texture));
-            try_gs_effect_set_float(get_full_subparam_name_static(name, "vpixel").c_str(), param_source_vpixel, 1.0 / (float)gs_texture_get_height(texture));
+
+            vec2 tex_size = {
+                .x = (float)gs_texture_get_width(texture),
+                .y = (float)gs_texture_get_height(texture),
+            };
+            try_gs_effect_set_vec2(PARAM_STR_SIZE, param_texture_size, &tex_size);
         }
 
         void show() override {

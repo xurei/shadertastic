@@ -30,6 +30,8 @@ struct effect_parameter_image_value {
 
 class effect_parameter_image : public effect_parameter {
     private:
+        static constexpr char PARAM_STR_SIZE[] = "size";
+
         std::string default_value;
         std::vector<effect_parameter_image_value> values;
         obs_data_array *default_array{};
@@ -38,6 +40,7 @@ class effect_parameter_image : public effect_parameter {
 
         std::string path;
         gs_texture_t * texture;
+        gs_eparam_t *param_texture_size{};
 
         void load_texture() {
             obs_enter_graphics();
@@ -114,6 +117,9 @@ class effect_parameter_image : public effect_parameter {
                 allow_custom = true;
             }
             obs_data_array_release(array);
+
+            std::string texture_size = get_full_subparam_name_static(name, PARAM_STR_SIZE);
+            param_texture_size = shader->get_param_by_name(texture_size.c_str());
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {
@@ -216,7 +222,14 @@ class effect_parameter_image : public effect_parameter {
         }
 
         void try_gs_set_val() override {
-            try_gs_effect_set_texture(name.c_str(), shader_param, this->texture);
+            try_gs_effect_set_texture_srgb(name.c_str(), shader_param, this->texture)
+
+            vec2 tex_size = {
+                .x = (float)gs_texture_get_width(texture),
+                .y = (float)gs_texture_get_height(texture),
+            };
+            std::string texture_size = get_full_subparam_name_static(name, PARAM_STR_SIZE);
+            try_gs_effect_set_vec2(texture_size, param_texture_size, &tex_size);
         }
 };
 
