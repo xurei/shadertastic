@@ -44,18 +44,6 @@ namespace onnxmediapipe
 //        ov::InferRequest inferRequest;
 
         bool _bWithAttention = true;
-
-        //these first 2 should exist for both versions
-        // of face mesh (with/without attention)
-        std::string facial_surface_tensor_name;
-        std::string face_flag_tensor_name;
-
-        //only face mesh with attention uses these 5.
-        std::string lips_refined_tensor_name;
-        std::string left_eye_with_eyebrow_tensor_name;
-        std::string right_eye_with_eyebrow_tensor_name;
-        std::string left_iris_refined_tensor_name;
-        std::string right_iris_refined_tensor_name;
     };
 
 } //ovfacemesh
