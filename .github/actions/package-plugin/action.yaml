@@ -116,7 +116,7 @@ runs:
       if: runner.os == 'Windows'
       shell: cmd
       run: |
-        curl "-kL" "https://github.com/jrsoftware/issrc/releases/download/is-6_2_2/innosetup-6.7.1.exe" "-f" "--retry" "5" "-o" "inno.exe"
+        curl "-kL" "https://github.com/jrsoftware/issrc/releases/download/is-6_7_1/innosetup-6.7.1.exe" "-f" "--retry" "5" "-o" "inno.exe"
         .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
     - name: Create Windows Installer
       if: runner.os == 'Windows' && startsWith(github.ref, 'refs/tags/')

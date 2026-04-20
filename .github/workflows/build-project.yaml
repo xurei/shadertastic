@@ -287,8 +287,8 @@ jobs:
         if: success() && github.event_name != 'pull_request' && runner.os == 'Windows'
         run: |
           New-Item -ItemType directory -Path certificate
-          Set-Content -Path certificate\certificate.txt -Value '${{ secrets.WINDOWS_CERTIFICATE }}'
-          certutil -decode certificate\certificate.txt certificate\certificate.pfx
+          Set-Content -Path certificate\certificate.pfx.b64 -Value '${{ secrets.WINDOWS_CERTIFICATE }}'
+          certutil -decode certificate\certificate.pfx.b64 certificate\certificate.pfx
           certutil -p "${{ secrets.WINDOWS_CERTIFICATE_PASS }}" -dump certificate\certificate.pfx
       - name: Code Sign x64 🔒
         if: success() && github.event_name != 'pull_request' && runner.os == 'Windows'
