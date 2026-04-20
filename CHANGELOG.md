@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - Fixed displacement map bugging with Linear RGB vs sRGB
+- Fix in linux build: requirelibonnxruntime.so.1.23.2instead libonnxruntime.so.1 (PR #24)
 
 ### Changed
 - Updated INNOSetup to 6.7.1
