@@ -89,16 +89,9 @@ elseif(OS_MACOS)
 elseif(OS_LINUX)
   file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/lib")
   add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND
-    cp "${CMAKE_BINARY_DIR}/_deps/onnxruntime-src/lib/libonnxruntime.so.${Onnxruntime_VERSION}" "${CMAKE_CURRENT_BINARY_DIR}/lib/libonnxruntime.so.1"
+    COMMAND patchelf --replace-needed libonnxruntime.so.1 libonnxruntime.so.${Onnxruntime_VERSION} $<TARGET_FILE:${PROJECT_NAME}>
+    COMMENT "Fixing ONNX dependency name for portability"
   )
-
-  # Crée un lien symbolique libonnxruntime.so.1 -> libonnxruntime.so.${Onnxruntime_VERSION}
-  install(CODE "
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-      libonnxruntime.so.${Onnxruntime_VERSION}
-      \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/obs-plugins/shadertastic/libonnxruntime.so.1)
-  ")
 
   # Packaging - force the dependencies so Qt is not taken with it; OBS will have it anyways
 endif()

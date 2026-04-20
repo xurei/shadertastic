@@ -34,3 +34,6 @@ build_dev.sh
 test.sh
 debug_logs/
 /CMakeUserPresets.json
+
+# Exclude release
+release/
