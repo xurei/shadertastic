@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Source/Image parameters : added `_size` sub parameter as float2 (#ST-21)
 
+### Fixed
+- Fixed displacement map bugging with Linear RGB vs sRGB
+
+### Changed
+- Updated INNOSetup to 6.7.1
+
 ## [1.0.2] - 2026-01-25
 ### Added
 - Added Sobel filter
