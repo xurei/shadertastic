@@ -49,7 +49,8 @@ class effect_shader {
 
     std::string load(const char *shader_path);
 
-    gs_eparam_t * get_param_by_name(const char *param_name) const;
+    [[nodiscard]] gs_eparam_t * get_param_by_name(const char *param_name) const;
+    [[nodiscard]] gs_eparam_t * get_param_by_name(const std::string &param_name) const;
     bool loop(const char *tech_name);
 
     //void render(gs_texrender_t *texrender, uint32_t cx, uint32_t cy);

@@ -60,10 +60,10 @@ class effect_parameter_facetracking : public effect_parameter {
             std::string bbox_br = get_full_subparam_name_static(name, PARAM_STR_BOX_BR);
             std::string points_tex = get_full_subparam_name_static(name, PARAM_STR_POINTS_TEX);
 
-            param_fd_face_found = shader->get_param_by_name(face_found.c_str());
-            param_fd_face_tl = shader->get_param_by_name(bbox_tl.c_str());
-            param_fd_face_br = shader->get_param_by_name(bbox_br.c_str());
-            param_fd_points_tex = shader->get_param_by_name(points_tex.c_str());
+            param_fd_face_found = shader->get_param_by_name(face_found);
+            param_fd_face_tl = shader->get_param_by_name(bbox_tl);
+            param_fd_face_br = shader->get_param_by_name(bbox_br);
+            param_fd_points_tex = shader->get_param_by_name(points_tex);
         }
 
         void tick(shadertastic_common *s) override {

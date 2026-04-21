@@ -99,6 +99,9 @@ bool effect_shader::loop(const char *tech_name) {
     return gs_effect_loop(gs_effect, tech_name);
 }
 
+gs_eparam_t *effect_shader::get_param_by_name(const std::string &param_name) const {
+    return this->get_param_by_name(param_name.c_str());
+}
 gs_eparam_t *effect_shader::get_param_by_name(const char *param_name) const {
     return gs_effect_get_param_by_name(gs_effect, param_name);
 }
