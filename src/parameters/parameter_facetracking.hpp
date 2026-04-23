@@ -106,7 +106,9 @@ class effect_parameter_facetracking : public effect_parameter {
                 try_gs_effect_set_texture(points_tex.c_str(), param_fd_points_tex, face_tracking->fd_points_texture);
 
                 //Pre-raster texture
-                try_gs_effect_set_texture(points_tex.c_str(), param_fd_preraster_tex, face_tracking->fd_preraster_texture);
+                if (face_tracking->fd_preraster_texture) {
+                    try_gs_effect_set_texture(points_tex.c_str(), param_fd_preraster_tex, face_tracking->fd_preraster_texture);
+                }
             }
         }
 

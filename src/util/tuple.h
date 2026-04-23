@@ -2,20 +2,40 @@
 #define SHADERTASTIC_TUPLE_H
 
 struct int2 {
-    int x;
-    int y;
+    union {
+        struct {
+            int x;
+            int y;
+        };
+        int ptr[2];
+    };
 };
 struct uint2 {
-    uint32_t x{};
-    uint32_t y{};
+    union {
+        struct {
+            unsigned int x;
+            unsigned int y;
+        };
+        unsigned int ptr[2];
+    };
 };
 struct float2 {
-    float x;
-    float y;
+    union {
+        struct {
+            float x;
+            float y;
+        };
+        float ptr[2];
+    };
 };
 struct double2 {
-    double x;
-    double y;
+    union {
+        struct {
+            double x;
+            double y;
+        };
+        double ptr[2];
+    };
 };
 
 #endif // SHADERTASTIC_TUPLE_H
