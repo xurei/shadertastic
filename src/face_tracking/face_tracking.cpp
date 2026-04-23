@@ -20,6 +20,7 @@
 #include <opencv2/core.hpp>
 #include <thread>
 #include <obs-module.h>
+#include <graphics/graphics.h>
 #include <util/bmem.h>
 #include "onnxmediapipe/face_landmarks_triangles.h"
 #include "onnxmediapipe/models_provider.h"
@@ -28,6 +29,7 @@
 #include "../settings.h"
 #include "../util/time_util.hpp"
 #include "src/util/texture_util.h"
+#include "src/shadertastic_common.hpp"
 
 // Globals
 static const cv::Mat failed(0, 0, CV_8UC1);
@@ -35,6 +37,174 @@ static const cv::Mat failed(0, 0, CV_8UC1);
 
 static inline float edge_function(const cv::Point2f& a, const cv::Point2f& b, const cv::Point2f& c) {
     return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
+}
+
+struct RasterVertex {
+    float pos[2];     // NDC
+    float bary[3];    // barycentrics
+    float tri_id;     // normalized triangle id
+};
+
+gs_vb_data *create_uv_vbuffer(uint32_t num_verts)
+{
+    struct gs_vb_data *vrect = nullptr;
+    vrect = gs_vbdata_create();
+    vrect->num = num_verts;
+    vrect->points = (struct vec3 *)bzalloc(sizeof(struct vec3) * num_verts);
+    vrect->num_tex = 1;
+    vrect->tvarray = (struct gs_tvertarray *)bzalloc(sizeof(struct gs_tvertarray) * 2);
+    vrect->tvarray[0].width = 2;
+    vrect->tvarray[0].array = bzalloc(sizeof(struct vec2) * num_verts);
+//        vrect->tvarray[1].width = 2;
+//        vrect->tvarray[1].array = bzalloc(sizeof(struct vec2) * num_verts);
+
+    //memset(vrect->points, 0, sizeof(struct vec3) * num_verts);
+    //memset(vrect->tvarray[0].array, 0, sizeof(struct vec2) * num_verts);
+
+	return vrect;
+}
+
+gs_vertbuffer_t* build_vertex_buffer(const std::vector<RasterVertex> &vertices)
+{
+    const size_t vertex_count = vertices.size();
+    auto *vb_data = create_uv_vbuffer(vertex_count);
+
+//
+//    gs_vb_data* vb_data = gs_vbdata_create();
+//    vb_data->num = (uint32_t)vertex_count;
+//
+//    // POSITION (vec3 obligatoire côté OBS → on met z=0)
+//    vb_data->points = (vec3*)bmalloc(sizeof(vec3) * vertex_count);
+//
+//    // TEXCOORD0 → bary
+//    vb_data->tvarray = (gs_tvertarray *)bzalloc(sizeof(gs_tvertarray *) * 2);
+//    vb_data->tvarray[0] = (gs_tvertarray*)bmalloc(sizeof(gs_tvertarray) * vertex_count);
+//
+//    // TEXCOORD1 → (bary.z + tri_id)
+//    vb_data->tvarray[1] = (vec2*)bmalloc(sizeof(vec2) * vertex_count);
+
+    for (size_t i = 0; i < vertex_count; ++i) {
+        const RasterVertex& v = vertices[i];
+
+        // POSITION
+        vb_data->points[i] = { v.pos[0], v.pos[1], 0.0f };
+
+        // bary.xy
+        struct vec2 *bary_xy = (struct vec2 *) vb_data->tvarray[0].array;
+        bary_xy[i] = { v.bary[0], v.bary[1] };
+
+        // bary.z + tri_id
+//        struct vec2 *bary_z = (struct vec2 *) vb_data->tvarray[1].array;
+//        bary_z[i] = { v.bary[2], v.tri_id };
+    }
+
+    gs_vertbuffer_t *out;
+    obs_enter_graphics();
+    {
+        out = gs_vertexbuffer_create(vb_data, GS_DYNAMIC);
+    }
+    obs_leave_graphics();
+
+    return out;
+}
+
+gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
+    cv::Point3f uvs[],
+    const cv::Vec3i triangles[],
+    int width,
+    int height
+) {
+    std::vector<RasterVertex> vertices;
+    vertices.reserve(onnxmediapipe::nb_face_triangles * 3);
+    debug("---a---");
+
+    auto to_ndc = [](const cv::Point3f& v) {
+        float x = v.x * 2.0f - 1.0f;
+        float y = 1.0f - v.y * 2.0f; // flip Y
+        return std::pair<float,float>(x,y);
+    };
+    debug("---a1---");
+
+    for (int tri_id = 0; tri_id < onnxmediapipe::nb_face_triangles; ++tri_id) {
+        const cv::Vec3i& tri = triangles[tri_id];
+
+        const cv::Point3f& v0 = uvs[tri[0]];
+        const cv::Point3f& v1 = uvs[tri[1]];
+        const cv::Point3f& v2 = uvs[tri[2]];
+
+        auto [x0,y0] = to_ndc(v0);
+        auto [x1,y1] = to_ndc(v1);
+        auto [x2,y2] = to_ndc(v2);
+
+        float tri_norm = ((float)tri_id + 0.5f) / (float)onnxmediapipe::nb_face_triangles;
+
+        vertices.push_back(RasterVertex {{x0,y0}, {1,0,0}, tri_norm});
+        vertices.push_back(RasterVertex {{x1,y1}, {0,1,0}, tri_norm});
+        vertices.push_back(RasterVertex {{x2,y2}, {0,0,1}, tri_norm});
+    }
+    debug("---a2---");
+
+    // Vertex buffer
+    gs_vertbuffer_t* vb = build_vertex_buffer(vertices);
+
+    gs_texrender_t *texrender = nullptr;
+    debug("---a3---");
+    obs_enter_graphics();
+    {
+        // Render target
+        texrender = gs_texrender_create(GS_RGBA32F, GS_ZS_NONE);
+        if (!texrender) {
+            goto end;
+        }
+
+        if (!gs_texrender_begin(texrender, width, height)) {
+            goto end;
+        }
+        debug("---b---");
+
+        vec4 clear_color = {0, 0, 0, 0};
+        gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
+        gs_ortho(0.0f, (float) width, 0.0f, (float) height, -100.0f,
+            100.0f); // This line took me A WHOLE WEEK to figure out
+
+        gs_load_vertexbuffer(vb);
+        gs_load_indexbuffer(nullptr);
+        debug("---c---");
+
+        // ⚠️ tu dois charger ton effect avant ça
+        char *raster_effect_path = obs_module_file("effects/facetracking_raster.hlsl");
+        gs_effect_t *raster_effect = gs_effect_create_from_file(raster_effect_path, nullptr);
+        gs_technique_t *tech = gs_effect_get_technique(raster_effect, "Draw");
+        gs_eparam_t *image = gs_effect_get_param_by_name(raster_effect, "image");
+
+        gs_technique_begin(tech);
+        gs_technique_begin_pass(tech, 0);
+
+        gs_effect_set_texture(image, shadertastic_transparent_texture);
+        gs_draw(GS_TRIS, 0, vertices.size());
+        debug("---d---");
+
+        gs_technique_end_pass(tech);
+        gs_technique_end(tech);
+
+        gs_texrender_end(texrender);
+
+        {
+            auto matA = extractImage(gs_texrender_get_texture(texrender));
+            saveMat(matA, "/home/olivier/obs-plugins/obs-shadertastic/plugin/lab/debug_images/tex_a.png");
+            debug("ok");
+        }
+    }
+
+    end:
+    obs_leave_graphics();
+    if (texrender != nullptr) {
+        gs_texrender_destroy(texrender);
+    }
+    if (vb != nullptr) {
+        gs_vertexbuffer_destroy(vb);
+    }
+    return nullptr;
 }
 
 cv::Mat face_tracking_raster_mesh_uv(
@@ -795,6 +965,13 @@ void face_tracking_tick(face_tracking_state *s, gs_texture_t *source_tex, const 
 
         //Preraster
         cv::Mat preraster = face_tracking_raster_mesh_uv(
+            s->average_results.refined_landmarks,
+            onnxmediapipe::face_triangles,
+            (int)cx,
+            (int)cy
+        );
+
+        face_tracking_raster_mesh_uv_gpu(
             s->average_results.refined_landmarks,
             onnxmediapipe::face_triangles,
             (int)cx,
