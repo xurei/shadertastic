@@ -45,7 +45,7 @@ struct RasterVertex {
     float tri_id;     // normalized triangle id
 };
 
-gs_vb_data *create_uv_vbuffer(uint32_t num_verts)
+gs_vertbuffer_t *create_uv_vbuffer(uint32_t num_verts)
 {
     struct gs_vb_data *vrect = nullptr;
     vrect = gs_vbdata_create();
@@ -55,33 +55,23 @@ gs_vb_data *create_uv_vbuffer(uint32_t num_verts)
     vrect->tvarray = (struct gs_tvertarray *)bzalloc(sizeof(struct gs_tvertarray) * 2);
     vrect->tvarray[0].width = 2;
     vrect->tvarray[0].array = bzalloc(sizeof(struct vec2) * num_verts);
-//        vrect->tvarray[1].width = 2;
-//        vrect->tvarray[1].array = bzalloc(sizeof(struct vec2) * num_verts);
+//    vrect->tvarray[1].width = 2;
+//    vrect->tvarray[1].array = bzalloc(sizeof(struct vec2) * num_verts);
 
-    //memset(vrect->points, 0, sizeof(struct vec3) * num_verts);
-    //memset(vrect->tvarray[0].array, 0, sizeof(struct vec2) * num_verts);
+    gs_vertbuffer_t *out;
+    obs_enter_graphics();
+    {
+        out = gs_vertexbuffer_create(vrect, GS_DYNAMIC);
+    }
+    obs_leave_graphics();
 
-	return vrect;
+	return out;
 }
 
-gs_vertbuffer_t* build_vertex_buffer(const std::vector<RasterVertex> &vertices)
+void fill_vertex_buffer(const std::vector<RasterVertex> &vertices, gs_vertbuffer_t *vb)
 {
     const size_t vertex_count = vertices.size();
-    auto *vb_data = create_uv_vbuffer(vertex_count);
-
-//
-//    gs_vb_data* vb_data = gs_vbdata_create();
-//    vb_data->num = (uint32_t)vertex_count;
-//
-//    // POSITION (vec3 obligatoire côté OBS → on met z=0)
-//    vb_data->points = (vec3*)bmalloc(sizeof(vec3) * vertex_count);
-//
-//    // TEXCOORD0 → bary
-//    vb_data->tvarray = (gs_tvertarray *)bzalloc(sizeof(gs_tvertarray *) * 2);
-//    vb_data->tvarray[0] = (gs_tvertarray*)bmalloc(sizeof(gs_tvertarray) * vertex_count);
-//
-//    // TEXCOORD1 → (bary.z + tri_id)
-//    vb_data->tvarray[1] = (vec2*)bmalloc(sizeof(vec2) * vertex_count);
+    auto *vb_data = gs_vertexbuffer_get_data(vb);
 
     for (size_t i = 0; i < vertex_count; ++i) {
         const RasterVertex& v = vertices[i];
@@ -98,15 +88,13 @@ gs_vertbuffer_t* build_vertex_buffer(const std::vector<RasterVertex> &vertices)
 //        bary_z[i] = { v.bary[2], v.tri_id };
     }
 
-    gs_vertbuffer_t *out;
-    obs_enter_graphics();
-    {
-        out = gs_vertexbuffer_create(vb_data, GS_DYNAMIC);
-    }
-    obs_leave_graphics();
-
-    return out;
+    gs_vertexbuffer_flush(vb);
 }
+
+gs_effect_t *raster_effect = nullptr;
+bool face_tracking_raster_mesh_uv_gpu_ready = false;
+std::vector<RasterVertex> face_tracking_raster_vertices;
+gs_vertbuffer_t *face_tracking_raster_vertexbuffer;
 
 gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
     cv::Point3f uvs[],
@@ -114,8 +102,12 @@ gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
     int width,
     int height
 ) {
-    std::vector<RasterVertex> vertices;
-    vertices.reserve(onnxmediapipe::nb_face_triangles * 3);
+    if (!face_tracking_raster_mesh_uv_gpu_ready) {
+        face_tracking_raster_vertices.reserve(onnxmediapipe::nb_face_triangles * 3);
+        face_tracking_raster_vertexbuffer = create_uv_vbuffer(onnxmediapipe::nb_face_triangles * 3);
+        face_tracking_raster_mesh_uv_gpu_ready = true;
+    }
+    face_tracking_raster_vertices.clear();
     debug("---a---");
 
     auto to_ndc = [](const cv::Point3f& v) {
@@ -125,6 +117,7 @@ gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
     };
     debug("---a1---");
 
+    face_tracking_raster_vertices.clear();
     for (int tri_id = 0; tri_id < onnxmediapipe::nb_face_triangles; ++tri_id) {
         const cv::Vec3i& tri = triangles[tri_id];
 
@@ -138,14 +131,14 @@ gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
 
         float tri_norm = ((float)tri_id + 0.5f) / (float)onnxmediapipe::nb_face_triangles;
 
-        vertices.push_back(RasterVertex {{x0,y0}, {1,0,0}, tri_norm});
-        vertices.push_back(RasterVertex {{x1,y1}, {0,1,0}, tri_norm});
-        vertices.push_back(RasterVertex {{x2,y2}, {0,0,1}, tri_norm});
+        face_tracking_raster_vertices.push_back(RasterVertex {{x0,y0}, {1,0,0}, tri_norm});
+        face_tracking_raster_vertices.push_back(RasterVertex {{x1,y1}, {0,1,0}, tri_norm});
+        face_tracking_raster_vertices.push_back(RasterVertex {{x2,y2}, {0,0,1}, tri_norm});
     }
     debug("---a2---");
 
     // Vertex buffer
-    gs_vertbuffer_t* vb = build_vertex_buffer(vertices);
+    fill_vertex_buffer(face_tracking_raster_vertices, face_tracking_raster_vertexbuffer);
 
     gs_texrender_t *texrender = nullptr;
     debug("---a3---");
@@ -167,13 +160,16 @@ gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
         gs_ortho(0.0f, (float) width, 0.0f, (float) height, -100.0f,
             100.0f); // This line took me A WHOLE WEEK to figure out
 
-        gs_load_vertexbuffer(vb);
+        gs_load_vertexbuffer(face_tracking_raster_vertexbuffer);
         gs_load_indexbuffer(nullptr);
         debug("---c---");
 
         // ⚠️ tu dois charger ton effect avant ça
-        char *raster_effect_path = obs_module_file("effects/facetracking_raster.hlsl");
-        gs_effect_t *raster_effect = gs_effect_create_from_file(raster_effect_path, nullptr);
+        if (raster_effect == nullptr) {
+            char *raster_effect_path = obs_module_file("effects/facetracking_raster.hlsl");
+            raster_effect = gs_effect_create_from_file(raster_effect_path, nullptr);
+        }
+
         gs_technique_t *tech = gs_effect_get_technique(raster_effect, "Draw");
         gs_eparam_t *image = gs_effect_get_param_by_name(raster_effect, "image");
 
@@ -181,7 +177,7 @@ gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
         gs_technique_begin_pass(tech, 0);
 
         gs_effect_set_texture(image, shadertastic_transparent_texture);
-        gs_draw(GS_TRIS, 0, vertices.size());
+        gs_draw(GS_TRIS, 0, onnxmediapipe::nb_face_triangles * 3);
         debug("---d---");
 
         gs_technique_end_pass(tech);
@@ -200,9 +196,6 @@ gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
     obs_leave_graphics();
     if (texrender != nullptr) {
         gs_texrender_destroy(texrender);
-    }
-    if (vb != nullptr) {
-        gs_vertexbuffer_destroy(vb);
     }
     return nullptr;
 }
