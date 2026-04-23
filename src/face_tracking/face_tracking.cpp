@@ -21,6 +21,7 @@
 #include <thread>
 #include <obs-module.h>
 #include <util/bmem.h>
+#include "onnxmediapipe/face_landmarks_triangles.h"
 #include "onnxmediapipe/models_provider.h"
 #include "face_tracking.h"
 #include "../logging_functions.hpp"
@@ -29,11 +30,87 @@
 #include "src/util/texture_util.h"
 
 // Globals
-face_tracking_bounding_box no_bounding_box{
-    -1.0f, -1.0f
-    -1.0f, -1.0f
-};
 static const cv::Mat failed(0, 0, CV_8UC1);
+//----------------------------------------------------------------------------------------------------------------------
+
+static inline float edge_function(const cv::Point2f& a, const cv::Point2f& b, const cv::Point2f& c) {
+    return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
+}
+
+cv::Mat face_tracking_raster_mesh_uv(
+    cv::Point3f uvs[],
+    const cv::Vec3i triangles[],
+    int width,
+    int height
+) {
+    cv::Mat out(height, width, CV_32FC4, cv::Scalar_<float>(0.0f, 0.0f, 0.0f, 0.0f));
+    cv::Mat zbuffer(height, width, CV_32FC1, cv::Scalar_<float>(-std::numeric_limits<float>::infinity()));
+
+    for (int tri_id = 0; tri_id < onnxmediapipe::nb_face_triangles; ++tri_id) {
+        const cv::Vec3i& tri = triangles[tri_id];
+        const cv::Point3f& v0 = uvs[tri[0]];
+        const cv::Point3f& v1 = uvs[tri[1]];
+        const cv::Point3f& v2 = uvs[tri[2]];
+
+        cv::Point2f p0(v0.x * (float)width,  v0.y * (float)height);
+        cv::Point2f p1(v1.x * (float)width,  v1.y * (float)height);
+        cv::Point2f p2(v2.x * (float)width,  v2.y * (float)height);
+
+        int min_x = std::max(0,          (int)std::floor(std::min({p0.x, p1.x, p2.x})));
+        int max_x = std::min(width - 1,  (int)std::ceil (std::max({p0.x, p1.x, p2.x})));
+        int min_y = std::max(0,          (int)std::floor(std::min({p0.y, p1.y, p2.y})));
+        int max_y = std::min(height - 1, (int)std::ceil (std::max({p0.y, p1.y, p2.y})));
+
+        float area = edge_function(p0, p1, p2);
+        if (std::abs(area) < 1e-6f) {
+            continue;
+        }
+
+        float inv_area = 1.0f / area;
+
+        for (int y = min_y; y <= max_y; ++y) {
+            for (int x = min_x; x <= max_x; ++x) {
+
+                cv::Point2f p((float)x + 0.5f, (float)y + 0.5f);
+
+                float w0 = edge_function(p1, p2, p);
+                float w1 = edge_function(p2, p0, p);
+                float w2 = edge_function(p0, p1, p);
+
+                if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
+                    // barycentriques normalisées
+                    float b0 = w0 * inv_area;
+                    float b1 = w1 * inv_area;
+                    float b2 = w2 * inv_area;
+
+                    // interpolation Z (uvs.z)
+                    float z =
+                        b0 * v0.z +
+                        b1 * v1.z +
+                        b2 * v2.z;
+
+                    float& current_z = zbuffer.at<float>(y, x);
+
+                    if (z > current_z) {
+                        current_z = z;
+
+                        float tri_norm = ((float)tri_id+0.5f) / (float)(onnxmediapipe::nb_face_triangles);
+
+                        // On stocke 2 bary (la 3e = 1 - u - v)
+                        out.at<cv::Vec4f>(y, x) = cv::Vec4f(
+                            tri_norm,
+                            b1,
+                            b2,
+                            1.0f
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    return out;
+}
 //----------------------------------------------------------------------------------------------------------------------
 
 void face_tracking_copy_points(onnxmediapipe::FaceLandmarksResults *facelandmark_results, float *points) {
@@ -47,11 +124,9 @@ void face_tracking_copy_points(onnxmediapipe::FaceLandmarksResults *facelandmark
 //----------------------------------------------------------------------------------------------------------------------
 
 face_tracking_bounding_box face_tracking_get_bounding_box(onnxmediapipe::FaceLandmarksResults *facelandmark_results, const unsigned short int *indices, int nb_indices) {
-    // Initialize min and max points
     cv::Point2f minPoint(std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
     cv::Point2f maxPoint(std::numeric_limits<float>::min(), std::numeric_limits<float>::min());
 
-    // Find the bounding box
     for (int i=0; i<nb_indices; ++i) {
         const size_t landmark_i = indices[i];
         if (landmark_i < refined_landmarks_num_points) {
@@ -64,7 +139,6 @@ face_tracking_bounding_box face_tracking_get_bounding_box(onnxmediapipe::FaceLan
         }
     }
 
-    // Finding the bounding box
     face_tracking_bounding_box out{
         minPoint.x, minPoint.y,
         maxPoint.x, maxPoint.y
@@ -715,20 +789,42 @@ void face_tracking_tick(face_tracking_state *s, gs_texture_t *source_tex, const 
         debug_trace("G %lu", get_time_us()-tic);
 
         float points[refined_landmarks_num_points * 4];
+        // TODO we could simplify this by using Point4f directly, but it takes ~15µs to copy the points, probably worthless
         face_tracking_copy_points(&s->average_results, points);
+        debug_trace("G1 %lu", get_time_us()-tic);
+
+        //Preraster
+        cv::Mat preraster = face_tracking_raster_mesh_uv(
+            s->average_results.refined_landmarks,
+            onnxmediapipe::face_triangles,
+            (int)cx,
+            (int)cy
+        );
 
         float *texpoints;
         uint32_t linesize2 = 0;
-        debug_trace("G1 %lu", get_time_us()-tic);
+        debug_trace("G2 %lu", get_time_us()-tic);
         obs_enter_graphics();
         {
             gs_texture_map(s->fd_points_texture, (uint8_t **) (&texpoints), &linesize2);
             memcpy(texpoints, points, refined_landmarks_num_points * 4 * sizeof(float));
             gs_texture_unmap(s->fd_points_texture);
+
+            if (!s->fd_preraster_texture || gs_texture_get_width(s->fd_preraster_texture) != cx || gs_texture_get_width(s->fd_preraster_texture) != cy) {
+                if (s->fd_preraster_texture) {
+                    gs_texture_destroy(s->fd_preraster_texture);
+                }
+                s->fd_preraster_texture = gs_texture_create(cx, cy, GS_RGBA32F, 1, nullptr, GS_DYNAMIC);
+            }
+            gs_texture_map(s->fd_preraster_texture, (uint8_t **) (&texpoints), &linesize2);
+            memcpy(texpoints, preraster.data, cx * cy * 4 * sizeof(float));
+            gs_texture_unmap(s->fd_preraster_texture);
         }
         obs_leave_graphics();
-        debug_trace("G2 %lu", get_time_us()-tic);
+        debug_trace("G3 %lu", get_time_us()-tic);
         debug_trace("H %lu", get_time_us()-tic);
+
+        //debug("Tick done");
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -800,7 +896,14 @@ void face_tracking_destroy(std::unique_ptr<face_tracking_state> &s) {
         obs_enter_graphics();
         {
             gs_texrender_destroy(s->facedetection_texrender);
-            gs_texture_destroy(s->fd_points_texture);
+            if (s->fd_points_texture != nullptr) {
+                gs_texture_destroy(s->fd_points_texture);
+                s->fd_points_texture = nullptr;
+            }
+            if (s->fd_preraster_texture != nullptr) {
+                gs_texture_destroy(s->fd_preraster_texture);
+                s->fd_preraster_texture = nullptr;
+            }
             if (s->staging_texture_detection) {
                 gs_stagesurface_destroy(s->staging_texture_detection);
                 s->staging_texture_detection = nullptr;

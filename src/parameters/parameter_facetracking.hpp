@@ -20,6 +20,7 @@
 
 #include <string>
 #include "parameter.hpp"
+#include "onnxmediapipe/face_landmarks_triangles.h"
 #include "../face_tracking/face_tracking_state.h"
 #include "../face_tracking/face_tracking.h"
 
@@ -29,6 +30,7 @@ class effect_parameter_facetracking : public effect_parameter {
         static constexpr char PARAM_STR_BOX_TL[] = "bbox_tl";
         static constexpr char PARAM_STR_BOX_BR[] = "bbox_br";
         static constexpr char PARAM_STR_POINTS_TEX[] = "points_tex";
+        static constexpr char PARAM_STR_PRERASTER_TEX[] = "preraster_tex";
 
         // Weak access to the unique_ptr of the face_tracking
         face_tracking_state *face_tracking{};
@@ -37,6 +39,7 @@ class effect_parameter_facetracking : public effect_parameter {
         gs_eparam_t *param_fd_face_tl{};
         gs_eparam_t *param_fd_face_br{};
         gs_eparam_t *param_fd_points_tex{};
+        gs_eparam_t *param_fd_preraster_tex{};
 
         static constexpr face_tracking_bounding_box no_bounding_box{
             -1.0f, -1.0f
@@ -59,11 +62,13 @@ class effect_parameter_facetracking : public effect_parameter {
             std::string bbox_tl = get_full_subparam_name_static(name, PARAM_STR_BOX_TL);
             std::string bbox_br = get_full_subparam_name_static(name, PARAM_STR_BOX_BR);
             std::string points_tex = get_full_subparam_name_static(name, PARAM_STR_POINTS_TEX);
+            std::string preraster_tex = get_full_subparam_name_static(name, PARAM_STR_PRERASTER_TEX);
 
             param_fd_face_found = shader->get_param_by_name(face_found);
             param_fd_face_tl = shader->get_param_by_name(bbox_tl);
             param_fd_face_br = shader->get_param_by_name(bbox_br);
             param_fd_points_tex = shader->get_param_by_name(points_tex);
+            param_fd_preraster_tex = shader->get_param_by_name(preraster_tex);
         }
 
         void tick(shadertastic_common *s) override {
@@ -99,6 +104,9 @@ class effect_parameter_facetracking : public effect_parameter {
                     //debug("Face: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
                 }
                 try_gs_effect_set_texture(points_tex.c_str(), param_fd_points_tex, face_tracking->fd_points_texture);
+
+                //Pre-raster texture
+                try_gs_effect_set_texture(points_tex.c_str(), param_fd_preraster_tex, face_tracking->fd_preraster_texture);
             }
         }
 

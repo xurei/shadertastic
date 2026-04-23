@@ -12,7 +12,6 @@
 namespace onnxmediapipe
 {
     class FaceLandmarks {
-
     public:
         explicit FaceLandmarks(std::unique_ptr<Ort::Env> &ort_env);
 

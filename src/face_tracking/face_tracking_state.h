@@ -27,6 +27,7 @@ constexpr size_t FACEDETECTION_NB_ITERATIONS = 1;
 struct face_tracking_state {
     gs_texrender_t *facedetection_texrender{};
     gs_texture_t *fd_points_texture{};
+    gs_texture_t *fd_preraster_texture{};
     gs_stagesurf_t *staging_texture_detection{};
     std::shared_ptr<onnxmediapipe::FaceMesh> facemesh{};
     onnxmediapipe::FaceLandmarksResults facelandmark_results[FACEDETECTION_NB_ITERATIONS];
