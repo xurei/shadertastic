@@ -28,7 +28,6 @@
 #include "../logging_functions.hpp"
 #include "../settings.h"
 #include "../util/time_util.hpp"
-#include "../util/truple.h"
 #include "src/util/texture_util.h"
 #include "src/shadertastic_common.hpp"
 
@@ -41,9 +40,9 @@ static inline float edge_function(const cv::Point2f& a, const cv::Point2f& b, co
 }
 
 struct RasterVertex {
-    vec3 pos;     // NDC
-    float bary[3];    // barycentrics
-    float tri_id;     // normalized triangle id
+    vec3 pos;       // NDC
+    float bary[3];  // barycentrics
+    float tri_id;   // normalized triangle id
 };
 
 gs_vertbuffer_t *create_uv_vbuffer(uint32_t num_verts)
@@ -89,7 +88,7 @@ void fill_vertex_buffer(const std::vector<RasterVertex> &vertices, gs_vertbuffer
 gs_effect_t *raster_effect = nullptr;
 bool face_tracking_raster_mesh_uv_gpu_ready = false;
 std::vector<RasterVertex> face_tracking_raster_vertices;
-gs_vertbuffer_t *face_tracking_raster_vertexbuffer;
+gs_vertbuffer_t *face_tracking_raster_vertexbuffer = nullptr;
 gs_texrender_t *face_tracking_raster_texrender = nullptr;
 
 gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
@@ -172,10 +171,10 @@ gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
 
         gs_enable_depth_test(true);
         vec4 clear_color = {0, 0, 0, 0};
-        gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &clear_color, -10000.0f, 0);
+        gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &clear_color, 10000.0f, 0);
         gs_ortho(0.0f, (float) width, 0.0f, (float) height, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
-        gs_depth_function(GS_GREATER);
-        //gs_depth_function(GS_LESS);
+        //gs_depth_function(GS_GREATER);
+        gs_depth_function(GS_LESS);
 
         auto prev_cull = gs_get_cull_mode();
         gs_set_cull_mode(GS_BACK);
@@ -985,7 +984,6 @@ void face_tracking_tick(face_tracking_state *s, gs_texture_t *source_tex, const 
             s->fd_preraster_texture = gs_texrender_get_texture(raster_texrender);
         }
         obs_leave_graphics();
-
         debug_trace("H %lu", get_time_us()-tic);
 
         //debug("Tick done");
@@ -1059,19 +1057,12 @@ void face_tracking_destroy(std::unique_ptr<face_tracking_state> &s) {
     if (s != nullptr) {
         obs_enter_graphics();
         {
-            gs_texrender_destroy(s->facedetection_texrender);
-            if (s->fd_points_texture != nullptr) {
-                gs_texture_destroy(s->fd_points_texture);
-                s->fd_points_texture = nullptr;
-            }
-//            if (s->fd_preraster_texture != nullptr) {
-//                gs_texture_destroy(s->fd_preraster_texture);
-//                s->fd_preraster_texture = nullptr;
-//            }
-            if (s->staging_texture_detection) {
-                gs_stagesurface_destroy(s->staging_texture_detection);
-                s->staging_texture_detection = nullptr;
-            }
+            release_resource(gs_texrender_destroy, s->facedetection_texrender);
+            release_resource(gs_texture_destroy, s->fd_points_texture);
+            release_resource(gs_stagesurface_destroy, s->staging_texture_detection);
+            release_resource(gs_texrender_destroy, face_tracking_raster_texrender);
+            release_resource(gs_vertexbuffer_destroy, face_tracking_raster_vertexbuffer);
+            release_resource(gs_effect_destroy, raster_effect);
         }
         obs_leave_graphics();
         s->crop_shader.reset(); // NOLINT(bugprone-unused-return-value)

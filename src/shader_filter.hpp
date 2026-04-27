@@ -116,15 +116,11 @@ static void shadertastic_filter_destroy(void *data) {
     shadertastic_filter *s = shadertastic_filter_cast(data);
 
     obs_enter_graphics();
-    gs_texrender_destroy(s->interm_texrender[0]);
-    gs_texrender_destroy(s->interm_texrender[1]);
-    if (s->filter_texrender) {
-        gs_texrender_destroy(s->filter_texrender);
-        s->filter_texrender = nullptr;
-    }
-    if (s->filter_texrender_pre) {
-        gs_texrender_destroy(s->filter_texrender_pre);
-        s->filter_texrender_pre = nullptr;
+    {
+        release_resource(gs_texrender_destroy, s->interm_texrender[0]);
+        release_resource(gs_texrender_destroy, s->interm_texrender[1]);
+        release_resource(gs_texrender_destroy, s->filter_texrender);
+        release_resource(gs_texrender_destroy, s->filter_texrender_pre);
     }
     obs_leave_graphics();
     face_tracking_destroy(s->face_tracking);
@@ -481,7 +477,7 @@ void shadertastic_filter_hide(void *data) {
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_filter_unload() {
-    shadertastic_filter_destroy(shadertastic_no_filter);
+    release_resource(shadertastic_filter_destroy, shadertastic_no_filter);
 }
 
 #endif // SHADERTASTIC_SHADER_FILTER_HPP

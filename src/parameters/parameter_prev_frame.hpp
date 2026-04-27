@@ -53,13 +53,9 @@ class effect_parameter_prev_frame : public effect_parameter {
 
         inline void release_texrenders() {
             obs_enter_graphics();
-            if (prev_texrender[0] != nullptr) {
-                gs_texrender_destroy(prev_texrender[0]);
-                prev_texrender[0] = nullptr;
-            }
-            if (prev_texrender[1] != nullptr) {
-                gs_texrender_destroy(prev_texrender[1]);
-                prev_texrender[1] = nullptr;
+            {
+                release_resource(gs_texrender_destroy, prev_texrender[0]);
+                release_resource(gs_texrender_destroy, prev_texrender[1]);
             }
             obs_leave_graphics();
         }

@@ -20,6 +20,7 @@
 #include "../util/rgba_to_rgb.h"
 #include "../logging_functions.hpp"
 #include "../util/time_util.hpp"
+#include "src/shadertastic_common.hpp"
 
 static const cv::Mat failed(0, 0, CV_8UC1);
 //----------------------------------------------------------------------------------------------------------------------
@@ -98,10 +99,7 @@ void FaceTrackingCropShader::init() {
 void FaceTrackingCropShader::release() {
     obs_enter_graphics();
     {
-        if (FaceTrackingCropShader::gs_crop_effect != nullptr) {
-            gs_effect_destroy(FaceTrackingCropShader::gs_crop_effect);
-            FaceTrackingCropShader::gs_crop_effect = nullptr;
-        }
+        release_resource(gs_effect_destroy, FaceTrackingCropShader::gs_crop_effect);
     }
     obs_leave_graphics();
 }
@@ -119,14 +117,8 @@ FaceTrackingCropShader::FaceTrackingCropShader() {
 FaceTrackingCropShader::~FaceTrackingCropShader() {
     obs_enter_graphics();
     {
-        if (this->staging_texture) {
-            gs_stagesurface_destroy(this->staging_texture);
-            this->staging_texture = nullptr;
-        }
-        if (this->crop_texrender) {
-            gs_texrender_destroy(this->crop_texrender);
-            this->crop_texrender = nullptr;
-        }
+        release_resource(gs_stagesurface_destroy, this->staging_texture);
+        release_resource(gs_texrender_destroy, this->crop_texrender);
     }
     obs_leave_graphics();
 }

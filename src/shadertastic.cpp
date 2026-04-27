@@ -188,12 +188,11 @@ bool is_module_loaded() {
     module_loaded = false;
     shadertastic_filter_unload();
 
-    if (shadertastic_transparent_texture != nullptr) {
-        obs_enter_graphics();
-        gs_texture_destroy(shadertastic_transparent_texture);
-        obs_leave_graphics();
-        shadertastic_transparent_texture = nullptr;
+    obs_enter_graphics();
+    {
+        release_resource(gs_texture_destroy, shadertastic_transparent_texture);
     }
+    obs_leave_graphics();
 
     FaceTrackingCropShader::release();
 }

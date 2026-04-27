@@ -76,19 +76,19 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_transition_destroy(void *data) {
-    debug("Destroy");
+    debug("Destroy...");
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
 
     obs_enter_graphics();
-    gs_texrender_destroy(s->transition_texrender[0]);
-    gs_texrender_destroy(s->transition_texrender[1]);
-    gs_texrender_destroy(s->source_a_texrender);
-    gs_texrender_destroy(s->source_b_texrender);
+    {
+        release_resource(gs_texrender_destroy, s->transition_texrender[0]);
+        release_resource(gs_texrender_destroy, s->transition_texrender[1]);
+        release_resource(gs_texrender_destroy, s->source_a_texrender);
+        release_resource(gs_texrender_destroy, s->source_b_texrender);
+    }
     obs_leave_graphics();
-    debug_trace("Destroy2");
 
     s->release();
-    debug_trace("Destroy3");
     bfree(data);
     debug_trace("Destroyed");
 }

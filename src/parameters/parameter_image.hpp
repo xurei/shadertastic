@@ -44,18 +44,17 @@ class effect_parameter_image : public effect_parameter {
 
         void load_texture() {
             obs_enter_graphics();
-            if (this->texture != nullptr) {
-                gs_texture_destroy(this->texture);
-            }
-
-            if (starts_with(path, "bundle://")) {
-                std::string temp_file_path = create_temp_file();
-                extract_file_zipped_or_local(path.substr(9), temp_file_path);
-                this->texture = gs_texture_create_from_file(temp_file_path.c_str());
-                std::remove(temp_file_path.c_str());
-            }
-            else {
-                this->texture = gs_texture_create_from_file(path.c_str());
+            {
+                release_resource(gs_texture_destroy, this->texture);
+                if (starts_with(path, "bundle://")) {
+                    std::string temp_file_path = create_temp_file();
+                    extract_file_zipped_or_local(path.substr(9), temp_file_path);
+                    this->texture = gs_texture_create_from_file(temp_file_path.c_str());
+                    std::remove(temp_file_path.c_str());
+                }
+                else {
+                    this->texture = gs_texture_create_from_file(path.c_str());
+                }
             }
             obs_leave_graphics();
         }
@@ -68,12 +67,11 @@ class effect_parameter_image : public effect_parameter {
         ~effect_parameter_image() override {
             obs_data_array_release(default_array);
 
-            if (this->texture != nullptr) {
-                obs_enter_graphics();
-                gs_texture_destroy(this->texture);
-                this->texture = nullptr;
-                obs_leave_graphics();
+            obs_enter_graphics();
+            {
+                release_resource(gs_texture_destroy, this->texture);
             }
+            obs_leave_graphics();
         }
 
         effect_param_datatype type() override {
@@ -212,12 +210,13 @@ class effect_parameter_image : public effect_parameter {
             }
             else {
                 if (this->texture != nullptr) {
-                    obs_enter_graphics();
-                    gs_texture_destroy(this->texture);
-                    this->texture = nullptr;
-                    obs_leave_graphics();
                     this->path = "";
                 }
+                obs_enter_graphics();
+                {
+                    release_resource(gs_texture_destroy, this->texture);
+                }
+                obs_leave_graphics();
             }
         }
 

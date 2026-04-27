@@ -68,12 +68,11 @@ class effect_parameter_source : public effect_parameter {
         }
 
         inline void release_texrender() {
-            if (this->source_texrender != nullptr) {
-                obs_enter_graphics();
-                gs_texrender_destroy(this->source_texrender);
-                this->source_texrender = nullptr;
-                obs_leave_graphics();
+            obs_enter_graphics();
+            {
+                release_resource(gs_texrender_destroy, this->source_texrender);
             }
+            obs_leave_graphics();
         }
 
         effect_param_datatype type() override {

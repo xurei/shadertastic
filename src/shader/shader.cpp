@@ -114,8 +114,9 @@ void effect_shader::release() {
     if (is_module_loaded() && gs_effect != nullptr) {
         debug("Release shader");
         obs_enter_graphics();
-        gs_effect_destroy(gs_effect);
-        gs_effect = nullptr;
+        {
+            release_resource(gs_effect_destroy, gs_effect);
+        }
         obs_leave_graphics();
     }
 }
