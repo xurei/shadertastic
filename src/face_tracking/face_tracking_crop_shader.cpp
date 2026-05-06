@@ -128,13 +128,13 @@ cv::Mat FaceTrackingCropShader::getCroppedImage(gs_texture_t *source_tex, float2
     unsigned long tic = get_time_us();
     #endif
 
-    const uint32_t cx = gs_texture_get_width(source_tex);
-    const uint32_t cy = gs_texture_get_height(source_tex);
-    float aspect_ratio = static_cast<float>(cx) / static_cast<float>(cy);
-
     if (source_tex == nullptr) {
         return failed;
     }
+
+    const uint32_t cx = gs_texture_get_width(source_tex);
+    const uint32_t cy = gs_texture_get_height(source_tex);
+    float aspect_ratio = static_cast<float>(cx) / static_cast<float>(cy);
 
     gs_texrender_reset(this->crop_texrender);
     if (gs_texrender_begin_with_color_space(this->crop_texrender, 192, 192, GS_CS_SRGB_16F)) {
