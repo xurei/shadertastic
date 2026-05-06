@@ -185,6 +185,15 @@ namespace onnxmediapipe
         p.y = new_y * rect.height + rect.center_y;
     }
 
+    void FaceLandmarks::refinePoints(FaceLandmarksResults& results, float dx, float dy, std::vector<int> &indices, float reduction) {
+        for(int idx : indices) {
+            dx *= reduction;
+            dy *= reduction;
+            results.refined_landmarks[idx].x += dx;
+            results.refined_landmarks[idx].y += dy;
+        }
+    }
+
     void FaceLandmarks::postprocess(int image_width, int image_height, const RotatedRect& roi, FaceLandmarksResults& results) {
         results.face_flag = 0.f;
 
@@ -262,8 +271,46 @@ namespace onnxmediapipe
             //override x & y for lip points
             for (size_t i = 0; i < lips_refined_region_num_points; i++) {
                 const size_t idx = lips_refinement_indices[i];
-                results.refined_landmarks[idx].x = results.lips_refined_region[i].x;
-                results.refined_landmarks[idx].y = results.lips_refined_region[i].y;
+                float dx = results.lips_refined_region[i].x - results.refined_landmarks[idx].x;
+                float dy = results.lips_refined_region[i].y - results.refined_landmarks[idx].y;
+                results.refined_landmarks[idx].x += dx;
+                results.refined_landmarks[idx].y += dy;
+                if (idx == 17) {
+                    static std::vector<int> sublips0 = {18, 200, 199, 175, 152};
+                    refinePoints(results, dx, dy, sublips0, 0.99);
+                }
+                else if (idx == 84) {
+                    static std::vector<int> sublips0 = {83, 201, 208, 171, 148};
+                    refinePoints(results, dx, dy, sublips0, 0.98);
+                }
+                else if (idx == 314) {
+                    static std::vector<int> sublips0 = {313, 421, 428, 396, 377};
+                    refinePoints(results, dx, dy, sublips0, 0.98);
+                }
+                else if (idx == 405) {
+                    static std::vector<int> sublips0 = {406, 418, 262, 369, 400};
+                    refinePoints(results, dx, dy, sublips0, 0.97);
+                }
+                else if (idx == 181) {
+                    static std::vector<int> sublips0 = {182, 194, 32, 140, 176};
+                    refinePoints(results, dx, dy, sublips0, 0.97);
+                }
+                else if (idx == 91) {
+                    static std::vector<int> sublips0 = {106, 204, 211, 170, 149};
+                    refinePoints(results, dx, dy, sublips0, 0.96);
+                }
+                else if (idx == 321) {
+                    static std::vector<int> sublips0 = {335, 424, 431, 395, 378};
+                    refinePoints(results, dx, dy, sublips0, 0.96);
+                }
+                else if (idx == 375) {
+                    static std::vector<int> sublips0 = {273, 422, 430, 394, 379};
+                    refinePoints(results, dx, dy, sublips0, 0.95);
+                }
+                else if (idx == 146) {
+                    static std::vector<int> sublips0 = {43, 202, 210, 169, 150};
+                    refinePoints(results, dx, dy, sublips0, 0.95);
+                }
             }
 
             //override x & y for left & right_eye points
