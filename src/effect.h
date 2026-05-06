@@ -33,8 +33,8 @@ struct shadertastic_effect_t {
     int nb_steps{};
     bool legacy_input_time = false;
     bool legacy_input_facedetection = false;
-    bool use_facetracking = false;
     std::vector<effect_parameter_prev_frame *> prev_frames_to_keep{};
+    effect_parameter *param_facetracking{};
 
     params_list effect_params;
     std::shared_ptr<effect_shader> main_shader{};

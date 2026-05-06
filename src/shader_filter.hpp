@@ -175,7 +175,7 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
     bool is_enabled = obs_source_enabled(s->source) && s->selected_effect != nullptr;
 
     if (is_enabled) {
-        if (s->selected_effect->use_facetracking) {
+        if (s->selected_effect->param_facetracking != nullptr) {
             if (s->face_tracking == nullptr) {
                 face_tracking_create(s->face_tracking);
             }
@@ -249,7 +249,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     const bool prev_linear_srgb = gs_set_linear_srgb(true);
 
     // Facetracking
-    if (selected_effect->use_facetracking && s->face_tracking != nullptr) {
+    if (selected_effect->param_facetracking && s->face_tracking != nullptr) {
         #ifdef DEV_MODE
         unsigned long tic = get_time_us();
         #endif

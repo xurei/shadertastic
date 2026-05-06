@@ -118,7 +118,12 @@ void shadertastic_effect_t::load() {
                     }
                 }
                 else if (param_type == PARAM_DATATYPE_FACETRACKING) {
-                    use_facetracking = true;
+                    if (param_facetracking != nullptr) {
+                        log_error("Trying to use multiple face tracking parameters. This makes no sense. Params: %s and %s", effect_param->get_name().c_str(), param_facetracking->get_name().c_str());
+                    }
+                    else {
+                        param_facetracking = effect_param;
+                    }
                 }
                 std::string param_name_str = obs_data_get_string(param_metadata, "name");
                 effect_parameter *previous_param = previous_effect_params.get(param_name_str);
