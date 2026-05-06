@@ -35,11 +35,16 @@ class effect_parameter_facetracking : public effect_parameter {
         // Weak access to the unique_ptr of the face_tracking
         face_tracking_state *face_tracking{};
 
+        bool use_preraster{false};
+
         gs_eparam_t *param_fd_face_found{};
         gs_eparam_t *param_fd_face_tl{};
         gs_eparam_t *param_fd_face_br{};
         gs_eparam_t *param_fd_points_tex{};
         gs_eparam_t *param_fd_preraster_tex{};
+
+        uint32_t cx{0};
+        uint32_t cy{0};
 
         static constexpr face_tracking_bounding_box no_bounding_box{
             -1.0f, -1.0f
@@ -55,7 +60,6 @@ class effect_parameter_facetracking : public effect_parameter {
         }
 
         void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
-            UNUSED_PARAMETER(metadata);
             UNUSED_PARAMETER(effect_path);
 
             std::string face_found = get_full_subparam_name_static(name, PARAM_STR_FACE_FOUND);
@@ -68,11 +72,19 @@ class effect_parameter_facetracking : public effect_parameter {
             param_fd_face_tl = shader->get_param_by_name(bbox_tl);
             param_fd_face_br = shader->get_param_by_name(bbox_br);
             param_fd_points_tex = shader->get_param_by_name(points_tex);
-            param_fd_preraster_tex = shader->get_param_by_name(preraster_tex);
+
+            // use_preraster field
+            obs_data_set_default_bool(metadata, "use_preraster", false);
+            this->use_preraster = obs_data_get_bool(metadata, "use_preraster");
+            if (this->use_preraster) {
+                param_fd_preraster_tex = shader->get_param_by_name(preraster_tex);
+            }
         }
 
         void tick(shadertastic_common *s) override {
             face_tracking = s->face_tracking.get();
+            cx = obs_source_get_width(s->source);
+            cy = obs_source_get_height(s->source);
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {
@@ -106,8 +118,19 @@ class effect_parameter_facetracking : public effect_parameter {
                 try_gs_effect_set_texture(points_tex.c_str(), param_fd_points_tex, face_tracking->fd_points_texture);
 
                 //Pre-raster texture
-                if (face_tracking->fd_preraster_texture) {
-                    try_gs_effect_set_texture(points_tex.c_str(), param_fd_preraster_tex, face_tracking->fd_preraster_texture);
+                if (use_preraster) {
+                    auto *raster_texrender = face_tracking_raster_mesh_uv_gpu(
+                        face_tracking->average_results.refined_landmarks,
+                        onnxmediapipe::face_triangles,
+                        (int)cx,
+                        (int)cy
+                    );
+                    obs_enter_graphics();
+                    {
+                        gs_texture_t *fd_preraster_texture = gs_texrender_get_texture(raster_texrender);
+                        try_gs_effect_set_texture(points_tex.c_str(), param_fd_preraster_tex, fd_preraster_texture);
+                    }
+                    obs_leave_graphics();
                 }
             }
         }

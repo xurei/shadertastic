@@ -123,7 +123,7 @@ static void shadertastic_filter_destroy(void *data) {
         release_resource(gs_texrender_destroy, s->filter_texrender_pre);
     }
     obs_leave_graphics();
-    face_tracking_destroy(s->face_tracking);
+    release_resource(face_tracking_destroy, s->face_tracking);
     s->release();
     bfree(data);
 }
@@ -175,7 +175,7 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
     bool is_enabled = obs_source_enabled(s->source) && s->selected_effect != nullptr;
 
     if (is_enabled) {
-        if (s->selected_effect && s->selected_effect->use_facetracking) {
+        if (s->selected_effect->use_facetracking) {
             if (s->face_tracking == nullptr) {
                 face_tracking_create(s->face_tracking);
             }

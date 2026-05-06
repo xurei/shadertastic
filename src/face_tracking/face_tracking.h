@@ -62,4 +62,11 @@ cv::Mat face_tracking_get_image_for_mesh(face_tracking_state *s, gs_texture_t *s
 
 void face_tracking_destroy(std::unique_ptr<face_tracking_state> &s);
 
+gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
+    cv::Point3f uvs[],
+    const cv::Vec3i triangles[],
+    int width,
+    int height
+);
+
 #endif // SHADERTASTIC_FACE_TRACKING_H

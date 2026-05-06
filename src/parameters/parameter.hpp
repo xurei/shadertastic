@@ -100,14 +100,14 @@ class effect_parameter {
 
         /**
          * Called in the factory, after creation of the parameter.
-         * This is where you should set the attributes of the parameter and their default values.
+         * This is where you should set the attributes of the parameter and their absent values.
          *
          * BE CAREFUL :
          *   they are NOT the default values that you see in the meta files,
-         *   but the default values of the attributes a parameter must have.
+         *   but the value that will be used if the default attribute is not set.
          *   For example, a `int` parameter has a boolean "slider" attribute,
          *   to display a slider in the UI. By default it's not active.
-         *   Hence, the default value of "slider" is false if it's
+         *   Hence, the absent value of "slider" is false if it's
          *   not otherwise mentioned in the metadata.
          * @param shader
          * @param metadata
