@@ -33,6 +33,7 @@ type param_common = {
      */
     devmode?: boolean,
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 /**
  * An audio-level aware parameter that responds to audio input.
@@ -51,6 +52,7 @@ type param_common = {
 type param_audiolevel = param_common & {
     type: "audiolevel",
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 /**
  * Boolean parameter
@@ -70,6 +72,7 @@ type param_bool = param_common & {
     type: "bool",
     default: boolean,
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 /**
  * Color parameter
@@ -90,6 +93,7 @@ type param_color = param_common & {
      */
     default: ColorRGB | ColorARGB,
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 /**
  * Use the face tracking functionnality.
@@ -103,6 +107,14 @@ type param_color = param_common & {
  */
 type param_facetracking = param_common & {
     type: "facetracking",
+
+    /**
+     * If set to true, use the face tracking data to build a secondary texture mapping the face.
+     * Each color channel has a different meaning :
+     * - R: index of the triangle in the face mesh
+     * - G,B: Barycentric coordinates of the point, for texturing
+     */
+    use_preraster: boolean,
     // /**
     //  * Allow to chain the result of the face tracking to the next filter.
     //  * If enabled, the face tracking algorithm will not be applied again on posterior filters. Instead, the result of
@@ -115,6 +127,7 @@ type param_facetracking = param_common & {
     //  */
     // allow_chaining?: boolean,
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 /**
  * Float/Double parameter
@@ -160,6 +173,53 @@ type param_float = param_common & {
      */
     step?: number,
 }
+//----------------------------------------------------------------------------------------------------------------------
+
+/**
+ * Float/Double parameter
+ *
+ * The `float` type represents a floating-point parameter that can be exposed in the user interface.
+ * It allows for configuring numeric inputs with options like sliders and value constraints.
+ *
+ * @shaderparam `uniform float`
+ *
+ * @example ```{
+ *   "type": "float",
+ *   "name": "my_float_value",
+ *   "label": "My float",
+ *   "slider": true,
+ *   "min": 0.0,
+ *   "max": 2.0,
+ *   "default": 1.0,
+ *   "step": 0.01
+ * }```
+ */
+type param_group = param_common & {
+    type: "group",
+    default: number,
+
+    /**
+     * Show a slider in the UI
+     * @default false
+     */
+    slider?: boolean,
+    /**
+     * Minimum value of the parameter
+     * @default 0.0
+     */
+    min?: number,
+    /**
+     * Maximum value of the parameter
+     * @default 100.0
+     */
+    max?: number,
+    /**
+     * Smaller step allowed
+     * @default 0.01
+     */
+    step?: number,
+}
+//----------------------------------------------------------------------------------------------------------------------
 
 /**
  * Image parameter.
@@ -215,6 +275,7 @@ type param_image = param_common & {
      */
     hidden?: boolean,
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 /**
  * Integer parameter
@@ -262,6 +323,7 @@ type param_int = param_common & {
      */
     step?: number,
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 /**
  * List of Integers parameter.
@@ -297,6 +359,7 @@ type param_list_int = param_common & {
     /** @type integer */
     default: number,
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 /**
  * Save the previous frame of a specific step as a parameter
@@ -323,6 +386,8 @@ type param_prev_frame = param_common & {
      **/
     step: number,
 }
+//----------------------------------------------------------------------------------------------------------------------
+
 /**
  * Video Source parameter
  *
@@ -336,6 +401,8 @@ type param_prev_frame = param_common & {
 type param_source = param_common & {
     type: "source",
 }
+//----------------------------------------------------------------------------------------------------------------------
+
 /**
  * Show some text in the properties UI
  *
@@ -350,6 +417,8 @@ type param_text = param_common & {
     type: "text",
     value: string,
 }
+//----------------------------------------------------------------------------------------------------------------------
+
 /**
  * Execution time of the effect, in seconds.
  * An optional speed input is provided to accelerate the effect.
@@ -406,6 +475,7 @@ type param_time = param_common & {
         default?: number,
     }
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 export type param = (
     param_audiolevel |
@@ -421,6 +491,7 @@ export type param = (
     param_text |
     param_time
 );
+//----------------------------------------------------------------------------------------------------------------------
 
 export type meta = {
     /**

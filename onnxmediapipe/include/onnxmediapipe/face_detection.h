@@ -29,7 +29,7 @@ namespace onnxmediapipe {
         void postprocess(const cv::Mat &frameBGR, std::array<float, 16>& transform_matrix, std::vector<DetectedObject>& results);
         cv::Mat centerWithAspectRatio(const cv::Mat &inputImage);
 
-        std::shared_ptr<Ort::Session> ortSession;
+        std::unique_ptr<Ort::Session> ortSession;
         size_t netInputHeight = 0;
         size_t netInputWidth = 0;
 

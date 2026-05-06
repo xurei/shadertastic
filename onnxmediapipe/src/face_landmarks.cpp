@@ -23,7 +23,7 @@
 #include <opencv2/core.hpp>
 #include <obs-module.h>
 #include "onnxmediapipe/face_landmarks.h"
-#include "onnxmediapipe/face_landmarks_triangles.h"
+#include "onnxmediapipe/sessions_provider.h"
 #include "onnxmediapipe/landmark_refinement_indices.h"
 
 #include "../../src/logging_functions.hpp"
@@ -39,15 +39,7 @@ namespace onnxmediapipe
     FaceLandmarks::FaceLandmarks(std::unique_ptr<Ort::Env> &ort_env) {
         unsigned long tic = get_time_ms();
         if (!ortSession) {
-            Ort::SessionOptions sessionOptions;
-            sessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
-            sessionOptions.EnableCpuMemArena();
-            sessionOptions.EnableMemPattern();
-            sessionOptions.DisablePerSessionThreads();
-            sessionOptions.SetExecutionMode(ExecutionMode::ORT_PARALLEL);
-            //const char *model_data_path = obs_module_file("face_detection_models/face_landmarks_detector.onnx");
             char *model_data_path = obs_module_file("face_detection_models/face_landmark_with_attention_192x192.onnx");
-            //const char *model_data_path = obs_module_file("face_detection_models/blazeface.onnx");
 
             if (model_data_path) {
                 #if defined(_WIN32)
@@ -58,7 +50,7 @@ namespace onnxmediapipe
                     info("MODEL DATA PATH: %s", model_data_path_.c_str());
                     ortSession = std::make_shared<Ort::Session>(*ort_env, (const ORTCHAR_T*)(model_data_path__.c_str()), sessionOptions);
                 #else
-                    ortSession = std::make_shared<Ort::Session>(*ort_env, (const ORTCHAR_T*)model_data_path, sessionOptions);
+                    ortSession = SessionsProvider::initializeSession(ort_env, model_data_path);
                 #endif
                 bfree(model_data_path);
                 debug("FACE_LANDMARKS Loading model %s", model_data_path);

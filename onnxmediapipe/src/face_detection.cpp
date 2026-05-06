@@ -20,6 +20,7 @@
 
 #include <memory>
 #include "onnxmediapipe/face_detection.h"
+#include "onnxmediapipe/sessions_provider.h"
 #include <obs-module.h>
 #include <cstdint>
 #include <opencv2/imgcodecs.hpp>
@@ -35,15 +36,6 @@ namespace onnxmediapipe
     FaceDetection::FaceDetection(std::unique_ptr<Ort::Env> &ort_env, float bbox_scale)
     : face_bbox_scale(bbox_scale) {
         if (!ortSession) {
-            Ort::SessionOptions sessionOptions;
-            sessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
-            sessionOptions.EnableCpuMemArena();
-            sessionOptions.EnableMemPattern();
-            sessionOptions.DisablePerSessionThreads();
-            sessionOptions.SetExecutionMode(ExecutionMode::ORT_PARALLEL);
-
-            // TODO sessionOptions.AppendExecutionProvider_DML
-
             char *model_data_path = obs_module_file("face_detection_models/face_detection_full_range.onnx");
 
             if (model_data_path) {
@@ -53,7 +45,7 @@ namespace onnxmediapipe
                     info("MODEL DATA PATH: %s", model_data_path_.c_str());
                     ortSession = std::make_shared<Ort::Session>(*ort_env, (const ORTCHAR_T*)(model_data_path__.c_str()), sessionOptions);
                 #else
-                    ortSession = std::make_shared<Ort::Session>(*ort_env, model_data_path, sessionOptions);
+                    ortSession = SessionsProvider::initializeSession(ort_env, model_data_path);
                 #endif
                 bfree(model_data_path);
                 debug("FACE_DETECTION Loading model %s", model_data_path);

@@ -21,8 +21,8 @@ else()
     set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-linux-aarch64-${Onnxruntime_VERSION}.tgz")
     set(Onnxruntime_HASH SHA256=70B6F536BB7AB5961D128E9DBD192368AC1513BFFB74FE92F97AAC342FBD0AC1)
   else()
-    set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-linux-x64-${Onnxruntime_VERSION}.tgz")
-    set(Onnxruntime_HASH SHA256=1fa4dcaef22f6f7d5cd81b28c2800414350c10116f5fdd46a2160082551c5f9b) # 1.23.2
+    set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-linux-x64-gpu-${Onnxruntime_VERSION}.tgz")
+    set(Onnxruntime_HASH SHA256=2083e361072a79ce16a90dcd5f5cb3ab92574a82a3ce0ac01e5cfa3158176f53) # 1.23.2
   endif()
 endif()
 
@@ -92,7 +92,12 @@ else()
     set(Onnxruntime_LINK_LIBS "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime.so.${Onnxruntime_VERSION}")
     set(Onnxruntime_INSTALL_LIBS ${Onnxruntime_LINK_LIBS})
   else()
-    set(Onnxruntime_LINK_LIBS "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime.so.${Onnxruntime_VERSION}")
+    set(Onnxruntime_LINK_LIBS
+        "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime.so.${Onnxruntime_VERSION}"
+        "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime_providers_shared.so"
+        "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime_providers_cuda.so"
+        "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime_providers_tensorrt.so"
+    )
     set(Onnxruntime_INSTALL_LIBS
         ${Onnxruntime_LINK_LIBS}
         #"${onnxruntime_SOURCE_DIR}/lib/libonnxruntime_providers_shared.so"

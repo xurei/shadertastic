@@ -71,6 +71,7 @@ set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_nam
 target_compile_definitions(${PROJECT_NAME} PRIVATE DISABLE_ONNXRUNTIME_GPU)
 message("Fetching ONNX Runtime...")
 include(cmake/FetchOnnxruntime.cmake)
+
 message("Fetching OpenCV...")
 include(cmake/FetchOpenCV.cmake)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenCV)

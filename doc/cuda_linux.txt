@@ -1,0 +1,15 @@
+il faut :
+libcublaslt12 libcublas libcufft libcurand libcudart
+
+libcudnn est un peu relou, infos : https://developer.nvidia.com/cudnn-9-21-0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Debian&target_version=12&target_type=deb_network&Configuration=JIT
+
+Mais en gros faut faire :
+```
+wget https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb
+sudo dpkg -i cuda-keyring_1.1-1_all.deb
+sudo apt-get update
+sudo apt-get -y install cudnn-jit (ou libcudnn9-cuda-12 ?)
+```
+
+Pour TensorRT :
+libnvinfer

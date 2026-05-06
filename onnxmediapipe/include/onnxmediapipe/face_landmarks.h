@@ -25,7 +25,7 @@ namespace onnxmediapipe
         void preprocess(const cv::Mat& frameBGR);
         void postprocess(int image_width, int image_height, const RotatedRect& roi, FaceLandmarksResults& results);
 
-        std::shared_ptr<Ort::Session> ortSession;
+        std::unique_ptr<Ort::Session> ortSession;
         size_t netInputHeight = 0;
         size_t netInputWidth = 0;
 
@@ -43,6 +43,8 @@ namespace onnxmediapipe
 //        ov::InferRequest inferRequest;
 
         bool _bWithAttention = true;
+
+        void refinePoints(FaceLandmarksResults &results, float dx, float dy, std::vector<int> &indices, float reduction);
     };
 
 } //ovfacemesh
