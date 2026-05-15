@@ -167,7 +167,7 @@ gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
 
         gs_enable_depth_test(true);
         vec4 clear_color = {0, 0, 0, 0};
-        gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &clear_color, 10000.0f, 0);
+        gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &clear_color, 1.0f, 0);
         gs_ortho(0.0f, (float) width, 0.0f, (float) height, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
         //gs_depth_function(GS_GREATER);
         gs_depth_function(GS_LESS);
