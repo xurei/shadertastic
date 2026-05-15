@@ -44,7 +44,7 @@ namespace onnxmediapipe
 
         bool _bWithAttention = true;
 
-        void refinePoints(FaceLandmarksResults &results, float dx, float dy, std::vector<int> &indices, float reduction);
+        void refineChinPoints(FaceLandmarksResults& results, float dx, float dy, std::vector<int> &sublipIndices, float reduction);
     };
 
 } //ovfacemesh
