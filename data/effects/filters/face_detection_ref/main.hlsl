@@ -14,11 +14,14 @@ uniform bool facetracking_face_found;
 uniform float2 facetracking_bbox_tl;
 uniform float2 facetracking_bbox_br;
 uniform texture2d facetracking_points_tex;
+uniform texture2d facetracking_preraster_tex;
 uniform bool show_tex;
 uniform bool show_mesh_face;
 uniform bool show_mesh_lips;
 uniform bool show_bounding_box;
 uniform bool show_eyes;
+uniform bool show_eyes_balls;
+uniform bool show_mesh_preraster;
 uniform float base_mult;
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -56,18 +59,22 @@ VertData VSDefault(VertData v_in)
 float4 EffectLinear(float2 uv)
 {
     if (show_tex && uv.y < 0.05) {
-        float4 px = facetracking_points_tex.Sample(textureSampler, uv);
+        float4 px = facetracking_points_tex.Sample(textureSampler, uv / float2(1.0, 0.05));
         return px;
     }
 
-    float4 px = image.Sample(textureSampler, uv);
+    float4 px = show_mesh_preraster ? facetracking_preraster_tex.Sample(textureSampler, uv) : image.Sample(textureSampler, uv);
+
+    if (px[3] <= 0.000001 || px.x+px.y+px.z <= 0.000001) {
+        px = image.Sample(textureSampler, uv);
+    }
     float4 mult = float4(base_mult, base_mult, base_mult , 1.0);
 
     float aspectRatio = vpixel/upixel;
     float2 orthoCorrection = float2(aspectRatio, 1.0);
     float2 uv_ortho = uv * orthoCorrection;
 
-    if (show_eyes) {
+    if (show_eyes_balls) {
         float2 fd_leye_center = facetracking_points_tex.Sample(pointsSampler, float2((468.5)/478.0, 0)).xy * orthoCorrection;
         float2 fd_leye_top = facetracking_points_tex.Sample(pointsSampler, float2((470.5)/478.0, 0)).xy * orthoCorrection;
         float fd_leye_radius = abs(fd_leye_center.y - fd_leye_top.y);
@@ -110,8 +117,8 @@ float4 EffectLinear(float2 uv)
         #endif
         for (int i=0; i<478; ++i) {
             float4 px2 = facetracking_points_tex.Sample(pointsSampler, float2((i + 0.5)/478.0, 0));
-            px2[2] = 1.0;
-            px2[3] = 1.0;
+//            px2[2] = 1.0;
+//            px2[3] = 1.0;
 
             float2 ptuv = float2(px2.x, px2.y);
 
@@ -123,15 +130,11 @@ float4 EffectLinear(float2 uv)
                 continue;
             }*/
 
-            bool isLips = (
+            bool isLipsUp = (
                 i == 0 ||
                 i == 11 ||
                 i == 12 ||
                 i == 13 ||
-                i == 14 ||
-                i == 15 ||
-                i == 16 ||
-                i == 17 ||
                 i == 37 ||
                 i == 38 ||
                 i == 39 ||
@@ -144,26 +147,10 @@ float4 EffectLinear(float2 uv)
                 i == 73 ||
                 i == 74 ||
                 i == 76 ||
-                i == 77 ||
                 i == 78 ||
                 i == 80 ||
                 i == 81 ||
                 i == 82 ||
-                i == 84 ||
-                i == 85 ||
-                i == 86 ||
-                i == 87 ||
-                i == 88 ||
-                i == 89 ||
-                i == 90 ||
-                i == 91 ||
-                i == 95 ||
-                i == 96 ||
-                i == 146 ||
-                i == 178 ||
-                i == 179 ||
-                i == 180 ||
-                i == 181 ||
                 i == 183 ||
                 i == 184 ||
                 i == 185 ||
@@ -180,11 +167,38 @@ float4 EffectLinear(float2 uv)
                 i == 303 ||
                 i == 304 ||
                 i == 306 ||
-                i == 307 ||
                 i == 308 ||
                 i == 310 ||
                 i == 311 ||
                 i == 312 ||
+                i == 407 ||
+                i == 408 ||
+                i == 409 ||
+                i == 415
+            );
+
+            bool isLipsDown = (
+                i == 14 ||
+                i == 15 ||
+                i == 16 ||
+                i == 17 ||
+                i == 77 ||
+                i == 84 ||
+                i == 85 ||
+                i == 86 ||
+                i == 87 ||
+                i == 88 ||
+                i == 89 ||
+                i == 90 ||
+                i == 91 ||
+                i == 95 ||
+                i == 96 ||
+                i == 146 ||
+                i == 178 ||
+                i == 179 ||
+                i == 180 ||
+                i == 181 ||
+                i == 307 ||
                 i == 314 ||
                 i == 315 ||
                 i == 316 ||
@@ -199,22 +213,29 @@ float4 EffectLinear(float2 uv)
                 i == 402 ||
                 i == 403 ||
                 i == 404 ||
-                i == 405 ||
-                i == 407 ||
-                i == 408 ||
-                i == 409 ||
-                i == 415
+                i == 405
             );
 
             if (ptuv.x - upixel*2 <= uv.x && uv.x <= ptuv.x + upixel*2 && ptuv.y - vpixel*2 <= uv.y && uv.y <= ptuv.y + vpixel*2) {
-                if (isLips) {
+                if (isLipsUp) {
                     if (show_mesh_lips) {
+                        return float4(1.0, 0.0, 0.0, 1.0);
+                    }
+                }
+                else if (isLipsDown) {
+                    if (show_mesh_lips) {
+                        return float4(0.3, 0.0, 0.0, 1.0);
+                    }
+                }
+                else if (isEyes) {
+                    if (show_eyes) {
                         return float4(1.0, 0.0, 0.0, 1.0);
                     }
                 }
                 else {
                     if (show_mesh_face) {
-                        return float4(0.0, 1.0, 0.0, 1.0);
+                        px2.z = 1.0 - (0.5 + px2.z*4.0);
+                        return float4(0.0, px2.z, 0.0, 1.0);
                     }
                 }
             }

@@ -10,7 +10,8 @@
   "parameters": [
     {
       "type": "facetracking",
-      "name": "facetracking"
+      "name": "facetracking",
+      "use_preraster": true
     },
     {
       "name": "show_mesh_face",
@@ -31,6 +32,12 @@
       "default": true
     },
     {
+      "name": "show_eyes_balls",
+      "label": "Show eyes balls",
+      "type": "bool",
+      "default": false
+    },
+    {
       "name": "show_bounding_box",
       "label": "Show bounding box",
       "type": "bool",
@@ -41,6 +48,12 @@
       "label": "Show produced texture",
       "type": "bool",
       "default": true
+    },
+    {
+      "name": "show_mesh_preraster",
+      "label": "Show face preraster",
+      "type": "bool",
+      "default": false
     },
     {
       "name": "base_mult",
