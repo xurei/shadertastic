@@ -105,23 +105,32 @@ float4 getGaussianV(float2 uv, int nb_samples) {
     return px_out;
 }
 
+float4 blend(float4 px_a, float4 px_b, float ratio) {
+  float4 px_out = lerp(
+      px_a,
+      px_b,
+      ratio
+  );
+  px_out.rgb = lerp(
+      px_a.rgb * px_a.a,
+      px_b.rgb * px_b.a,
+      ratio
+  ) / ( step(0.00001, px_out.a) * px_out.a );
+
+  // step(0.00001, px_out.a) is equivalent to (0.00001 <= px_out.a) ? 1.0: 0.0
+  // It is more efficient on GPUs as it avoids branching
+
+  return px_out;
+}
+
 float4 EffectLinear(float2 uv)
 {
     if (current_step == 0) {
         float lerp_ratio = sigmoid_centered(10, break_point, time);
         float4 px_a = tex_a.Sample(textureSampler, uv);
         float4 px_b = tex_b.Sample(textureSampler, uv);
-        float4 px_out = lerp(
-            px_a,
-            px_b,
-            lerp_ratio
-        );
-        px_out.rgb = lerp(
-            px_a.rgb * px_a.a,
-            px_b.rgb * px_b.a,
-            lerp_ratio
-        ) / px_out.a;
-        return px_out;
+
+        return blend(px_a, px_b, lerp_ratio);
     }
     else {
         float t = time;
