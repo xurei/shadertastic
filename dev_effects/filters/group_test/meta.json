@@ -1,0 +1,37 @@
+{
+  "label": "AAA Group test",
+  "revision": 1,
+  "steps": 1,
+  "input_time": true,
+  "parameters": [
+    {
+      "name": "val1",
+      "label": "val1",
+      "type": "float",
+      "slider": true,
+      "min": 0,
+      "max": 100,
+      "default": 10
+    },
+    {
+      "name": "group1",
+      "label": "Group 1",
+      "type": "group",
+      "if": "float",
+      "param": "val1",
+      "condition": "greater",
+      "value": 10,
+      "parameters": [
+        {
+          "name": "val2",
+          "label": "val2",
+          "type": "float",
+          "slider": true,
+          "min": 0,
+          "max": 100,
+          "default": 10
+        }
+      ]
+    }
+  ]
+}

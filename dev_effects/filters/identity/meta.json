@@ -9,7 +9,7 @@
   "steps": 5,
   "parameters": [
     {
-      "name": "displace_mode_text",
+      "name": "effect_description",
       "label": "",
       "type": "text",
       "value": "Does nothing"
