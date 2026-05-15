@@ -18,7 +18,6 @@
 // NOTE : this file has been taken from https://github.com/intel/openvino-plugins-for-obs-studio and modified to use ONNX instead
 
 #include <vector>
-#include <algorithm>
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <obs-module.h>
@@ -42,16 +41,7 @@ namespace onnxmediapipe
             char *model_data_path = obs_module_file("face_detection_models/face_landmark_with_attention_192x192.onnx");
 
             if (model_data_path) {
-                #if defined(_WIN32)
-                    std::string model_data_path_ = std::string(model_data_path);
-                    std::wstring model_data_path__ = std::wstring(model_data_path_.begin(), model_data_path_.end());
-                    info("MODEL DATA PATH: %s", model_data_path_.c_str());
-                    info("MODEL DATA PATH: %s", model_data_path_.c_str());
-                    info("MODEL DATA PATH: %s", model_data_path_.c_str());
-                    ortSession = std::make_shared<Ort::Session>(*ort_env, (const ORTCHAR_T*)(model_data_path__.c_str()), sessionOptions);
-                #else
-                    ortSession = SessionsProvider::initializeSession(ort_env, model_data_path);
-                #endif
+                ortSession = SessionsProvider::initializeSession(ort_env, model_data_path);
                 bfree(model_data_path);
                 debug("FACE_LANDMARKS Loading model %s", model_data_path);
             }
@@ -277,39 +267,39 @@ namespace onnxmediapipe
                 results.refined_landmarks[idx].y += dy;
                 if (idx == 17) {
                     static std::vector<int> sublips0 = {18, 200, 199, 175, 152};
-                    refinePoints(results, dx, dy, sublips0, 0.99);
+                    refinePoints(results, dx, dy, sublips0, 0.99f);
                 }
                 else if (idx == 84) {
                     static std::vector<int> sublips0 = {83, 201, 208, 171, 148};
-                    refinePoints(results, dx, dy, sublips0, 0.98);
+                    refinePoints(results, dx, dy, sublips0, 0.98f);
                 }
                 else if (idx == 314) {
                     static std::vector<int> sublips0 = {313, 421, 428, 396, 377};
-                    refinePoints(results, dx, dy, sublips0, 0.98);
+                    refinePoints(results, dx, dy, sublips0, 0.98f);
                 }
                 else if (idx == 405) {
                     static std::vector<int> sublips0 = {406, 418, 262, 369, 400};
-                    refinePoints(results, dx, dy, sublips0, 0.97);
+                    refinePoints(results, dx, dy, sublips0, 0.97f);
                 }
                 else if (idx == 181) {
                     static std::vector<int> sublips0 = {182, 194, 32, 140, 176};
-                    refinePoints(results, dx, dy, sublips0, 0.97);
+                    refinePoints(results, dx, dy, sublips0, 0.97f);
                 }
                 else if (idx == 91) {
                     static std::vector<int> sublips0 = {106, 204, 211, 170, 149};
-                    refinePoints(results, dx, dy, sublips0, 0.96);
+                    refinePoints(results, dx, dy, sublips0, 0.96f);
                 }
                 else if (idx == 321) {
                     static std::vector<int> sublips0 = {335, 424, 431, 395, 378};
-                    refinePoints(results, dx, dy, sublips0, 0.96);
+                    refinePoints(results, dx, dy, sublips0, 0.96f);
                 }
                 else if (idx == 375) {
                     static std::vector<int> sublips0 = {273, 422, 430, 394, 379};
-                    refinePoints(results, dx, dy, sublips0, 0.95);
+                    refinePoints(results, dx, dy, sublips0, 0.95f);
                 }
                 else if (idx == 146) {
                     static std::vector<int> sublips0 = {43, 202, 210, 169, 150};
-                    refinePoints(results, dx, dy, sublips0, 0.95);
+                    refinePoints(results, dx, dy, sublips0, 0.95f);
                 }
             }
 

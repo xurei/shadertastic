@@ -33,6 +33,12 @@ namespace onnxmediapipe
 
         blog(LOG_INFO, "Using ONNX Runtime CPU provider");
 
-        return std::make_unique<Ort::Session>(*ort_env, model_data_path, sessionOptions);
+        #if defined(_WIN32)
+            std::string model_data_path_ = std::string(model_data_path);
+            std::wstring model_data_path__ = std::wstring(model_data_path_.begin(), model_data_path_.end());
+            return std::make_unique<Ort::Session>(*ort_env, (const ORTCHAR_T*)(model_data_path__.c_str()), sessionOptions);
+        #else
+            return std::make_unique<Ort::Session>(*ort_env, model_data_path, sessionOptions);
+        #endif
     }
 }
