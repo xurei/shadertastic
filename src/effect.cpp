@@ -30,6 +30,7 @@ void shadertastic_effect_t::load() {
     debug(">>>>>>>>>>>>>>> load_effect %s %s %s", this->name.c_str(), this->path.c_str(), metadata_path.c_str());
 
     this->main_shader = shaders_library.get(this->path);
+    this->param_facetracking = nullptr; // Resets the face_tracking param to null if present; no need to release, it's a weak pointer
 
     char *meta_json = load_file_zipped_or_local(metadata_path);
 
