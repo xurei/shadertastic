@@ -53,7 +53,12 @@ OBS_MODULE_USE_DEFAULT_LOCALE("shadertastic", "en-US")
 //----------------------------------------------------------------------------------------------------------------------
 
 bool module_loaded = false;
+bool is_direct3d = false;
 gs_texture_t *shadertastic_transparent_texture{};
+
+bool shadertastic_is_direct3d() {
+    return is_direct3d;
+}
 //----------------------------------------------------------------------------------------------------------------------
 
 void load_effects(shadertastic_common *s, obs_data_t *settings, const std::string &effects_dir, const std::string &effects_type) {
@@ -176,6 +181,17 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
     QObject::connect(action, &QAction::triggered, show_settings_dialog);
 
     module_loaded = true;
+
+    obs_video_info video_info;
+    obs_get_video_info(&video_info);
+    info("Video renderer: %s", video_info.graphics_module);
+    std::string graphics_module = video_info.graphics_module;
+    std::transform(graphics_module.begin(), graphics_module.end(), graphics_module.begin(),
+        [](unsigned char c){ return std::tolower(c); });
+    if (graphics_module.find("opengl") <= 0) {
+        is_direct3d = true;
+    }
+
     return true;
 }
 //----------------------------------------------------------------------------------------------------------------------

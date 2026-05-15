@@ -29,7 +29,7 @@
 #include "../settings.h"
 #include "../util/time_util.hpp"
 #include "src/util/texture_util.h"
-#include "src/shadertastic_common.hpp"
+#include "src/shadertastic.hpp"
 #include "face_tracking_points.h"
 
 // Globals
@@ -110,7 +110,7 @@ gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
     auto to_ndc = [](const cv::Point3f& v) {
         float x = v.x * 2.0f - 1.0f;
         //float y = 1.0f - v.y * 2.0f; // flip Y
-        float y = v.y * 2.0f - 1.0f; // flip Y
+        float y = shadertastic_is_direct3d() ? (1.0f - v.y * 2.0f) : (v.y * 2.0f - 1.0f);
         vec3 out = {
             .x = x,
             .y = y,

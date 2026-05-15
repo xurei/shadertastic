@@ -86,6 +86,8 @@ void about_property(obs_properties_t *props);
 
 MODULE_EXPORT [[maybe_unused]] const char *obs_module_name(void);
 MODULE_EXPORT [[maybe_unused]] const char *obs_module_description(void);
+
+bool shadertastic_is_direct3d();
 //----------------------------------------------------------------------------------------------------------------------
 
 #endif // SHADERTASTIC_HPP
