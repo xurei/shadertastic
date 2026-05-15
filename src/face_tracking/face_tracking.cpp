@@ -92,6 +92,18 @@ std::vector<RasterVertex> face_tracking_raster_vertices;
 gs_vertbuffer_t *face_tracking_raster_vertexbuffer = nullptr;
 gs_texrender_t *face_tracking_raster_texrender = nullptr;
 
+inline vec3 face_tracking_to_ndc(const cv::Point3f& v) {
+    float x = v.x * 2.0f - 1.0f;
+    float y = shadertastic_is_direct3d() ? (1.0f - v.y * 2.0f) : (v.y * 2.0f - 1.0f);
+    float z = 0.5f + v.z * 0.5f;
+    vec3 out = {
+        .x = x,
+        .y = y,
+        .z = z
+    };
+    return out;
+};
+
 gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
     cv::Point3f uvs[],
     const cv::Vec3i triangles[],
@@ -107,19 +119,8 @@ gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
     face_tracking_raster_vertices.clear();
     gs_texrender_reset(face_tracking_raster_texrender);
 
-    auto to_ndc = [](const cv::Point3f& v) {
-        float x = v.x * 2.0f - 1.0f;
-        //float y = 1.0f - v.y * 2.0f; // flip Y
-        float y = shadertastic_is_direct3d() ? (1.0f - v.y * 2.0f) : (v.y * 2.0f - 1.0f);
-        vec3 out = {
-            .x = x,
-            .y = y,
-            .z = v.z
-        };
-        return out;
-    };
-
     face_tracking_raster_vertices.clear();
+    //float minz = 1000.0f, maxz = -1000.0f;
     for (int tri_id = 0; tri_id < onnxmediapipe::nb_face_triangles; ++tri_id) {
         const cv::Vec3i& tri = triangles[tri_id];
 
@@ -127,16 +128,25 @@ gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
         const cv::Point3f& v1 = uvs[tri[1]];
         const cv::Point3f& v2 = uvs[tri[2]];
 
-        auto vv0 = to_ndc(v0);
-        auto vv1 = to_ndc(v1);
-        auto vv2 = to_ndc(v2);
+        auto vv0 = face_tracking_to_ndc(v0);
+        auto vv1 = face_tracking_to_ndc(v1);
+        auto vv2 = face_tracking_to_ndc(v2);
+
+        //minz = std::min(minz, vv0.z);
+        //minz = std::min(minz, vv1.z);
+        //minz = std::min(minz, vv2.z);
+        //maxz = std::max(maxz, vv0.z);
+        //maxz = std::max(maxz, vv1.z);
+        //maxz = std::max(maxz, vv2.z);
 
         float tri_norm = ((float)tri_id + 0.5f) / (float)onnxmediapipe::nb_face_triangles;
 
-        face_tracking_raster_vertices.push_back(RasterVertex {vv0, {0,0,1}, tri_norm});
-        face_tracking_raster_vertices.push_back(RasterVertex {vv1, {1,0,0}, tri_norm});
-        face_tracking_raster_vertices.push_back(RasterVertex {vv2, {0,1,0}, tri_norm});
+        face_tracking_raster_vertices.push_back(RasterVertex {vv0, {0.0f,0.0f,1.0f}, tri_norm});
+        face_tracking_raster_vertices.push_back(RasterVertex {vv1, {1.0f,0.0f,0.0f}, tri_norm});
+        face_tracking_raster_vertices.push_back(RasterVertex {vv2, {0.0f,1.0f,0.0f}, tri_norm});
     }
+
+    //debug("Z VALS : [ %f, %f ]", minz, maxz);
 
     obs_enter_graphics();
     {

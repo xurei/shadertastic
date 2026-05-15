@@ -188,7 +188,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
     std::string graphics_module = video_info.graphics_module;
     std::transform(graphics_module.begin(), graphics_module.end(), graphics_module.begin(),
         [](unsigned char c){ return std::tolower(c); });
-    if (graphics_module.find("opengl") <= 0) {
+    if (graphics_module.find("opengl") == std::string::npos) {
         is_direct3d = true;
     }
 
