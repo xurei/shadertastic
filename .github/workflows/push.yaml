@@ -6,6 +6,7 @@ on:
       - main
       - 'release/**'
       - 'lab/**'
+      - 'dev/current'
     tags:
       - '*'
 permissions:
