@@ -328,38 +328,6 @@ void face_tracking_create(std::unique_ptr<face_tracking_state> &s) {
     obs_enter_graphics();
     {
         s->facedetection_texrender = gs_texrender_create(GS_RGBA32F, GS_ZS_NONE);
-
-        if (!s->fd_points_texture) {
-            s->fd_points_texture = gs_texture_create(refined_landmarks_num_points, 4, GS_RGBA32F, 1, nullptr, GS_DYNAMIC);
-        }
-
-        float *texpoints;
-        uint32_t linesize2 = 0;
-        gs_texture_map(s->fd_points_texture, (uint8_t **)(&texpoints), &linesize2);
-        //float *row0 = (float *)((uint8_t *)texpoints + 0 * linesize2);
-        float *row1 = (float *)((uint8_t *)texpoints + 1 * linesize2);
-        float *row2 = (float *)((uint8_t *)texpoints + 2 * linesize2);
-        float *row3 = (float *)((uint8_t *)texpoints + 3 * linesize2);
-        {
-            // Fill in the 2nd and 3rd rows of the texture with the triangle map
-            for (size_t tri_id = 0; tri_id < onnxmediapipe::nb_face_triangles; ++tri_id) {
-                auto tri = onnxmediapipe::face_triangles[tri_id];
-                float tri_f[4] = {
-                    ((float)tri[0] + 0.5f) / 478.0f,
-                    ((float)tri[1] + 0.5f) / 478.0f,
-                    ((float)tri[2] + 0.5f) / 478.0f,
-                    1.0f
-                };
-
-                float *row = tri_id < refined_landmarks_num_points ? row1 : row2;
-                memcpy(&row[(tri_id%refined_landmarks_num_points)*4], tri_f, 4 * sizeof(float));
-            }
-        }
-        {
-            // Fill in the last row of the texture with the point from the original model
-            memcpy(row3, facetracking_points_data, refined_landmarks_num_points * 4 * sizeof(float));
-        }
-        gs_texture_unmap(s->fd_points_texture);
     }
     obs_leave_graphics();
     //debug("STAGING TEXTURE = %p", s->staging_texture);
@@ -524,13 +492,43 @@ void face_tracking_tick(face_tracking_state *s, gs_texture_t *source_tex, const 
         //    debug("ok");
         //}
 
-        float *texpoints;
-        uint32_t linesize2 = 0;
         debug_trace("G2 %lu", get_time_us()-tic);
         obs_enter_graphics();
         {
-            gs_texture_map(s->fd_points_texture, (uint8_t **) (&texpoints), &linesize2);
-            memcpy(texpoints, points, refined_landmarks_num_points * 4 * sizeof(float));
+            s->facedetection_texrender = gs_texrender_create(GS_RGBA32F, GS_ZS_NONE);
+
+            if (!s->fd_points_texture) {
+                s->fd_points_texture = gs_texture_create(refined_landmarks_num_points, 4, GS_RGBA32F, 1, nullptr, GS_DYNAMIC);
+            }
+
+            float *texpoints;
+            uint32_t linesize2 = 0;
+            gs_texture_map(s->fd_points_texture, (uint8_t **)(&texpoints), &linesize2);
+            float *row0 = (float *)((uint8_t *)texpoints + 0 * linesize2);
+            float *row1 = (float *)((uint8_t *)texpoints + 1 * linesize2);
+            float *row2 = (float *)((uint8_t *)texpoints + 2 * linesize2);
+            float *row3 = (float *)((uint8_t *)texpoints + 3 * linesize2);
+
+            // Fill in the first row with the detected points
+            memcpy(row0, points, refined_landmarks_num_points * 4 * sizeof(float));
+
+            // Fill in the 2nd and 3rd rows of the texture with the triangle map
+            for (size_t tri_id = 0; tri_id < onnxmediapipe::nb_face_triangles; ++tri_id) {
+                auto tri = onnxmediapipe::face_triangles[tri_id];
+                float tri_f[4] = {
+                    ((float)tri[0] + 0.5f) / 478.0f,
+                    ((float)tri[1] + 0.5f) / 478.0f,
+                    ((float)tri[2] + 0.5f) / 478.0f,
+                    1.0f
+                };
+
+                float *row = tri_id < refined_landmarks_num_points ? row1 : row2;
+                memcpy(&row[(tri_id%refined_landmarks_num_points)*4], tri_f, 4 * sizeof(float));
+            }
+
+            // Fill in the last row of the texture with the point from the original model
+            memcpy(row3, facetracking_points_data, refined_landmarks_num_points * 4 * sizeof(float));
+
             gs_texture_unmap(s->fd_points_texture);
         }
         obs_leave_graphics();
