@@ -183,7 +183,7 @@ gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
         gs_depth_function(GS_LESS);
 
         auto prev_cull = gs_get_cull_mode();
-        gs_set_cull_mode(GS_NEITHER);
+        gs_set_cull_mode(GS_BACK);
         gs_draw(GS_TRIS, 0, onnxmediapipe::nb_face_triangles * 3);
 
         gs_technique_end_pass(tech);
