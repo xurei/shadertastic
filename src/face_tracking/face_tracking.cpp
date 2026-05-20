@@ -336,11 +336,13 @@ void face_tracking_create(std::unique_ptr<face_tracking_state> &s) {
         float *texpoints;
         uint32_t linesize2 = 0;
         gs_texture_map(s->fd_points_texture, (uint8_t **)(&texpoints), &linesize2);
-
+        //float *row0 = (float *)((uint8_t *)texpoints + 0 * linesize2);
+        float *row1 = (float *)((uint8_t *)texpoints + 1 * linesize2);
+        float *row2 = (float *)((uint8_t *)texpoints + 2 * linesize2);
+        float *row3 = (float *)((uint8_t *)texpoints + 3 * linesize2);
         {
             // Fill in the 2nd and 3rd rows of the texture with the triangle map
-            int start_idx = 1 * refined_landmarks_num_points * 4;
-            for (int tri_id = 0; tri_id < onnxmediapipe::nb_face_triangles; ++tri_id) {
+            for (size_t tri_id = 0; tri_id < onnxmediapipe::nb_face_triangles; ++tri_id) {
                 auto tri = onnxmediapipe::face_triangles[tri_id];
                 float tri_f[4] = {
                     ((float)tri[0] + 0.5f) / 478.0f,
@@ -348,16 +350,14 @@ void face_tracking_create(std::unique_ptr<face_tracking_state> &s) {
                     ((float)tri[2] + 0.5f) / 478.0f,
                     1.0f
                 };
-                memcpy(&texpoints[start_idx + tri_id*4], tri_f, 4 * sizeof(float));
+
+                float *row = tri_id < refined_landmarks_num_points ? row1 : row2;
+                memcpy(&row[(tri_id%refined_landmarks_num_points)*4], tri_f, 4 * sizeof(float));
             }
-            /*memcpy(&texpoints[k], facetracking_points_data, refined_landmarks_num_points * 4 * sizeof(float));
-            k = 3 * refined_landmarks_num_points * 4;
-            memcpy(&texpoints[k], facetracking_points_data, refined_landmarks_num_points * 4 * sizeof(float));*/
         }
         {
             // Fill in the last row of the texture with the point from the original model
-            int k = 3 * refined_landmarks_num_points * 4;
-            memcpy(&texpoints[k], facetracking_points_data, refined_landmarks_num_points * 4 * sizeof(float));
+            memcpy(row3, facetracking_points_data, refined_landmarks_num_points * 4 * sizeof(float));
         }
         gs_texture_unmap(s->fd_points_texture);
     }
