@@ -4,7 +4,7 @@
     "author_url": "http://about.xurei.io"
   },
   "metafileVersion": 1,
-  "label": "[Face Detection] Zoom to face",
+  "label": "[Face Tracking] Zoom to face",
   "steps": 1,
   "input_facedetection": true,
   "parameters": [

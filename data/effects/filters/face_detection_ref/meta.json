@@ -4,7 +4,7 @@
     "author_url": "http://about.xurei.io"
   },
   "metafileVersion": 1,
-  "label": "[Face Detection] Reference",
+  "label": "[Face Tracking] Reference",
   "steps": 1,
   "input_facedetection": true,
   "parameters": [

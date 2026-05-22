@@ -5,7 +5,7 @@
   },
   "revision": 2,
   "metafileVersion": 1,
-  "label": "[Face Detection] Laser Eyes",
+  "label": "[Face Tracking] Laser Eyes",
   "steps": 4,
   "parameters": [
     {
