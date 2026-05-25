@@ -207,9 +207,9 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
+void shadertastic_filter_video_render(void *data, gs_effect_t *effect_unused) {
     //debug("-----------------------------------------");
-    UNUSED_PARAMETER(effect);
+    UNUSED_PARAMETER(effect_unused);
     shadertastic_filter *s = shadertastic_filter_cast(data);
     shadertastic_effect_t *selected_effect = s->selected_effect;
     if (selected_effect == nullptr || selected_effect->main_shader == nullptr) {
@@ -286,7 +286,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
         // You CANNOT put it above the for loop. Textures need to be rebinded every time (not that costful actually)
         selected_effect->set_params(nullptr, nullptr, s->frame_index, false, filter_time, s->delta_time, cx, cy, s->rand_seed);
 
-        selected_effect->main_shader->render(s->source, s->filter_texrender, cx, cy);
+        shadertastic_source_process_filter_tech_end(s->source, s->filter_texrender, selected_effect->main_shader.get(), cx, cy, "Draw");
 
         gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
         interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);

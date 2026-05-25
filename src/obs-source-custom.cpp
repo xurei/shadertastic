@@ -27,33 +27,6 @@
 #include "shadertastic.hpp"
 #include "src/util/texture_util.h"
 
-inline void render_filter_tex(gs_texture_t *tex, const gs_effect_t *effect, const uint32_t width, const uint32_t height, const char *tech_name) {
-	gs_technique_t *tech = gs_effect_get_technique(effect, tech_name);
-	gs_eparam_t *image = gs_effect_get_param_by_name(effect, "image");
-
-	const bool linear_srgb = gs_get_linear_srgb();
-
-	const bool previous = gs_framebuffer_srgb_enabled();
-	gs_enable_framebuffer_srgb(linear_srgb);
-
-	if (linear_srgb) {
-		gs_effect_set_texture_srgb(image, tex);
-	}
-	else {
-		gs_effect_set_texture(image, tex);
-	}
-
-	size_t passes = gs_technique_begin(tech);
-	for (size_t i = 0; i < passes; i++) {
-		gs_technique_begin_pass(tech, i);
-		gs_draw_sprite(tex, 0, width, height);
-		gs_technique_end_pass(tech);
-	}
-	gs_technique_end(tech);
-
-	gs_enable_framebuffer_srgb(previous);
-}
-
 bool shadertastic_source_process_filter_begin_with_color_space(obs_source_t *filter, shadertastic_filter *s, gs_color_format format, gs_color_space space) {
 	if (!filter || !s) {
 		return false;
@@ -133,26 +106,36 @@ bool shadertastic_source_process_filter_begin_with_color_space(obs_source_t *fil
 	return true;
 }
 
-void shadertastic_source_process_filter_tech_end(obs_source_t *filter, gs_texrender_t *filter_texrender, gs_effect_t *effect, uint32_t width, uint32_t height, const char *tech_name) {
-	if (!filter)
-		return;
+void shadertastic_source_process_filter_tech_end(obs_source_t *obs_source, gs_texrender_t *filter_texrender, effect_shader *shader, uint32_t width, uint32_t height, const char *tech_name) {
+	if (!obs_source) {
+        return;
+    }
 
-	obs_source_t *target = obs_filter_get_target(filter);
-	obs_source_t *parent = obs_filter_get_parent(filter);
-
-	if (!target || !parent)
-		return;
-
-	uint32_t filter_flags = obs_source_get_output_flags(filter);
-
-	const bool previous = gs_set_linear_srgb((filter_flags & OBS_SOURCE_SRGB) != 0);
-
-	const char *tech = tech_name ? tech_name : "Draw";
+	obs_source_t *target = obs_filter_get_target(obs_source);
+	obs_source_t *parent = obs_filter_get_parent(obs_source);
+	if (!target || !parent) {
+        return;
+    }
 
 	gs_texture_t *texture = gs_texrender_get_texture(filter_texrender);
-	if (texture) {
-		render_filter_tex(texture, effect, width, height, tech);
-	}
+	if (!texture) {
+        return;
+    }
 
-	gs_set_linear_srgb(previous);
+    uint32_t output_flags = obs_source_get_output_flags(obs_source);
+    const bool previous_linear = gs_set_linear_srgb((output_flags & OBS_SOURCE_SRGB) != 0);
+    const bool linear_srgb = gs_get_linear_srgb();
+    const bool previous_srgb = gs_framebuffer_srgb_enabled();
+    gs_enable_framebuffer_srgb(linear_srgb);
+
+    if (linear_srgb) {
+        gs_effect_set_texture_srgb(shader->param_image, texture);
+    }
+    else {
+        gs_effect_set_texture(shader->param_image, texture);
+    }
+    shader->render(filter_texrender, (tech_name ? tech_name : "Draw"), width, height);
+
+    gs_enable_framebuffer_srgb(previous_srgb);
+    gs_set_linear_srgb(previous_linear);
 }

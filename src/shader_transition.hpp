@@ -264,7 +264,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
                 s->frame_index, is_studio_mode, t, s->delta_time, cx, cy, s->rand_seed
             );
             effect->set_step_params(current_step, interm_texture);
-            effect->render_shader(cx, cy, true);
+            effect->main_shader->render(nullptr, "DrawLinear", cx, cy);
 
             if (is_saved_step) {
                 const gs_texrender_t *next_texrender = effect->prev_frames_to_keep[current_step]->detach();

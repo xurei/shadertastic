@@ -23,6 +23,7 @@
 #define OBS_SOURCE_CUSTOM_H
 
 #include <obs-module.h>
+#include "src/shader/shader.h"
 
 struct shadertastic_filter;
 
@@ -30,6 +31,6 @@ bool shadertastic_source_process_filter_begin_with_color_space(obs_source_t *fil
 
 // void shadertastic_source_process_filter_end(obs_source_t *filter, shadertastic_filter *s, gs_effect_t *effect, uint32_t width, uint32_t height);
 
-void shadertastic_source_process_filter_tech_end(obs_source_t *filter, gs_texrender_t *texrender, gs_effect_t *effect, uint32_t width, uint32_t height, const char *tech_name);
+void shadertastic_source_process_filter_tech_end(obs_source_t *obs_source, gs_texrender_t *texrender, effect_shader *shader, uint32_t width, uint32_t height, const char *tech_name);
 
 #endif // OBS_SOURCE_CUSTOM_H

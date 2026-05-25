@@ -23,8 +23,6 @@
 #include "shader.h"
 #include "../shadertastic.hpp"
 
-#include "src/obs-source-custom.h"
-
 effect_shader::~effect_shader() {
     //debug("DELETE effect_shader %s", path.c_str());
     this->release();
@@ -40,11 +38,8 @@ std::string effect_shader::load(const char *shader_path) {
         return "File does not exist";
     }
     else {
-        std::string shader_source = std::string(shader_source_);
-        bfree(shader_source_);
-
         // Global common arguments, must be in all the effects for this plugin
-        shader_source = (std::string("") +
+        std::string shader_source = (std::string("") +
             "uniform float4x4 ViewProj;\n" +
             "uniform texture2d image;\n" +
             "uniform texture2d tex_a;\n" +
@@ -64,8 +59,13 @@ std::string effect_shader::load(const char *shader_path) {
             "float srgb_linear_to_nonlinear_channel(float u) { return (u <= 0.0031308) ? (12.92 * u) : ((1.055 * pow(u, 1. / 2.4)) - 0.055); }\n" +
             "float3 srgb_linear_to_nonlinear(float3 v) { return float3(srgb_linear_to_nonlinear_channel(v.r), srgb_linear_to_nonlinear_channel(v.g), srgb_linear_to_nonlinear_channel(v.b)); }\n" +
             "#ifdef _D3D11 \n #define fract(a) frac(a) \n #else \n #define frac(a) fract(a) \n #endif \n" +
-            shader_source
+            "sampler_state facetracking_sampler { Filter=Point; AddressU=Clamp; AddressV=Clamp;}; \n" +
+            "#define facetracking_edge(fd_points_tex, edge_idx) fd_points_tex.Sample(facetracking_sampler, float2(((edge_idx) + 0.5)/478.0, 0.0)).xyz \n" +
+            "#define facetracking_tex_edge(fd_points_tex, edge_idx) fd_points_tex.Sample(facetracking_sampler, float2(((edge_idx) + 0.5)/478.0, 1.0)).xyz \n" +
+            shader_source_
         );
+        bfree(shader_source_);
+
         obs_enter_graphics();
         gs_effect = gs_effect_create(shader_source.c_str(), shader_path, &error_string);
         obs_leave_graphics();
@@ -77,6 +77,7 @@ std::string effect_shader::load(const char *shader_path) {
             return error_str;
         }
         else {
+            param_image = gs_effect_get_param_by_name(gs_effect, "image");
             param_tex_a = gs_effect_get_param_by_name(gs_effect, "tex_a");
             param_tex_b = gs_effect_get_param_by_name(gs_effect, "tex_b");
             param_is_studio_mode = gs_effect_get_param_by_name(gs_effect, "is_studio_mode");
@@ -95,19 +96,17 @@ std::string effect_shader::load(const char *shader_path) {
     }
 }
 
-bool effect_shader::loop(const char *tech_name) {
-    return gs_effect_loop(gs_effect, tech_name);
-}
+void effect_shader::render(const gs_texrender_t *texrender, const char *tech_name, const uint32_t cx, const uint32_t cy) {
+    auto *tech = get_technique(tech_name);
+    auto *texture = texrender != nullptr ? gs_texrender_get_texture(texrender) : nullptr;
 
-gs_eparam_t *effect_shader::get_param_by_name(const std::string &param_name) const {
-    return this->get_param_by_name(param_name.c_str());
-}
-gs_eparam_t *effect_shader::get_param_by_name(const char *param_name) const {
-    return gs_effect_get_param_by_name(gs_effect, param_name);
-}
-
-void effect_shader::render(obs_source_t *filter, gs_texrender_t *texrender, uint32_t cx, uint32_t cy) {
-    shadertastic_source_process_filter_tech_end(filter, texrender, gs_effect, cx, cy, "Draw");
+    const size_t passes = gs_technique_begin(tech);
+    for (size_t i = 0; i < passes; i++) {
+        gs_technique_begin_pass(tech, i);
+        gs_draw_sprite(texture, 0, cx, cy);
+        gs_technique_end_pass(tech);
+    }
+    gs_technique_end(tech);
 }
 
 void effect_shader::release() {

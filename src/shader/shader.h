@@ -18,6 +18,7 @@
 #ifndef SHADERTASTIC_SHADER_H
 #define SHADERTASTIC_SHADER_H
 
+#include <string>
 #include <obs-module.h>
 
 class effect_shader {
@@ -27,6 +28,9 @@ class effect_shader {
     public:
     // 0 -> 1 with transitions; time elapsed with filters when enabled
     gs_eparam_t *param_time = nullptr;
+
+    // Filter only
+    gs_eparam_t *param_image = nullptr;
 
     // Transition only
     gs_eparam_t *param_tex_a = nullptr;
@@ -49,12 +53,12 @@ class effect_shader {
 
     std::string load(const char *shader_path);
 
-    [[nodiscard]] gs_eparam_t * get_param_by_name(const char *param_name) const;
-    [[nodiscard]] gs_eparam_t * get_param_by_name(const std::string &param_name) const;
-    bool loop(const char *tech_name);
+    [[nodiscard]] inline gs_eparam_t * get_param_by_name(const char *param_name) const { return gs_effect_get_param_by_name(gs_effect, param_name); }
+    [[nodiscard]] inline gs_eparam_t * get_param_by_name(const std::string &param_name) const { return get_param_by_name(param_name.c_str()); }
+    [[nodiscard]] inline gs_technique_t * get_technique(const char *tech_name) const { return gs_effect_get_technique(gs_effect, tech_name); }
+    [[nodiscard]] inline gs_technique_t * get_technique(const std::string &tech_name) const { return get_technique(tech_name.c_str()); }
 
-    //void render(gs_texrender_t *texrender, uint32_t cx, uint32_t cy);
-    void render(obs_source_t *filter, gs_texrender_t *texrender, uint32_t cx, uint32_t cy);
+    void render(const gs_texrender_t *texrender, const char *tech_name, uint32_t cx, uint32_t cy);
 
     void release();
 

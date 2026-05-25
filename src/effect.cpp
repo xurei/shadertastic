@@ -205,14 +205,6 @@ void shadertastic_effect_t::set_step_params(int current_step, gs_texture_t *inte
     try_gs_effect_set_int("current_step", main_shader->param_current_step, current_step);
 }
 
-
-void shadertastic_effect_t::render_shader(uint32_t cx, uint32_t cy, bool use_linear) const {
-    const char *tech_name = (!use_linear && gs_get_color_space() == GS_CS_SRGB) ? "Draw" : "DrawLinear";
-    while (main_shader->loop(tech_name)) {
-        gs_draw_sprite(nullptr, 0, cx, cy);
-    }
-}
-
 void shadertastic_effect_t::show() {
     debug("show %s", this->name.c_str());
     for (auto param: this->effect_params) {
