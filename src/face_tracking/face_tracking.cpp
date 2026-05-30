@@ -31,6 +31,7 @@
 #include "src/util/texture_util.h"
 #include "src/shadertastic.hpp"
 #include "face_tracking_points.h"
+#include "src/util/bit_conversion.h"
 
 // Globals
 static const cv::Mat failed(0, 0, CV_8UC1);
@@ -281,7 +282,7 @@ void face_tracking_copy_points(onnxmediapipe::FaceLandmarksResults *facelandmark
         points[i*4+0] = facelandmark_results->refined_landmarks[i].x;
         points[i*4+1] = facelandmark_results->refined_landmarks[i].y;
         points[i*4+2] = facelandmark_results->refined_landmarks[i].z;
-        points[i*4+3] = 1.0;
+        points[i*4+3] = 0.00000;
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -330,7 +331,8 @@ void face_tracking_create(std::unique_ptr<face_tracking_state> &s) {
         s->facedetection_texrender = gs_texrender_create(GS_RGBA32F, GS_ZS_NONE);
     }
     obs_leave_graphics();
-    //debug("STAGING TEXTURE = %p", s->staging_texture);
+    //debug("STAGING TEXTURE = %p", s->staging_texture)
+    // ;
 
     /** Configure networks **/
     try {
@@ -360,6 +362,66 @@ uint2 scaledown_aspectratio(uint32_t cx, uint32_t cy, uint32_t max_size) {
             .x = (cx * max_size) / cy,
             .y = max_size,
         };
+    }
+}
+
+void cartesian_to_spherical(const cv::Vec3f &v, float a[2]) {
+    const float x = v[0];
+    const float y = v[1];
+    const float z = v[2];
+
+    const float r2 = x*x + y*y + z*z;
+    const float eps = 1e-8f;
+
+    float r_inv = 0.0f;
+    if (r2 > eps) {
+        r_inv = 1.0f / std::sqrt(r2);
+    }
+
+    const float nz = z * r_inv;
+    a[0] = std::acos(nz);    // theta
+    a[1] = std::atan2(y, x); // phi
+}
+static inline cv::Vec3f load_point(const float* data, int idx)
+{
+    const float* p = data + idx * 4;
+    return cv::Vec3f(p[0], p[1], p[2]);
+}
+void face_tracking_compute_normals(float* points, int nb_points, const cv::Vec3i* triangles, int nb_triangles) {
+    std::vector<cv::Vec3f> out_normals;
+    out_normals.assign(nb_points, cv::Vec3f(0.0f, 0.0f, 0.0f));
+
+    for (int i = 0; i < nb_triangles; ++i) {
+        const cv::Vec3i& t = triangles[i];
+
+        int i0 = t[0];
+        int i1 = t[1];
+        int i2 = t[2];
+
+        cv::Vec3f p0 = load_point(points, i0);
+        cv::Vec3f p1 = load_point(points, i1);
+        cv::Vec3f p2 = load_point(points, i2);
+
+        //cv::Vec3f n = cv::cross(p1 - p0, p2 - p0); // area-weighted normal
+        cv::Vec3f n = (p1 - p0).cross(p2 - p0); // area-weighted normal
+
+        out_normals[i0] += n;
+        out_normals[i1] += n;
+        out_normals[i2] += n;
+    }
+
+    for (uint32_t i = 0; i < refined_landmarks_num_points; ++i) {
+        auto &n = out_normals[i];
+        n = normalize(n);
+
+        float buf[2];
+        cartesian_to_spherical(n, buf);
+        buf[0] += M_PI; buf[0] /= 2*M_PI;
+        buf[1] += M_PI; buf[1] /= 2*M_PI;
+        buf[1] += 0.5; buf[1] = buf[1] > 1.0f ? buf[1] - 1.0f : buf[1];
+
+        auto packed = pack2f1i(buf[0], buf[1]);
+        points[i * 4 + 3] = pack1i1f(packed);
     }
 }
 
@@ -475,6 +537,13 @@ void face_tracking_tick(face_tracking_state *s, gs_texture_t *source_tex, const 
         float points[refined_landmarks_num_points * 4];
         // TODO we could simplify this by using Point4f directly, but it takes ~15µs to copy the points, probably worthless
         face_tracking_copy_points(&s->average_results, points);
+
+        std::vector<cv::Vec3f> normals;
+        face_tracking_compute_normals(
+            points, refined_landmarks_num_points,
+            onnxmediapipe::face_triangles, onnxmediapipe::nb_face_triangles
+        );
+
         debug_trace("G1 %lu", get_time_us()-tic);
 
         // CPU Preraster (kept for debugging and comparing with GPU raster)

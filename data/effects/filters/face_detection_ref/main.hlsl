@@ -60,6 +60,7 @@ float4 EffectLinear(float2 uv)
 {
     if (show_tex && uv.y < 0.05) {
         float4 px = facetracking_points_tex.Sample(textureSampler, uv / float2(1.0, 0.05));
+        px.a = 1.0;
         return px;
     }
 
@@ -75,15 +76,15 @@ float4 EffectLinear(float2 uv)
     float2 uv_ortho = uv * orthoCorrection;
 
     if (show_eyes_balls) {
-        float2 fd_leye_center = facetracking_points_tex.Sample(pointsSampler, float2((468.5)/478.0, 0)).xy * orthoCorrection;
-        float2 fd_leye_top = facetracking_points_tex.Sample(pointsSampler, float2((470.5)/478.0, 0)).xy * orthoCorrection;
+        float2 fd_leye_center = facetracking_edge(facetracking_points_tex, 468).xy * orthoCorrection;
+        float2 fd_leye_top = facetracking_edge(facetracking_points_tex, 470).xy * orthoCorrection;
         float fd_leye_radius = abs(fd_leye_center.y - fd_leye_top.y);
         if (distance(uv_ortho, fd_leye_center) < fd_leye_radius) {
             return lerp(px, float4(1.0, 0.0, 0.0, 1.0), 0.4);
         }
 
-        float2 fd_reye_center = facetracking_points_tex.Sample(pointsSampler, float2((473.5)/478.0, 0)).xy * orthoCorrection;
-        float2 fd_reye_top = facetracking_points_tex.Sample(pointsSampler, float2((475.5)/478.0, 0)).xy * orthoCorrection;
+        float2 fd_reye_center = facetracking_edge(facetracking_points_tex, 473).xy * orthoCorrection;
+        float2 fd_reye_top = facetracking_edge(facetracking_points_tex, 475).xy * orthoCorrection;
         float fd_reye_radius = abs(fd_reye_center.y - fd_reye_top.y);
         if (distance(uv_ortho, fd_reye_center) < fd_reye_radius) {
             return lerp(px, float4(1.0, 1.0, 0.0, 1.0), 0.4);
@@ -116,7 +117,7 @@ float4 EffectLinear(float2 uv)
         [loop]
         #endif
         for (int i=0; i<478; ++i) {
-            float4 px2 = facetracking_points_tex.Sample(pointsSampler, float2((i + 0.5)/478.0, 0));
+            float3 px2 = facetracking_edge(facetracking_points_tex, i);
 //            px2[2] = 1.0;
 //            px2[3] = 1.0;
 
