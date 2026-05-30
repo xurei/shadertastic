@@ -30,7 +30,7 @@ class effect_parameter_bool : public effect_parameter {
         explicit effect_parameter_bool(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
         }
 
-        effect_param_datatype type() override {
+    [[nodiscard]] effect_param_datatype type() const override {
             return PARAM_DATATYPE_BOOL;
         }
 

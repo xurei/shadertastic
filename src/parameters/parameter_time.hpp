@@ -44,7 +44,7 @@ class effect_parameter_time : public effect_parameter {
             *time = 0.0;
         }
 
-        effect_param_datatype type() override {
+        [[nodiscard]] effect_param_datatype type() const override {
             return PARAM_DATATYPE_TIME;
         }
 

@@ -41,7 +41,7 @@ class effect_parameter_list_int : public effect_parameter {
             obs_data_array_release(default_array);
         }
 
-        effect_param_datatype type() override {
+        [[nodiscard]] effect_param_datatype type() const override {
             return PARAM_DATATYPE_LIST_INT;
         }
 

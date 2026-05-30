@@ -74,7 +74,7 @@ class effect_parameter_image : public effect_parameter {
             obs_leave_graphics();
         }
 
-        effect_param_datatype type() override {
+        [[nodiscard]] effect_param_datatype type() const override {
             return PARAM_DATATYPE_IMAGE;
         }
 

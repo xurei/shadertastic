@@ -72,7 +72,7 @@ class effect_parameter {
             }
         }
 
-        virtual effect_param_datatype type() = 0;
+        [[nodiscard]] virtual effect_param_datatype type() const = 0;
 
         [[nodiscard]] bool is_dev_mode() const {
             return devmode;

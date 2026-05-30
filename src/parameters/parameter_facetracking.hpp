@@ -55,7 +55,7 @@ class effect_parameter_facetracking : public effect_parameter {
         explicit effect_parameter_facetracking(const effect_shader *shader) : effect_parameter(shader) {
         }
 
-        effect_param_datatype type() override {
+        [[nodiscard]] effect_param_datatype type() const override {
             return PARAM_DATATYPE_FACETRACKING;
         }
 

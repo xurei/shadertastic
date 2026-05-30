@@ -66,7 +66,7 @@ class effect_parameter_audiolevel : public effect_parameter {
             obs_volmeter_destroy(this->obs_volmeter);
         }
 
-        effect_param_datatype type() override {
+        [[nodiscard]] effect_param_datatype type() const override {
             return PARAM_DATATYPE_AUDIOLEVEL;
         }
 
