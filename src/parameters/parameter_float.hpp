@@ -37,20 +37,20 @@ class effect_parameter_float : public effect_parameter {
             return PARAM_DATATYPE_DOUBLE;
         }
 
-        void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
-            obs_data_set_default_bool(metadata, "slider", false);
-            obs_data_set_default_double(metadata, "min", 0.0);
-            obs_data_set_default_double(metadata, "max", 100.0);
-            obs_data_set_default_double(metadata, "step", 0.01);
-            obs_data_set_default_double(metadata, "default", 50.0);
+            json_t *slider_json = json_object_get(metadata, "slider");
+            json_t *min_json = json_object_get(metadata, "min");
+            json_t *max_json = json_object_get(metadata, "max");
+            json_t *step_json = json_object_get(metadata, "step");
+            json_t *default_json = json_object_get(metadata, "default");
 
-            default_value = obs_data_get_double(metadata, "default");
-            is_slider = obs_data_get_bool(metadata, "slider");
-            param_min = obs_data_get_double(metadata, "min");
-            param_max = obs_data_get_double(metadata, "max");
-            param_step = obs_data_get_double(metadata, "step");
+            is_slider = json_is_boolean(slider_json) ? json_boolean_value(slider_json) : false;
+            param_min = json_number_value_or(min_json, 0.0);
+            param_max = json_number_value_or(max_json, 100.0);
+            param_step = json_number_value_or(step_json, 0.01);
+            default_value = json_number_value_or(default_json, 50.0);
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {

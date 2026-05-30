@@ -17,6 +17,7 @@
 
 #include <string>
 #include <obs-module.h>
+#include <jansson.h>
 
 #include "../logging_functions.hpp"
 
@@ -35,10 +36,19 @@
 #include "parameter_unknown.hpp"
 #include "parameter_factory.h"
 
-effect_parameter * effect_parameter_factory::create(const std::string &effect_name, const std::string &effect_path, const effect_shader *main_shader, obs_data_t *param_metadata) {
-    const char *param_name = obs_data_get_string(param_metadata, "name");
+effect_parameter * effect_parameter_factory::create(const std::string &effect_name, const std::string &effect_path, const effect_shader *main_shader, json_t *param_metadata) {
+    const char *param_name = nullptr;
+    json_t *name_json = json_object_get(param_metadata, "name");
+    if (json_is_string(name_json)) {
+        param_name = json_string_value(name_json);
+    }
+
     gs_eparam_t *shader_param = main_shader->get_param_by_name(param_name);
-    const char *data_type = obs_data_get_string(param_metadata, "type");
+    const char *data_type = nullptr;
+    json_t *type_json = json_object_get(param_metadata, "type");
+    if (json_is_string(type_json)) {
+        data_type = json_string_value(type_json);
+    }
     if (param_name == nullptr || strcmp(param_name, "") == 0) {
         do_log(LOG_WARNING, "Missing name for a parameter in effect %s", effect_name.c_str());
         return nullptr;
@@ -114,7 +124,7 @@ effect_param_datatype effect_parameter_factory::effect_parse_datatype(const char
     if (strcmp(datatype_str, "float") == 0 || strcmp(datatype_str, "double") == 0) {
         return PARAM_DATATYPE_DOUBLE;
     }
-    else if (strcmp(datatype_str, "bool") == 0) {
+    else if (strcmp(datatype_str, "bool") == 0 || strcmp(datatype_str, "boolean") == 0) {
         return PARAM_DATATYPE_BOOL;
     }
     else if (strcmp(datatype_str, "int") == 0) {

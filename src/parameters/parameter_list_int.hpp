@@ -31,38 +31,32 @@ class effect_parameter_list_int : public effect_parameter {
     private:
         int default_value{};
         std::vector<effect_parameter_list_int_value> values;
-        obs_data_array *default_array{};
 
     public:
         explicit effect_parameter_list_int(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
-        }
-
-        ~effect_parameter_list_int() override {
-            obs_data_array_release(default_array);
         }
 
         [[nodiscard]] effect_param_datatype type() const override {
             return PARAM_DATATYPE_LIST_INT;
         }
 
-        void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
-            default_array = obs_data_array_create();
-            obs_data_set_default_array(metadata, "values", default_array);
-            obs_data_set_default_int(metadata, "default", 0);
 
-            default_value = (int)obs_data_get_int(metadata, "default");
-            obs_data_array_t *array = obs_data_get_array(metadata, "values");
-            size_t array_count = obs_data_array_count(array);
+            json_t *default_json = json_object_get(metadata, "default");
+            default_value = json_is_integer(default_json) ? (int)json_integer_value(default_json) : 0;
+
+            json_t *array = json_object_get(metadata, "values");
+            size_t array_count = json_is_array(array) ? json_array_size(array) : 0;
             values.resize(array_count);
             for (size_t i=0; i<array_count; ++i) {
-                obs_data_t *item = obs_data_array_item(array, i);
-                values[i].label = std::string(obs_data_get_string(item, "label"));
-                values[i].value = (int)obs_data_get_int(item, "value");
-                obs_data_release(item);
+                json_t *item = json_array_get(array, i);
+                json_t *label_json = json_object_get(item, "label");
+                json_t *value_json = json_object_get(item, "value");
+                values[i].label = json_is_string(label_json) ? json_string_value(label_json) : "";
+                values[i].value = json_is_integer(value_json) ? (int)json_integer_value(value_json) : 0;
             }
-            obs_data_array_release(array);
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {

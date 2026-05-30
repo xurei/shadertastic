@@ -17,6 +17,7 @@
 
 #include <string>
 #include <obs-module.h>
+#include <jansson.h>
 #include "effect.h"
 #include "logging_functions.hpp"
 #include "try_gs_effect_set.h"
@@ -42,70 +43,101 @@ void shadertastic_effect_t::load() {
         return;
     }
 
-    obs_data_t *metadata = obs_data_create_from_json(meta_json);
+    json_error_t error;
+    json_t *metadata = json_loads(meta_json, 0, &error);
+
     bfree(meta_json);
-    if (metadata == nullptr) {
+    if (metadata == nullptr|| !json_is_object(metadata)) {
         // Something went wrong -> set default configuration
         warn("Unable to parse metadata for effect %s. Check the JSON syntax", name.c_str());
         label = name;
         nb_steps = 1;
+
+        if (metadata != nullptr) {
+            json_decref(metadata);
+        }
+
+        return;
     }
     else {
-        const char *effect_label = obs_data_get_string(metadata, "label");
-        if (effect_label == nullptr) {
-            label = name;
+        // Label
+        json_t *label_json = json_object_get(metadata, "label");
+        if (json_is_string(label_json)) {
+            label = json_string_value(label_json);
         }
         else {
-            label = std::string(effect_label);
+            label = name;
         }
-        obs_data_set_default_int(metadata, "steps", 1);
-        nb_steps = (int)obs_data_get_int(metadata, "steps");
 
-        obs_data_array_t *parameters = obs_data_get_array(metadata, "parameters");
-        if (parameters == nullptr) {
+        // Steps
+        json_t *steps_json = json_object_get(metadata, "steps");
+        if (json_is_integer(steps_json)) {
+            nb_steps = (int)json_integer_value(steps_json);
+        }
+        else {
+            nb_steps = 1;
+        }
+
+        // Parameters
+        json_t *parameters = json_object_get(metadata, "parameters");
+        if (!json_is_array(parameters)) {
             warn("No parameters specified for effect %s", name.c_str());
-            parameters = obs_data_array_create();
+            parameters = json_array();
+        }
+        else {
+            json_incref(parameters);
         }
 
         // LEGACY - input_facedetection is deprecated.
-        obs_data_set_default_bool(metadata, "input_facedetection", false);
-        legacy_input_facedetection = obs_data_get_bool(metadata, "input_facedetection");
+        json_t *input_facedetection_json = json_object_get(metadata, "input_facedetection");
+        legacy_input_facedetection =
+            json_is_boolean(input_facedetection_json)
+                ? json_boolean_value(input_facedetection_json)
+                : false;
         if (legacy_input_facedetection) {
-            obs_data_t *param_metadata = obs_data_create();
-            obs_data_set_string(param_metadata, "name", "fd");
-            obs_data_set_string(param_metadata, "type", "facetracking");
-            obs_data_array_insert(parameters, 0, param_metadata);
-            obs_data_release(param_metadata);
+            json_t *param = json_pack(
+                "{s:s,s:s}",
+                "name", "fd",
+                "type", "facetracking");
+            json_array_insert_new(parameters, 0, param);
         }
 
-        // LEGACY - input_time is deprecated. Migrating it as a parameter
-        obs_data_set_default_bool(metadata, "input_time", false);
-        legacy_input_time = obs_data_get_bool(metadata, "input_time");
+        // LEGACY - input_time is deprecated.
+        json_t *input_time_json = json_object_get(metadata, "input_time");
+        legacy_input_time =
+            json_is_boolean(input_time_json)
+                ? json_boolean_value(input_time_json)
+                : false;
         if (legacy_input_time) {
-            obs_data_t *param_metadata = obs_data_create();
-            obs_data_set_string(param_metadata, "name", "time");
-            obs_data_set_string(param_metadata, "type", "time");
-            obs_data_set_string(param_metadata, "reset_on_show", "prompt");
-            obs_data_array_insert(parameters, 0, param_metadata);
-            obs_data_release(param_metadata);
+            json_t *param = json_pack(
+                "{s:s,s:s,s:s}",
+                "name", "time",
+                "type", "time",
+                "reset_on_show", "prompt");
+            json_array_insert_new(parameters, 0, param);
         }
 
         // Copy the effect params map to allow recycling
         params_list previous_effect_params(effect_params);
         effect_params.clear();
 
-        size_t nb_parameters = obs_data_array_count(parameters);
         prev_frames_to_keep.resize(nb_steps);
         std::fill(prev_frames_to_keep.begin(), prev_frames_to_keep.end(), nullptr);
 
+        // Load parameters
+        //debug("%s", json_dumps(parameters, 0));
+        size_t nb_parameters = json_array_size(parameters);
         for (size_t i=0; i < nb_parameters; i++) {
-            obs_data_t *param_metadata = obs_data_array_item(parameters, i);
+            json_t *param_metadata = json_array_get(parameters, i);
+            if (!json_is_object(param_metadata)) {
+                continue;
+            }
             effect_parameter *effect_param = effect_parameter_factory::create(name, this->path, main_shader.get(), param_metadata);
 
             if (effect_param != nullptr) {
                 auto param_type = effect_param->type();
                 if (param_type == PARAM_DATATYPE_PREV_FRAME) {
-                    effect_parameter_prev_frame *effect_param_prev_frame = dynamic_cast<effect_parameter_prev_frame *>(effect_param);
+                    auto *effect_param_prev_frame = dynamic_cast<effect_parameter_prev_frame *>(effect_param);
 
                     int step_to_keep = effect_param_prev_frame->step();
                     if (step_to_keep < 0) {
@@ -120,25 +152,36 @@ void shadertastic_effect_t::load() {
                 }
                 else if (param_type == PARAM_DATATYPE_FACETRACKING) {
                     if (param_facetracking != nullptr) {
-                        log_error("Trying to use multiple face tracking parameters. This makes no sense. Params: %s and %s", effect_param->get_name().c_str(), param_facetracking->get_name().c_str());
+                        log_error(
+                            "Trying to use multiple face tracking parameters. This makes no sense. Params: %s and %s",
+                            effect_param->get_name().c_str(),
+                            param_facetracking->get_name().c_str()
+                        );
                     }
                     else {
                         param_facetracking = effect_param;
                     }
                 }
-                std::string param_name_str = obs_data_get_string(param_metadata, "name");
+
+                std::string param_name_str;
+                json_t *name_json = json_object_get(param_metadata, "name");
+                if (json_is_string(name_json)) {
+                    param_name_str = json_string_value(name_json);
+                }
                 effect_parameter *previous_param = previous_effect_params.get(param_name_str);
                 if (previous_param != nullptr) {
                     if (previous_param->get_data_size() == effect_param->get_data_size()) {
-                        debug("Recycling data for %s (size: %i)", param_name_str.c_str(), (int)effect_param->get_data_size());
+                        debug(
+                            "Recycling data for %s (size: %i)",
+                            param_name_str.c_str(),
+                            (int)effect_param->get_data_size()
+                        );
                         memcpy(effect_param->get_data(), previous_param->get_data(), effect_param->get_data_size());
                     }
                 }
 
                 effect_params.put(param_name_str, effect_param);
             }
-
-            obs_data_release(param_metadata);
         }
 
         // Clear memory of removed params
@@ -147,8 +190,9 @@ void shadertastic_effect_t::load() {
             delete param;
         }
 
-        obs_data_array_release(parameters);
-        obs_data_release(metadata);
+        json_decref(parameters);
+        json_decref(metadata);
+
         debug("Loaded effect %s from %s", name.c_str(), metadata_path.c_str());
     }
 }

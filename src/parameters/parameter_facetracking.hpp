@@ -59,7 +59,7 @@ class effect_parameter_facetracking : public effect_parameter {
             return PARAM_DATATYPE_FACETRACKING;
         }
 
-        void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
             UNUSED_PARAMETER(effect_path);
 
             std::string face_found = get_full_subparam_name_static(name, PARAM_STR_FACE_FOUND);
@@ -74,8 +74,8 @@ class effect_parameter_facetracking : public effect_parameter {
             param_fd_points_tex = shader->get_param_by_name(points_tex);
 
             // use_preraster field
-            obs_data_set_default_bool(metadata, "use_preraster", false);
-            this->use_preraster = obs_data_get_bool(metadata, "use_preraster");
+            json_t *use_preraster_json = json_object_get(metadata, "use_preraster");
+            this->use_preraster = json_is_boolean(use_preraster_json) ? json_boolean_value(use_preraster_json) : false;
             if (this->use_preraster) {
                 param_fd_preraster_tex = shader->get_param_by_name(preraster_tex);
             }

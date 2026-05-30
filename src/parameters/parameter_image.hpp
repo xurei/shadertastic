@@ -34,7 +34,6 @@ class effect_parameter_image : public effect_parameter {
 
         std::string default_value;
         std::vector<effect_parameter_image_value> values;
-        obs_data_array *default_array{};
         bool allow_custom{};
         bool hidden{};
 
@@ -65,8 +64,6 @@ class effect_parameter_image : public effect_parameter {
         }
 
         ~effect_parameter_image() override {
-            obs_data_array_release(default_array);
-
             obs_enter_graphics();
             {
                 release_resource(gs_texture_destroy, this->texture);
@@ -78,43 +75,43 @@ class effect_parameter_image : public effect_parameter {
             return PARAM_DATATYPE_IMAGE;
         }
 
-        void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
             UNUSED_PARAMETER(shader);
-            obs_data_set_default_string(metadata, "default", "");
-            obs_data_set_default_bool(metadata, "allow_custom", true);
-            default_array = obs_data_array_create();
-            obs_data_set_default_array(metadata, "values", default_array);
 
-            auto default_file = std::string(obs_data_get_string(metadata, "default"));
-            if (!default_file.empty()) {
-                default_value = std::string("bundle://") + std::string(effect_path) + '/' + std::string(obs_data_get_string(metadata, "default"));
+            json_t *default_json = json_object_get(metadata, "default");
+            const char *default_file = json_is_string(default_json) ? json_string_value(default_json) : "";
+            if (default_file[0] != '\0') {
+                default_value = std::string("bundle://") + effect_path + '/' + default_file;
             }
             else {
                 default_value = "";
             }
 
-            allow_custom = obs_data_get_bool(metadata, "allow_custom");
-            hidden = obs_data_get_bool(metadata, "hidden");
+            json_t *allow_custom_json = json_object_get(metadata, "allow_custom");
+            allow_custom = json_is_boolean(allow_custom_json) ? json_boolean_value(allow_custom_json) : true;
 
-            obs_data_array_t *array = obs_data_get_array(metadata, "values");
-            size_t array_count = obs_data_array_count(array);
+            json_t *hidden_json = json_object_get(metadata, "hidden");
+            hidden = json_is_boolean(hidden_json) ? json_boolean_value(hidden_json) : false;
+
+            json_t *array = json_object_get(metadata, "values");
+            size_t array_count = json_is_array(array) ? json_array_size(array) : 0;
             values.resize(array_count);
             for (size_t i=0; i<array_count; ++i) {
-                obs_data_t *item = obs_data_array_item(array, i);
-                values[i].label = std::string(obs_data_get_string(item, "label"));
-                const char *val = obs_data_get_string(item, "value");
+                json_t *item = json_array_get(array, i);
+                json_t *label_json = json_object_get(item, "label");
+                json_t *value_json = json_object_get(item, "value");
+                values[i].label = json_is_string(label_json) ? json_string_value(label_json) : "";
+                const char *val = json_is_string(value_json) ? json_string_value(value_json) : "";
                 if (val == nullptr || strlen(val) == 0) {
                     values[i].value = std::string("");
                 }
                 else {
-                    values[i].value = std::string("bundle://") + std::string(effect_path) + '/' + obs_data_get_string(item, "value");
+                    values[i].value = std::string("bundle://") + effect_path + '/' + val;
                 }
-                obs_data_release(item);
             }
             if (values.empty()) {
                 allow_custom = true;
             }
-            obs_data_array_release(array);
 
             std::string texture_size = get_full_subparam_name_static(name, PARAM_STR_SIZE);
             param_texture_size = shader->get_param_by_name(texture_size.c_str());

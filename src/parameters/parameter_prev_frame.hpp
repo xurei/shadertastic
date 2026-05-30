@@ -68,11 +68,12 @@ class effect_parameter_prev_frame : public effect_parameter {
             return step_;
         }
 
-        void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
-            obs_data_set_default_int(metadata, "step", -1); // -1 means "the last step". This way by default we take the last step, i.e. the actually rendered frame
-            step_ = (int)obs_data_get_int(metadata, "step");
+
+            json_t *step_json = json_object_get(metadata, "step");
+            step_ = json_is_integer(step_json) ? (int)json_integer_value(step_json) : -1;
 
             init_texrenders();
         }

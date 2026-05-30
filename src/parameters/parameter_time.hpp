@@ -48,38 +48,40 @@ class effect_parameter_time : public effect_parameter {
             return PARAM_DATATYPE_TIME;
         }
 
-        void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
 
-            // reset_on_show field
-            obs_data_set_default_bool(metadata, "reset_on_show", false);
-            const char *reset_on_show_str = obs_data_get_string(metadata, "reset_on_show");
-            if (reset_on_show_str && strcmp(reset_on_show_str, "prompt") == 0) {
+            json_t *reset_on_show_json = json_object_get(metadata, "reset_on_show");
+            if (json_is_string(reset_on_show_json) && strcmp(json_string_value(reset_on_show_json), "prompt") == 0) {
                 reset_on_show_type = CHOICE_PROMPT;
             }
             else {
-                reset_on_show = obs_data_get_bool(metadata, "reset_on_show");
+                reset_on_show = json_is_boolean(reset_on_show_json) ? json_boolean_value(reset_on_show_json) : false;
                 reset_on_show_type = reset_on_show ? CHOICE_YES : CHOICE_NO;
             }
 
-            // speed field
-            obs_data_t *speed_obj = obs_data_create();
-            obs_data_set_default_obj(metadata, "speed", speed_obj);
-            obs_data_release(speed_obj);
+            json_t *speed_obj = json_object_get(metadata, "speed");
+            if (json_is_object(speed_obj)) {
+                json_t *show_ui_json = json_object_get(speed_obj, "show_ui");
+                json_t *label_json = json_object_get(speed_obj, "label");
+                json_t *min_json = json_object_get(speed_obj, "min");
+                json_t *max_json = json_object_get(speed_obj, "max");
+                json_t *default_json = json_object_get(speed_obj, "default");
 
-            speed_obj = obs_data_get_obj(metadata, "speed");
-            obs_data_set_default_bool(speed_obj, "show_ui", true);
-            obs_data_set_default_string(speed_obj, "label", "Speed");
-            obs_data_set_default_double(speed_obj, "min", 0.0);
-            obs_data_set_default_double(speed_obj, "max", 1.0);
-            obs_data_set_default_double(speed_obj, "default", 1.0);
-            min_speed = (float)obs_data_get_double(speed_obj, "min");
-            max_speed = (float)obs_data_get_double(speed_obj, "max");
-            default_speed = (float)obs_data_get_double(speed_obj, "default");
-            show_speed_ui = obs_data_get_bool(speed_obj, "show_ui");
-            speed_label = std::string(obs_data_get_string(speed_obj, "label"));
-            obs_data_release(speed_obj);
+                min_speed = (float)json_number_value_or(min_json, 0.0);
+                max_speed = (float)json_number_value_or(max_json, 1.0);
+                default_speed = (float)json_number_value_or(default_json, 1.0);
+                show_speed_ui = json_is_boolean(show_ui_json) ? json_boolean_value(show_ui_json) : true;
+                speed_label = json_is_string(label_json) ? json_string_value(label_json) : "Speed";
+            }
+            else {
+                min_speed = 0.0f;
+                max_speed = 1.0f;
+                default_speed = 1.0f;
+                show_speed_ui = true;
+                speed_label = "Speed";
+            }
 
             // Set time to zero at init time
             *time = 0.0;

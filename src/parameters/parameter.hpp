@@ -18,6 +18,7 @@
 #ifndef SHADERTASTIC_PARAMETER_HPP
 #define SHADERTASTIC_PARAMETER_HPP
 
+#include <jansson.h>
 #include "parameter_datatype.hpp"
 #include "../try_gs_effect_set.h"
 #include "../shadertastic_common.hpp"
@@ -29,6 +30,16 @@ inline static std::string get_full_param_name_static(const std::string &effect_n
 
 inline static std::string get_full_subparam_name_static(const std::string &effect_name, const std::string &param_name) {
     return effect_name + '_' + param_name;
+}
+
+inline static double json_number_value_or(json_t *value, double default_value) {
+    if (json_is_real(value)) {
+        return json_real_value(value);
+    }
+    if (json_is_integer(value)) {
+        return (double)json_integer_value(value);
+    }
+    return default_value;
 }
 
 class effect_parameter {
@@ -78,19 +89,33 @@ class effect_parameter {
             return devmode;
         }
 
-        void load_common_fields(obs_data_t *metadata) {
-            name = std::string(obs_data_get_string(metadata, "name"));
-            label = std::string(obs_data_get_string(metadata, "label"));
-            const char *description_c_str = obs_data_get_string(metadata, "description");
-            if (description_c_str != nullptr) {
-                description = std::string(description_c_str);
+        void load_common_fields(json_t *metadata) {
+            json_t *name_json = json_object_get(metadata, "name");
+            if (json_is_string(name_json)) {
+                name = json_string_value(name_json);
             }
             else {
-                description = std::string("");
+                name.clear();
             }
 
-            obs_data_set_default_bool(metadata, "devmode", false);
-            devmode = obs_data_get_bool(metadata, "devmode");
+            json_t *label_json = json_object_get(metadata, "label");
+            if (json_is_string(label_json)) {
+                label = json_string_value(label_json);
+            }
+            else {
+                label.clear();
+            }
+
+            json_t *description_json = json_object_get(metadata, "description");
+            if (json_is_string(description_json)) {
+                description = json_string_value(description_json);
+            }
+            else {
+                description.clear();
+            }
+
+            json_t *devmode_json = json_object_get(metadata, "devmode");
+            devmode = json_is_boolean(devmode_json) ? json_boolean_value(devmode_json) : false;
         }
 
         virtual void tick(shadertastic_common *s) {
@@ -113,7 +138,7 @@ class effect_parameter {
          * @param metadata
          * @param effect_path
          */
-        virtual void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) = 0;
+        virtual void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) = 0;
 
         /**
          * Called by the parent element (effect or parameter), after creation of the parameter by the factory.

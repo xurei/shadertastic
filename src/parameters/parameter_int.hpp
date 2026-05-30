@@ -37,20 +37,20 @@ class effect_parameter_int : public effect_parameter {
             return PARAM_DATATYPE_INT;
         }
 
-        void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
-            obs_data_set_default_bool(metadata, "slider", false);
-            obs_data_set_default_int(metadata, "min", 0);
-            obs_data_set_default_int(metadata, "max", 100);
-            obs_data_set_default_int(metadata, "step", 1);
-            obs_data_set_default_int(metadata, "default", 50);
+            json_t *slider_json = json_object_get(metadata, "slider");
+            json_t *min_json = json_object_get(metadata, "min");
+            json_t *max_json = json_object_get(metadata, "max");
+            json_t *step_json = json_object_get(metadata, "step");
+            json_t *default_json = json_object_get(metadata, "default");
 
-            default_value = (int)obs_data_get_int(metadata, "default");
-            is_slider = obs_data_get_bool(metadata, "slider");
-            param_min = (int)obs_data_get_int(metadata, "min");
-            param_max = (int)obs_data_get_int(metadata, "max");
-            param_step = (int)obs_data_get_int(metadata, "step");
+            default_value = json_is_integer(default_json) ? (int)json_integer_value(default_json) : 50;
+            is_slider = json_is_boolean(slider_json) ? json_boolean_value(slider_json) : false;
+            param_min = json_is_integer(min_json) ? (int)json_integer_value(min_json) : 0;
+            param_max = json_is_integer(max_json) ? (int)json_integer_value(max_json) : 100;
+            param_step = json_is_integer(step_json) ? (int)json_integer_value(step_json) : 1;
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {

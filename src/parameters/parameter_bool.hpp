@@ -34,13 +34,12 @@ class effect_parameter_bool : public effect_parameter {
             return PARAM_DATATYPE_BOOL;
         }
 
-        void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
 
-            obs_data_set_default_bool(metadata, "default", false);
-
-            default_value = obs_data_get_bool(metadata, "default");
+            json_t *default_json = json_object_get(metadata, "default");
+            default_value = json_is_boolean(default_json) ? json_boolean_value(default_json) : false;
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {
