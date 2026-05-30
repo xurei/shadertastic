@@ -57,21 +57,23 @@ class effect_parameter_int : public effect_parameter {
             obs_data_set_default_int(settings, full_param_name, default_value);
         }
 
-        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
+        void render_property_ui(const char *effect_name, obs_properties_t *props) override {
             obs_property_t *prop;
+            std::string full_param_name = get_full_param_name(effect_name);
             if (is_slider) {
-                prop = obs_properties_add_int_slider(props, full_param_name, label.c_str(), param_min, param_max, param_step);
+                prop = obs_properties_add_int_slider(props, full_param_name.c_str(), label.c_str(), param_min, param_max, param_step);
             }
             else {
-                prop = obs_properties_add_int(props, full_param_name, label.c_str(), param_min, param_max, param_step);
+                prop = obs_properties_add_int(props, full_param_name.c_str(), label.c_str(), param_min, param_max, param_step);
             }
             if (!description.empty()) {
                 obs_property_set_long_description(prop, obs_module_text(description.c_str()));
             }
         }
 
-        void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
-            *((int*)this->data) = (int)obs_data_get_int(settings, full_param_name);
+        void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
+            std::string full_param_name = get_full_param_name(effect_name);
+            *((int*)this->data) = (int)obs_data_get_int(settings, full_param_name.c_str());
             //debug("%s = %d", full_param_name, *((int*)this->data));
         }
 };

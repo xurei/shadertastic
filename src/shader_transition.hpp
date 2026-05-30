@@ -142,8 +142,7 @@ void shadertastic_transition_update(void *data, obs_data_t *settings) {
 
     if (s->selected_effect != nullptr) {
         for (auto param: s->selected_effect->effect_params) {
-            std::string full_param_name = param->get_full_param_name(selected_effect_name);
-            param->set_data_from_settings(settings, full_param_name.c_str());
+            param->set_data_from_settings(settings, selected_effect_name);
         }
     }
 
@@ -318,8 +317,7 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
             s->selected_effect->reload();
             obs_data *settings = obs_source_get_settings(s->source);
             for (auto *param: s->selected_effect->effect_params) {
-                std::string full_param_name = param->get_full_param_name(s->selected_effect->name);
-                param->set_data_from_settings(settings, full_param_name.c_str());
+                param->set_data_from_settings(settings, s->selected_effect->name.c_str());
             }
             obs_source_update(s->source, nullptr);
         }
@@ -504,7 +502,7 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
 
         for (auto param: effect.effect_params) {
             std::string full_param_name = param->get_full_param_name(effect_name);
-            param->render_property_ui(full_param_name.c_str(), effect_group);
+            param->render_property_ui(effect_name.c_str(), effect_group);
         }
         obs_properties_add_group(props, (effect_name + "__params").c_str(), effect_label, OBS_GROUP_NORMAL, effect_group);
         obs_property_set_visible(obs_properties_get(props, (effect_name + "__params").c_str()), false);

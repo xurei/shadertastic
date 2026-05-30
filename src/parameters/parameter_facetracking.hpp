@@ -135,15 +135,15 @@ class effect_parameter_facetracking : public effect_parameter {
             }
         }
 
-        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
-            UNUSED_PARAMETER(full_param_name);
+        void render_property_ui(const char *effect_name, obs_properties_t *props) override {
+            UNUSED_PARAMETER(effect_name);
             UNUSED_PARAMETER(props);
             // TODO faudrait ptetre mettre un message de warning, ou alors si on fait le truc de recyclage mais faut guider l'user
         }
 
-        void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
+        void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
             UNUSED_PARAMETER(settings);
-            UNUSED_PARAMETER(full_param_name);
+            UNUSED_PARAMETER(effect_name);
         }
 };
 

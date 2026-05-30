@@ -126,14 +126,15 @@ class effect_parameter_image : public effect_parameter {
             obs_data_set_default_string(settings, full_param_name_list.c_str(), default_value.c_str());
         }
 
-        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
+        void render_property_ui(const char *effect_name, obs_properties_t *props) override {
+            std::string full_param_name = get_full_param_name(effect_name);
             bool with_values = !values.empty();
 
             // If values are present, show a list widget to select them
             if (with_values) {
                 obs_property_t *list_ui = obs_properties_add_list(
                     props,
-                    full_param_name,
+                    full_param_name.c_str(),
                     label.c_str(),
                     OBS_COMBO_TYPE_LIST,
                     OBS_COMBO_FORMAT_STRING
@@ -170,7 +171,7 @@ class effect_parameter_image : public effect_parameter {
                 std::string full_param_name_filepicker = std::string(full_param_name) + "__custom";
                 obs_properties_add_path(
                     props,
-                    with_values ? full_param_name_filepicker.c_str() : full_param_name,
+                    with_values ? full_param_name_filepicker.c_str() : full_param_name.c_str(),
                     with_values ? "∟ Custom file" : label.c_str(),
                     OBS_PATH_FILE,
                     "Image (*.jpg *.jpeg *.png *.bmp)",
@@ -199,8 +200,9 @@ class effect_parameter_image : public effect_parameter {
             set_data_from_settings_sub(settings, full_param_name);
         }
 
-        void set_data_from_settings_sub(obs_data_t *settings, const char *full_param_name) {
-            const char *path_ = obs_data_get_string(settings, full_param_name);
+        void set_data_from_settings_sub(obs_data_t *settings, const char *effect_name) {
+            std::string full_param_name = get_full_param_name(effect_name);
+            const char *path_ = obs_data_get_string(settings, full_param_name.c_str());
             if (path_ != nullptr) {
                 std::string path_str = std::string(path_);
                 if (this->path != path_str) {

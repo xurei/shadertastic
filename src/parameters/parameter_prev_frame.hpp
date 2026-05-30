@@ -82,15 +82,15 @@ class effect_parameter_prev_frame : public effect_parameter {
             UNUSED_PARAMETER(full_param_name);
         }
 
-        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
-            UNUSED_PARAMETER(full_param_name);
+        void render_property_ui(const char *effect_name, obs_properties_t *props) override {
+            UNUSED_PARAMETER(effect_name);
             UNUSED_PARAMETER(props);
             /* Automatic parameter, no UI */
         }
 
-        void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
+        void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
             UNUSED_PARAMETER(settings);
-            UNUSED_PARAMETER(full_param_name);
+            UNUSED_PARAMETER(effect_name);
             /* Automatic parameter, no UI */
         }
 

@@ -38,18 +38,19 @@ class effect_parameter_unknown : public effect_parameter {
             UNUSED_PARAMETER(full_param_name);
         }
 
-        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
+        void render_property_ui(const char *effect_name, obs_properties_t *props) override {
+            std::string full_param_name = get_full_param_name(effect_name);
             obs_properties_add_text(
                 props,
-                full_param_name,
+                full_param_name.c_str(),
                 (std::string("Unknown type for ") + std::string(full_param_name)).c_str(),
                 OBS_TEXT_INFO
             );
         }
 
-        void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
+        void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
             UNUSED_PARAMETER(settings);
-            UNUSED_PARAMETER(full_param_name);
+            UNUSED_PARAMETER(effect_name);
             *((int*)this->data) = 0;
         }
 };

@@ -116,6 +116,19 @@ class effect_parameter {
         virtual void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) = 0;
 
         /**
+         * Called by the parent element (effect or parameter), after creation of the parameter by the factory.
+         * Used to get references to other parameters or to the effect or shader.
+         * @param effect
+         * @param shader
+         * @param effect_path
+         */
+        virtual void initialize_params_post(const shadertastic_effect_t *effect, const effect_shader *shader, const std::string &effect_path) {
+            UNUSED_PARAMETER(effect);
+            UNUSED_PARAMETER(shader);
+            UNUSED_PARAMETER(effect_path);
+        }
+
+        /**
          * This is where you should set the defaults as explicitly specified in the metadata.
          * See also initialize_params for details about the defaults
          * @param settings
@@ -132,11 +145,24 @@ class effect_parameter {
 
         /**
          * Update function of the parameter, will be called when a filter is loaded or when the
-         * value is changed through the UI or an OBS internal call.
+         * effect settings are changed through the UI or an OBS internal call.
+         * This function should update the internal state of the parameter to reflect any value change for its given settings.
          * @param settings
          * @param full_param_name
          */
-        virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) = 0;
+        virtual void set_data_from_settings(obs_data_t *settings, const char *effect_name) = 0;
+
+        /**
+         * Update function of the parameter, will be called when the effect settings change.
+         * Does nothing by default
+         * @param settings
+         * @param full_param_name
+         */
+        virtual void update_ui(obs_data_t *settings, const char *effect_name) {
+            UNUSED_PARAMETER(settings);
+            UNUSED_PARAMETER(effect_name);
+            /* does nothing by default */
+        }
 
         [[nodiscard]] std::string get_name() {
             return name;

@@ -68,15 +68,17 @@ class effect_parameter_color_alpha : public effect_parameter {
             obs_data_set_default_int(settings, full_param_name, default_value);
         }
 
-        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
-            auto prop = obs_properties_add_color_alpha(props, full_param_name, label.c_str());
+        void render_property_ui(const char *effect_name, obs_properties_t *props) override {
+            std::string full_param_name = get_full_param_name(effect_name);
+            auto prop = obs_properties_add_color_alpha(props, full_param_name.c_str(), label.c_str());
             if (!description.empty()) {
                 obs_property_set_long_description(prop, obs_module_text(description.c_str()));
             }
         }
 
-        void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
-            vec4_from_rgba(&this->selected_color, (uint32_t)obs_data_get_int(settings, full_param_name));
+        void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
+            std::string full_param_name = get_full_param_name(effect_name);
+            vec4_from_rgba(&this->selected_color, (uint32_t)obs_data_get_int(settings, full_param_name.c_str()));
         }
 
         void try_gs_set_val() override {

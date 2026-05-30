@@ -90,7 +90,8 @@ class effect_parameter_time : public effect_parameter {
             obs_data_set_default_bool(settings, get_full_subparam_name_static(full_param_name, std::string("reset_on_show")).c_str(), false);
         }
 
-        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
+        void render_property_ui(const char *effect_name, obs_properties_t *props) override {
+            std::string full_param_name = get_full_param_name(effect_name);
             if (show_speed_ui) {
                 obs_properties_add_float_slider(props, get_full_subparam_name_static(full_param_name, "speed").c_str(), speed_label.c_str(),
                     min_speed, max_speed, 0.001);
@@ -116,11 +117,12 @@ class effect_parameter_time : public effect_parameter {
             }
         }
 
-        void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
+        void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
+            std::string full_param_name = get_full_param_name(effect_name);
             if (reset_on_show_type == CHOICE_PROMPT) {
-                reset_on_show = obs_data_get_bool(settings, get_full_subparam_name_static(full_param_name, "reset_on_show").c_str());
+                reset_on_show = obs_data_get_bool(settings, get_full_subparam_name_static(full_param_name.c_str(), "reset_on_show").c_str());
             }
-            speed = (float)obs_data_get_double(settings, get_full_subparam_name_static(full_param_name, "speed").c_str());
+            speed = (float)obs_data_get_double(settings, get_full_subparam_name_static(full_param_name.c_str(), "speed").c_str());
         }
 };
 

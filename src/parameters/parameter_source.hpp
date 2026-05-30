@@ -91,8 +91,9 @@ class effect_parameter_source : public effect_parameter {
             UNUSED_PARAMETER(full_param_name);
         }
 
-        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
-            obs_property_t *p = obs_properties_add_list(props, full_param_name, label.c_str(), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+        void render_property_ui(const char *effect_name, obs_properties_t *props) override {
+            std::string full_param_name = get_full_param_name(effect_name);
+            obs_property_t *p = obs_properties_add_list(props, full_param_name.c_str(), label.c_str(), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
             std::list<std::string> sources_list;
             obs_enum_sources(effect_parameter_source_add, &sources_list);
             obs_enum_scenes(effect_parameter_source_add, &sources_list);
@@ -106,7 +107,8 @@ class effect_parameter_source : public effect_parameter {
             }
         }
 
-        void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
+        void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
+            std::string full_param_name = get_full_param_name(effect_name);
             if (this->source != nullptr) {
                 this->hide();
                 #ifdef DEV_MODE
@@ -120,18 +122,18 @@ class effect_parameter_source : public effect_parameter {
                 this->source = nullptr;
             }
 
-            obs_source_t *ref_source = obs_get_source_by_name(obs_data_get_string(settings, full_param_name));
+            obs_source_t *ref_source = obs_get_source_by_name(obs_data_get_string(settings, full_param_name.c_str()));
             if (ref_source != nullptr) {
                 this->source = obs_source_get_weak_source(ref_source);
                 obs_source_release(ref_source);
             }
 
             if (this->source != nullptr) {
-                debug("Acquired source %s", obs_data_get_string(settings, full_param_name));
+                debug("Acquired source %s", obs_data_get_string(settings, full_param_name.c_str()));
                 this->show();
             }
             else {
-                debug("Cannot Acquire source %s", obs_data_get_string(settings, full_param_name));
+                debug("Cannot Acquire source %s", obs_data_get_string(settings, full_param_name.c_str()));
             }
         }
 
