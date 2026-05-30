@@ -51,6 +51,7 @@ struct shadertastic_transition : public shadertastic_common {
                 effect.release();
             }
             delete this->effects;
+            this->effects = nullptr;
         }
     }
 };
@@ -72,6 +73,7 @@ struct shadertastic_filter : public shadertastic_common {
                 effect.release();
             }
             delete this->effects;
+            this->effects = nullptr;
         }
     }
 };
