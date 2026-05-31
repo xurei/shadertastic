@@ -36,6 +36,8 @@ class effect_parameter_image : public effect_parameter {
         std::vector<effect_parameter_image_value> values;
         bool allow_custom{};
         bool hidden{};
+        obs_property_t *ui_prop{nullptr};
+        obs_property_t *ui_filepicker_prop{nullptr};
 
         std::string path;
         gs_texture_t * texture;
@@ -129,21 +131,23 @@ class effect_parameter_image : public effect_parameter {
 
             // If values are present, show a list widget to select them
             if (with_values) {
-                obs_property_t *list_ui = obs_properties_add_list(
+                ui_prop = obs_properties_add_list(
                     props,
                     full_param_name.c_str(),
                     label.c_str(),
                     OBS_COMBO_TYPE_LIST,
                     OBS_COMBO_FORMAT_STRING
                 );
-                obs_property_set_visible(list_ui, !hidden);
+                obs_property_set_visible(ui_prop, !hidden);
 
                 for (size_t i=0; i < values.size(); ++i) {
-                    obs_property_list_add_string(list_ui, values[i].label.c_str(), values[i].value.c_str());
+                    obs_property_list_add_string(ui_prop, values[i].label.c_str(), values[i].value.c_str());
                 }
                 if (allow_custom) {
-                    obs_property_list_add_string(list_ui, "Use custom file", "__CUSTOM__");
-                    obs_property_set_modified_callback(list_ui, [](obs_properties_t *props, obs_property_t *property, obs_data_t *settings) {
+                    obs_property_list_add_string(ui_prop, "Use custom file", "__CUSTOM__");
+
+                    // FIXME Maybe we should use obs_property_add_modified_callback2 here, but actually it is not allowed to use conditionals with string
+                    obs_property_set_modified_callback(ui_prop, [](obs_properties_t *props, obs_property_t *property, obs_data_t *settings) {
                         const char *full_param_name = obs_property_name(property);
 
                         std::string new_value = std::string(obs_data_get_string(settings, full_param_name));
@@ -166,7 +170,7 @@ class effect_parameter_image : public effect_parameter {
             // It will be masked if values are present and the "Select File..." item is not selected
             if (allow_custom) {
                 std::string full_param_name_filepicker = std::string(full_param_name) + "__custom";
-                obs_properties_add_path(
+                ui_filepicker_prop = obs_properties_add_path(
                     props,
                     with_values ? full_param_name_filepicker.c_str() : full_param_name.c_str(),
                     with_values ? "∟ Custom file" : label.c_str(),
@@ -180,6 +184,18 @@ class effect_parameter_image : public effect_parameter {
             //if (!description.empty()) {
             //    obs_property_set_long_description(filepicker, obs_module_text(description.c_str()));
             //}
+        }
+
+        void set_visible(const bool visible) override {
+            if (ui_prop != nullptr) {
+                obs_property_set_visible(ui_prop, visible && !hidden);
+            }
+            if (ui_filepicker_prop != nullptr) {
+                obs_property_set_visible(ui_filepicker_prop, visible && !hidden);
+            }
+        }
+        [[nodiscard]] virtual bool is_visible() const override {
+            return obs_property_visible(ui_prop);
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {

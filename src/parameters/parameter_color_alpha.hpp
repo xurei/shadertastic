@@ -25,6 +25,7 @@ class effect_parameter_color_alpha : public effect_parameter {
     private:
         uint32_t default_value = (uint32_t)0xFF000000;
         vec4 selected_color{};
+        obs_property_t *ui_prop{nullptr};
 
         // Function to convert an RGBA string to an integer
         static int rgba_string_to_int(std::string rgba) {
@@ -72,10 +73,19 @@ class effect_parameter_color_alpha : public effect_parameter {
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {
             std::string full_param_name = get_full_param_name(effect_name);
-            auto prop = obs_properties_add_color_alpha(props, full_param_name.c_str(), label.c_str());
+            ui_prop = obs_properties_add_color_alpha(props, full_param_name.c_str(), label.c_str());
             if (!description.empty()) {
-                obs_property_set_long_description(prop, obs_module_text(description.c_str()));
+                obs_property_set_long_description(ui_prop, obs_module_text(description.c_str()));
             }
+        }
+
+        void set_visible(const bool visible) override {
+            if (ui_prop != nullptr) {
+                obs_property_set_visible(ui_prop, visible);
+            }
+        }
+        [[nodiscard]] virtual bool is_visible() const override {
+            return obs_property_visible(ui_prop);
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {

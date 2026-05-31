@@ -28,6 +28,7 @@ class effect_parameter_float : public effect_parameter {
         double param_min{};
         double param_max{};
         double param_step{};
+        obs_property_t *ui_prop{nullptr};
 
     public:
         explicit effect_parameter_float(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
@@ -38,6 +39,7 @@ class effect_parameter_float : public effect_parameter {
         }
 
         void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
+
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
             json_t *slider_json = json_object_get(metadata, "slider");
@@ -59,21 +61,29 @@ class effect_parameter_float : public effect_parameter {
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {
             std::string full_param_name = get_full_param_name(effect_name);
-            obs_property_t *prop;
             if (is_slider) {
-                prop = obs_properties_add_float_slider(props, full_param_name.c_str(), label.c_str(), param_min, param_max, param_step);
+                ui_prop = obs_properties_add_float_slider(props, full_param_name.c_str(), label.c_str(), param_min, param_max, param_step);
             }
             else {
-                prop = obs_properties_add_float(props, full_param_name.c_str(), label.c_str(), param_min, param_max, param_step);
+                ui_prop = obs_properties_add_float(props, full_param_name.c_str(), label.c_str(), param_min, param_max, param_step);
             }
             if (!description.empty()) {
-                obs_property_set_long_description(prop, obs_module_text(description.c_str()));
+                obs_property_set_long_description(ui_prop, obs_module_text(description.c_str()));
             }
+        }
+
+        void set_visible(const bool visible) override {
+            if (ui_prop != nullptr) {
+                obs_property_set_visible(ui_prop, visible);
+            }
+        }
+        [[nodiscard]] virtual bool is_visible() const override {
+            return obs_property_visible(ui_prop);
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
             std::string full_param_name = get_full_param_name(effect_name);
-            debug("%s", obs_data_get_json(settings));
+            //debug("%s", obs_data_get_json(settings));
             *((float*)this->data) = (float)obs_data_get_double(settings, full_param_name.c_str());
             //debug("%s = %f", full_param_name, *((float*)this->data));
         }

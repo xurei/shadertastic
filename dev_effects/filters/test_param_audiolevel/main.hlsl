@@ -7,30 +7,37 @@ uniform float upixel;          // Width of a pixel in the UV space
 uniform float vpixel;          // Height of a pixel in the UV space
 uniform float rand_seed;       // Seed for random functions
 uniform int current_step;      // index of current step (for multistep effects)
-uniform int nb_steps;          // number of steps (for multistep effects)
 */
 
 // Specific parameters of the shader. They must be defined in the meta.json file next to this one.
-uniform float val1;
-uniform float val2;
-uniform bool val3;
-uniform float valG1;
-uniform float valG2;
+uniform float audio_level;
+uniform float audio_threshold;
 //----------------------------------------------------------------------------------------------------------------------
 
-// Samplers: these define how the texture pixels are interpolated when you sample them.
-// Two samplers are defined by default: textureSampler and pointSampler.
-// You can adapt or remove them if you like
+// These are required objects for the shader to work.
+// You don't need to change anything here, unless you know what you are doing
 sampler_state textureSampler {
     Filter    = Linear;
-    AddressU  = Mirror;
-    AddressV  = Mirror;
-};
-sampler_state pointSampler {
-    Filter    = Point;
     AddressU  = Clamp;
     AddressV  = Clamp;
 };
+
+struct VertData {
+    float2 uv  : TEXCOORD0;
+    float4 pos : POSITION;
+};
+
+struct FragData {
+    float2 uv  : TEXCOORD0;
+};
+
+VertData VSDefault(VertData v_in)
+{
+    VertData vert_out;
+    vert_out.uv  = v_in.uv;
+    vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+    return vert_out;
+}
 //----------------------------------------------------------------------------------------------------------------------
 
 bool inside_box(float2 v, float2 left_top, float2 right_bottom) {
@@ -155,45 +162,37 @@ bool printValue(float2 uv, float value_to_debug, float2 area_topRight, int nbDec
     return false;
 }
 
+//Here goes your implementation !
+
 float4 EffectLinear(float2 uv)
 {
-    if (printValue(uv, valG2, float2(0.99, 0.01), 3, 0.2)) {
+    if (printValue(uv, audio_level, float2(0.99, 0.01), 3, 0.2)) {
         return float4(0.0, 1.0, 0.0, 1.0);
     }
-    if (printValue(uv, valG1, float2(0.99, 0.21), 3, 0.2)) {
-        return float4(0.0, 1.0, 0.0, 1.0);
+    if (uv[0] > 0.99) {
+        float4 px = float4(0.0, 0.0, 0.0, 1.0);
+        float lvl = 100.0 + audio_level - (100.0 + audio_threshold);
+        if (lvl < 0.0) {
+            lvl = 0.0;
+        }
+        lvl = 1.0 - lvl / (-1.0 * audio_threshold);
+        if (lvl < uv[1]) {
+            px = float4(1.0, 1.0, 1.0, 1.0);
+        }
+        return px;
     }
-    // -----> THE CODE OF THE EFFECT GOES HERE <-----
-
-    // Here is a basic example that will flip the image
-    return image.Sample(textureSampler, uv);
+    else {
+        return image.Sample(textureSampler, uv);
+    }
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-// These are required objects and functions for the shader to work in OBS.
 // You probably don't want to change anything from this point.
-
-struct FragData {
-    float2 uv  : TEXCOORD0;
-};
-
-struct VertData {
-    float2 uv  : TEXCOORD0;
-    float4 pos : POSITION;
-};
 
 float4 PSEffect(FragData f_in) : TARGET
 {
     float4 rgba = EffectLinear(f_in.uv);
     return rgba;
-}
-
-VertData VSDefault(VertData v_in)
-{
-    VertData vert_out;
-    vert_out.uv  = v_in.uv;
-    vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
-    return vert_out;
 }
 
 technique Draw

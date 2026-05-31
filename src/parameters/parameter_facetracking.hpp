@@ -60,7 +60,7 @@ class effect_parameter_facetracking : public effect_parameter {
         }
 
         void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
-            UNUSED_PARAMETER(effect_path);
+                        UNUSED_PARAMETER(effect_path);
 
             std::string face_found = get_full_subparam_name_static(name, PARAM_STR_FACE_FOUND);
             std::string bbox_tl = get_full_subparam_name_static(name, PARAM_STR_BOX_TL);
@@ -139,6 +139,13 @@ class effect_parameter_facetracking : public effect_parameter {
             UNUSED_PARAMETER(effect_name);
             UNUSED_PARAMETER(props);
             // TODO faudrait ptetre mettre un message de warning, ou alors si on fait le truc de recyclage mais faut guider l'user
+        }
+
+        void set_visible(const bool visible) override {
+            UNUSED_PARAMETER(visible);
+        }
+        [[nodiscard]] virtual bool is_visible() const override {
+            return true;
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {

@@ -10,7 +10,7 @@
   "parameters": [
     {
       "type": "facetracking",
-      "name": "face"
+      "name": "fd"
     },
     {
       "name": "show_mesh_face",

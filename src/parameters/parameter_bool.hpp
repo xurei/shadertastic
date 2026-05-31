@@ -24,6 +24,7 @@
 class effect_parameter_bool : public effect_parameter {
     private:
         bool default_value{};
+        obs_property_t *ui_prop{nullptr};
 
     public:
         // Note: the shaders need a 4-byte data for booleans, this is NOT a mistake to use sizeof(int).
@@ -48,16 +49,25 @@ class effect_parameter_bool : public effect_parameter {
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {
             std::string full_param_name = get_full_param_name(effect_name);
-            obs_property_t *list_ui = obs_properties_add_list(
+            ui_prop = obs_properties_add_list(
                 props, full_param_name.c_str(), label.c_str(),
                 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_BOOL
             );
-            obs_property_list_add_bool(list_ui, "✓ Yes", true);
-            obs_property_list_add_bool(list_ui, "✕ No", false);
+            obs_property_list_add_bool(ui_prop, "✓ Yes", true);
+            obs_property_list_add_bool(ui_prop, "✕ No", false);
 
             if (!description.empty()) {
-                obs_property_set_long_description(list_ui, obs_module_text(description.c_str()));
+                obs_property_set_long_description(ui_prop, obs_module_text(description.c_str()));
             }
+        }
+
+        void set_visible(const bool visible) override {
+            if (ui_prop != nullptr) {
+                obs_property_set_visible(ui_prop, visible);
+            }
+        }
+        [[nodiscard]] virtual bool is_visible() const override {
+            return obs_property_visible(ui_prop);
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {

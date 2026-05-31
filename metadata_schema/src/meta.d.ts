@@ -7,6 +7,35 @@ type ColorARGB = `#${string}`;
  */
 type ColorRGB = `#${string}`;
 
+type param_condition_member = boolean | number | string;
+type param_condition_not = {
+    "not": Array<param_condition>
+};
+type param_condition_and = {
+    "and": Array<param_condition>
+};
+type param_condition_or = {
+    "or": Array<param_condition>
+};
+type param_condition_comp = [
+    param_condition_member,
+    (
+        '==' | "eq" |
+        "!=" | 'ne' | 'neq' |
+        '>'  | 'gt' |
+        '>=' | 'gte' |
+        '<'  | 'lt' |
+        '<=' | 'lte'
+    ),
+    param_condition_member
+];
+type param_condition = (
+    param_condition_or |
+    param_condition_and |
+    param_condition_not |
+    param_condition_comp
+);
+
 type param_common = {
     /**
      * Name of the field. It *must* be the same as the associated variable in the shader.
@@ -24,6 +53,11 @@ type param_common = {
      * Description of the field. It will be shown in the UI.
      */
     description?: string,
+
+    /**
+     * Condition for display
+     */
+    if?: param_condition,
 
     /**
      * If set to true, this field will only be available in the property UI if
@@ -114,7 +148,7 @@ type param_facetracking = param_common & {
      * - R: index of the triangle in the face mesh
      * - G,B: Barycentric coordinates of the point, for texturing
      */
-    use_preraster: boolean,
+    use_preraster?: boolean,
     // /**
     //  * Allow to chain the result of the face tracking to the next filter.
     //  * If enabled, the face tracking algorithm will not be applied again on posterior filters. Instead, the result of
@@ -196,28 +230,7 @@ type param_float = param_common & {
  */
 type param_group = param_common & {
     type: "group",
-    default: number,
-
-    /**
-     * Show a slider in the UI
-     * @default false
-     */
-    slider?: boolean,
-    /**
-     * Minimum value of the parameter
-     * @default 0.0
-     */
-    min?: number,
-    /**
-     * Maximum value of the parameter
-     * @default 100.0
-     */
-    max?: number,
-    /**
-     * Smaller step allowed
-     * @default 0.01
-     */
-    step?: number,
+    parameters: param[],
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -483,6 +496,7 @@ export type param = (
     param_color |
     param_facetracking |
     param_float |
+    param_group |
     param_image |
     param_int |
     param_list_int |

@@ -1,4 +1,9 @@
 {
+  "metafileVersion": 1,
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io"
+  },
   "label": "AAA Group test",
   "revision": 1,
   "steps": 1,
@@ -14,17 +19,50 @@
       "default": 10
     },
     {
+      "name": "val2",
+      "label": "val2",
+      "type": "float",
+      "slider": true,
+      "min": 0,
+      "max": 100,
+      "default": 10
+    },
+    {
+      "name": "val3",
+      "label": "val3",
+      "type": "bool",
+      "default": false
+    },
+    {
       "name": "group1",
-      "label": "Group 1",
+      "label": "Val1 <= 10",
       "type": "group",
-      "if": "float",
-      "param": "val1",
-      "condition": "greater",
-      "value": 10,
+      "if": {
+        "and": [
+          [ "val1", "<=", 10 ]
+        ]
+      },
       "parameters": [
         {
-          "name": "val2",
-          "label": "val2",
+          "name": "valG1",
+          "label": "valG1",
+          "type": "float",
+          "slider": true,
+          "min": 0,
+          "max": 100,
+          "default": 10
+        }
+      ]
+    },
+    {
+      "name": "group2",
+      "label": "Val1 > 10",
+      "type": "group",
+      "if": [ "val1", ">", 10 ],
+      "parameters": [
+        {
+          "name": "valG2",
+          "label": "valG2",
           "type": "float",
           "slider": true,
           "min": 0,

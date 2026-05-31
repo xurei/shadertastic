@@ -20,9 +20,12 @@
 
 #include <jansson.h>
 #include "parameter_datatype.hpp"
-#include "../try_gs_effect_set.h"
-#include "../shadertastic_common.hpp"
-#include "../shader/shader.h"
+#include "src/condition/collect_strings.h"
+#include "src/condition/condition_parser.h"
+#include "src/shader/shader.h"
+#include "src/shadertastic_common.hpp"
+#include "src/try_gs_effect_set.h"
+#include "src/util/obs_property_add_modified_callback2.h"
 
 inline static std::string get_full_param_name_static(const std::string &effect_name, const std::string &param_name) {
     return effect_name + '.' + param_name;
@@ -43,6 +46,9 @@ inline static double json_number_value_or(json_t *value, double default_value) {
 }
 
 class effect_parameter {
+    private:
+        std::unique_ptr<condition_t> condition;
+
     protected:
         void *data;
         gs_eparam_t *shader_param;
@@ -89,7 +95,7 @@ class effect_parameter {
             return devmode;
         }
 
-        void load_common_fields(json_t *metadata) {
+        void load_common_fields(const std::string &effect_name, json_t *metadata) {
             json_t *name_json = json_object_get(metadata, "name");
             if (json_is_string(name_json)) {
                 name = json_string_value(name_json);
@@ -116,6 +122,13 @@ class effect_parameter {
 
             json_t *devmode_json = json_object_get(metadata, "devmode");
             devmode = json_is_boolean(devmode_json) ? json_boolean_value(devmode_json) : false;
+
+            json_t *if_param = json_object_get(metadata, "if");
+            condition = parse_condition(effect_name, if_param);
+
+            if (condition != nullptr) {
+                debug("if node found");
+            }
         }
 
         virtual void tick(shadertastic_common *s) {
@@ -141,19 +154,6 @@ class effect_parameter {
         virtual void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) = 0;
 
         /**
-         * Called by the parent element (effect or parameter), after creation of the parameter by the factory.
-         * Used to get references to other parameters or to the effect or shader.
-         * @param effect
-         * @param shader
-         * @param effect_path
-         */
-        virtual void initialize_params_post(const shadertastic_effect_t *effect, const effect_shader *shader, const std::string &effect_path) {
-            UNUSED_PARAMETER(effect);
-            UNUSED_PARAMETER(shader);
-            UNUSED_PARAMETER(effect_path);
-        }
-
-        /**
          * This is where you should set the defaults as explicitly specified in the metadata.
          * See also initialize_params for details about the defaults
          * @param settings
@@ -169,6 +169,52 @@ class effect_parameter {
         virtual void render_property_ui(const char *effect_name, obs_properties_t *props) = 0;
 
         /**
+         * Set visibility of the parameter inputs the UI in the OBS view
+         * @param visible
+         */
+        virtual void set_visible(bool visible) = 0;
+
+        /**
+         * Get visibility of the parameter inputs the UI in the OBS view
+         * @param visible
+         */
+        [[nodiscard]] virtual bool is_visible() const = 0;
+
+        /**
+         * Apply the visibility conditions and register the event listeners
+         * @param effect_name
+         * @param props
+         */
+        virtual void apply_visibility_condition(obs_properties_t *props) {
+            if (condition != nullptr) {
+                debug("if node found");
+                std::vector<std::string> referenced_param_names;
+                collect_strings_from_condition(condition.get(), referenced_param_names);
+
+                for (std::string &referenced_param_name : referenced_param_names) {
+                    debug("PARAM: %s", referenced_param_name.c_str());
+                    auto p = obs_properties_get(props, referenced_param_name.c_str());
+                    debug("prop: %p", p);
+                    obs_property_add_modified_callback2(p, [](void *self_, obs_properties_t *props, obs_property_t *property, obs_data_t *settings) {
+                        UNUSED_PARAMETER(props);
+                        UNUSED_PARAMETER(property);
+                        debug("obs_property_set_modified_callback2 B");
+                        auto *self = static_cast<effect_parameter *>(self_);
+                        if (!self) {
+                            return false;
+                        }
+                        bool should_be_visible = self->condition->check(settings);
+                        bool currently_visible = self->is_visible();
+                        self->set_visible(should_be_visible);
+                        return (should_be_visible != currently_visible);
+                    }, (void *) this);
+                }
+
+                debug("%lu params used in condition", referenced_param_names.size());
+            }
+        }
+
+        /**
          * Update function of the parameter, will be called when a filter is loaded or when the
          * effect settings are changed through the UI or an OBS internal call.
          * This function should update the internal state of the parameter to reflect any value change for its given settings.
@@ -176,18 +222,6 @@ class effect_parameter {
          * @param full_param_name
          */
         virtual void set_data_from_settings(obs_data_t *settings, const char *effect_name) = 0;
-
-        /**
-         * Update function of the parameter, will be called when the effect settings change.
-         * Does nothing by default
-         * @param settings
-         * @param full_param_name
-         */
-        virtual void update_ui(obs_data_t *settings, const char *effect_name) {
-            UNUSED_PARAMETER(settings);
-            UNUSED_PARAMETER(effect_name);
-            /* does nothing by default */
-        }
 
         [[nodiscard]] std::string get_name() {
             return name;

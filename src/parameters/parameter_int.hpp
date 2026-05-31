@@ -28,6 +28,7 @@ class effect_parameter_int : public effect_parameter {
         int param_min{};
         int param_max{};
         int param_step{};
+        obs_property_t *ui_prop{nullptr};
 
     public:
         explicit effect_parameter_int(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
@@ -58,17 +59,25 @@ class effect_parameter_int : public effect_parameter {
         }
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {
-            obs_property_t *prop;
             std::string full_param_name = get_full_param_name(effect_name);
             if (is_slider) {
-                prop = obs_properties_add_int_slider(props, full_param_name.c_str(), label.c_str(), param_min, param_max, param_step);
+                ui_prop = obs_properties_add_int_slider(props, full_param_name.c_str(), label.c_str(), param_min, param_max, param_step);
             }
             else {
-                prop = obs_properties_add_int(props, full_param_name.c_str(), label.c_str(), param_min, param_max, param_step);
+                ui_prop = obs_properties_add_int(props, full_param_name.c_str(), label.c_str(), param_min, param_max, param_step);
             }
             if (!description.empty()) {
-                obs_property_set_long_description(prop, obs_module_text(description.c_str()));
+                obs_property_set_long_description(ui_prop, obs_module_text(description.c_str()));
             }
+        }
+
+        void set_visible(const bool visible) override {
+            if (ui_prop != nullptr) {
+                obs_property_set_visible(ui_prop, visible);
+            }
+        }
+        [[nodiscard]] virtual bool is_visible() const override {
+            return obs_property_visible(ui_prop);
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {

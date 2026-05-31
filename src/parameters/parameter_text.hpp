@@ -22,6 +22,8 @@
 #include "parameter.hpp"
 
 class effect_parameter_text : public effect_parameter {
+    private:
+        obs_property_t *ui_prop{nullptr};
     public:
         std::string value;
 
@@ -47,12 +49,21 @@ class effect_parameter_text : public effect_parameter {
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {
             std::string full_param_name = get_full_param_name(effect_name);
-            obs_properties_add_text(
+            ui_prop = obs_properties_add_text(
                 props,
                 full_param_name.c_str(),
                 value.c_str(),
                 OBS_TEXT_INFO
             );
+        }
+
+        void set_visible(const bool visible) override {
+            if (ui_prop != nullptr) {
+                obs_property_set_visible(ui_prop, visible);
+            }
+        }
+        [[nodiscard]] virtual bool is_visible() const override {
+            return obs_property_visible(ui_prop);
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {

@@ -15,18 +15,26 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#ifndef SHADERTASTIC_PARAMETER_FACTORY_H
-#define SHADERTASTIC_PARAMETER_FACTORY_H
+#ifndef SHADERTASTIC_CONDITION_VALUE_H
+#define SHADERTASTIC_CONDITION_VALUE_H
 
-#include "parameter.hpp"
-#include <jansson.h>
+#include <optional>
+#include <variant>
 
-class effect_parameter_factory {
-    public:
-        static effect_parameter *create(const std::string &effect_name, const std::string &effect_path, const effect_shader *main_shader, json_t *param_metadata);
+#include "condition.hpp"
 
-    private:
-        static effect_param_datatype effect_parse_datatype(const char *datatype_str);
+struct condition_parameter_reader {
+    [[nodiscard]] static std::optional<condition_value> read(const condition_member &member_, [[maybe_unused]] const obs_data_t *settings);
+
+    [[nodiscard]] static std::optional<double> as_number(const condition_value &value);
+
+    [[nodiscard]] static bool equal(const condition_value &current, const condition_value &expected);
+
+    [[nodiscard]] static std::optional<double> compare_numbers(
+        const condition_member &actual,
+        const condition_member &expected,
+        const obs_data_t *settings
+    );
 };
 
-#endif // SHADERTASTIC_PARAMETER_FACTORY_H
+#endif // SHADERTASTIC_CONDITION_VALUE_H

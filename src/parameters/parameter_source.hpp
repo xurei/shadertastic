@@ -46,6 +46,7 @@ class effect_parameter_source : public effect_parameter {
         struct vec4 clear_color{0,0,0,0};
         bool source_rendered = false;
         gs_eparam_t *param_texture_size{};
+        obs_property_t *ui_prop{nullptr};
 
     public:
         explicit effect_parameter_source(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
@@ -80,7 +81,7 @@ class effect_parameter_source : public effect_parameter {
         }
 
         void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
-            UNUSED_PARAMETER(metadata);
+                        UNUSED_PARAMETER(metadata);
             UNUSED_PARAMETER(effect_path);
 
             param_texture_size = shader->get_param_by_name(get_full_subparam_name_static(name, PARAM_STR_SIZE).c_str());
@@ -93,18 +94,27 @@ class effect_parameter_source : public effect_parameter {
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {
             std::string full_param_name = get_full_param_name(effect_name);
-            obs_property_t *p = obs_properties_add_list(props, full_param_name.c_str(), label.c_str(), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+            ui_prop = obs_properties_add_list(props, full_param_name.c_str(), label.c_str(), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
             std::list<std::string> sources_list;
             obs_enum_sources(effect_parameter_source_add, &sources_list);
             obs_enum_scenes(effect_parameter_source_add, &sources_list);
             sources_list.sort(compare_nocase);
-            obs_property_list_add_string(p, "-- Choose one --", "");
+            obs_property_list_add_string(ui_prop, "-- Choose one --", "");
             for (const std::string &str: sources_list) {
-                obs_property_list_add_string(p, str.c_str(), str.c_str());
+                obs_property_list_add_string(ui_prop, str.c_str(), str.c_str());
             }
             if (!description.empty()) {
-                obs_property_set_long_description(p, obs_module_text(description.c_str()));
+                obs_property_set_long_description(ui_prop, obs_module_text(description.c_str()));
             }
+        }
+
+        void set_visible(const bool visible) override {
+            if (ui_prop != nullptr) {
+                obs_property_set_visible(ui_prop, visible);
+            }
+        }
+        [[nodiscard]] virtual bool is_visible() const override {
+            return obs_property_visible(ui_prop);
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {

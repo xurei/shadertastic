@@ -89,6 +89,13 @@ class effect_parameter_prev_frame : public effect_parameter {
             /* Automatic parameter, no UI */
         }
 
+        void set_visible(const bool visible) override {
+            UNUSED_PARAMETER(visible);
+        }
+        [[nodiscard]] virtual bool is_visible() const override {
+            return true;
+        }
+
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
             UNUSED_PARAMETER(settings);
             UNUSED_PARAMETER(effect_name);

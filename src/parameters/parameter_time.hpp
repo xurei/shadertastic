@@ -29,15 +29,17 @@ enum effect_parameter_time_reset_t {
 
 class effect_parameter_time : public effect_parameter {
     private:
-    effect_parameter_time_reset_t reset_on_show_type{CHOICE_NO};
-    bool reset_on_show{false};
-    bool show_speed_ui{true};
-    float *time;
-    float speed;
-    float min_speed;
-    float max_speed;
-    float default_speed;
-    std::string speed_label;
+        effect_parameter_time_reset_t reset_on_show_type{CHOICE_NO};
+        bool reset_on_show{false};
+        bool show_speed_ui{true};
+        float *time;
+        float speed;
+        float min_speed;
+        float max_speed;
+        float default_speed;
+        std::string speed_label;
+        obs_property_t *ui_speed_prop{nullptr};
+        obs_property_t *ui_reset_prop{nullptr};
 
     public:
         explicit effect_parameter_time(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param), time((float*)this->data) {
@@ -95,17 +97,28 @@ class effect_parameter_time : public effect_parameter {
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {
             std::string full_param_name = get_full_param_name(effect_name);
             if (show_speed_ui) {
-                obs_properties_add_float_slider(props, get_full_subparam_name_static(full_param_name, "speed").c_str(), speed_label.c_str(),
-                    min_speed, max_speed, 0.001);
+                ui_speed_prop = obs_properties_add_float_slider(props, get_full_subparam_name_static(full_param_name, "speed").c_str(), speed_label.c_str(), min_speed, max_speed, 0.001);
             }
             if (reset_on_show_type == CHOICE_PROMPT) {
-                obs_property_t *list_ui = obs_properties_add_list(
+                ui_reset_prop = obs_properties_add_list(
                     props, get_full_subparam_name_static(full_param_name, "reset_on_show").c_str(), "On filter visibility toggle:",
                     OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_BOOL
                 );
-                obs_property_list_add_bool(list_ui, "Do nothing", false);
-                obs_property_list_add_bool(list_ui, "Reset time to zero", true);
+                obs_property_list_add_bool(ui_reset_prop, "Do nothing", false);
+                obs_property_list_add_bool(ui_reset_prop, "Reset time to zero", true);
             }
+        }
+
+        void set_visible(const bool visible) override {
+            if (ui_speed_prop != nullptr) {
+                obs_property_set_visible(ui_speed_prop, visible);
+            }
+            if (ui_reset_prop != nullptr) {
+                obs_property_set_visible(ui_reset_prop, visible);
+            }
+        }
+        [[nodiscard]] virtual bool is_visible() const override {
+            return obs_property_visible(ui_speed_prop) || obs_property_visible(ui_reset_prop);
         }
 
         void tick(shadertastic_common *s) override {
@@ -122,9 +135,9 @@ class effect_parameter_time : public effect_parameter {
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
             std::string full_param_name = get_full_param_name(effect_name);
             if (reset_on_show_type == CHOICE_PROMPT) {
-                reset_on_show = obs_data_get_bool(settings, get_full_subparam_name_static(full_param_name.c_str(), "reset_on_show").c_str());
+                reset_on_show = obs_data_get_bool(settings, get_full_subparam_name_static(full_param_name, "reset_on_show").c_str());
             }
-            speed = (float)obs_data_get_double(settings, get_full_subparam_name_static(full_param_name.c_str(), "speed").c_str());
+            speed = (float)obs_data_get_double(settings, get_full_subparam_name_static(full_param_name, "speed").c_str());
         }
 };
 

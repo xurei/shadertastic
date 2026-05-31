@@ -503,6 +503,7 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
         for (auto param: effect.effect_params) {
             std::string full_param_name = param->get_full_param_name(effect_name);
             param->render_property_ui(effect_name.c_str(), effect_group);
+            param->apply_visibility_condition(effect_group);
         }
         obs_properties_add_group(props, (effect_name + "__params").c_str(), effect_label, OBS_GROUP_NORMAL, effect_group);
         obs_property_set_visible(obs_properties_get(props, (effect_name + "__params").c_str()), false);
