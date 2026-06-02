@@ -24,7 +24,13 @@ endif()
 
 find_package(libobs REQUIRED)
 find_package(jansson REQUIRED)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::libobs)
+
+target_link_libraries(
+        ${CMAKE_PROJECT_NAME}
+        PRIVATE
+        OBS::libobs
+        jansson::jansson
+)
 
 if(ENABLE_FRONTEND_API)
   find_package(obs-frontend-api REQUIRED)

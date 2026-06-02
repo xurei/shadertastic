@@ -38,15 +38,19 @@ class condition_bool_group: public condition_t {
     protected:
         std::vector<std::unique_ptr<condition_t>> conditions;
     public:
+        #ifndef _WIN32
         #pragma clang diagnostic push
         #pragma ide diagnostic ignored "readability-convert-member-functions-to-static"
+        #endif
         [[nodiscard]] inline auto begin() const {
             return conditions.begin();
         }
         [[nodiscard]] inline auto end() const {
             return conditions.end();
         }
+        #ifndef _WIN32
         #pragma clang diagnostic pop
+        #endif
 };
 
 class condition_leaf: public condition_t {

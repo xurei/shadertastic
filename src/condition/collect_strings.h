@@ -29,8 +29,10 @@ inline void collect_strings_from_member(const condition_member &member, std::vec
     }
 }
 
+#ifndef _WIN32
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "misc-no-recursion"
+#endif
 static void collect_strings_from_condition(const condition_t *cond, std::vector<std::string> &out) {
     if (cond == nullptr) {
         return;
@@ -57,6 +59,8 @@ static void collect_strings_from_condition(const condition_t *cond, std::vector<
         return;
     }
 }
+#ifndef _WIN32
 #pragma clang diagnostic pop
+#endif
 
 #endif // SHADERTASTIC_COLLECT_STRINGS_H
