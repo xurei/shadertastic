@@ -23,6 +23,7 @@ if(DEV_MODE)
 endif()
 
 find_package(libobs REQUIRED)
+find_package(jansson REQUIRED)
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::libobs)
 
 if(ENABLE_FRONTEND_API)

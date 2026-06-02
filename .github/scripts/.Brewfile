@@ -1,5 +1,6 @@
 brew "ccache"
 brew "coreutils"
 brew "cmake"
+brew "jansson"
 brew "jq"
 brew "xcbeautify"
