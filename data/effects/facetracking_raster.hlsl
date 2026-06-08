@@ -1,10 +1,8 @@
 uniform float4x4 ViewProj;
-//uniform texture2d image;
 
 struct VertInOut {
 	float4 pos : POSITION;
     float4 bary_id   : TEXCOORD0;
-    //float2 bary2_id : TEXCOORD1;
 };
 
 VertInOut VSDefault(VertInOut v_in)
