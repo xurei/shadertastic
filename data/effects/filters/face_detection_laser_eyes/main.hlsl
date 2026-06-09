@@ -12,6 +12,7 @@ uniform int current_step;      // index of current step (for multistep effects)
 // Specific parameters of the shader. They must be defined in the meta.json file next to this one.
 uniform bool fd_face_found;
 uniform texture2d fd_points_tex;
+uniform texture2d fd_preraster_tex;
 
 uniform float audio_level;
 uniform float audio_threshold_low;
@@ -25,6 +26,8 @@ uniform bool no_effect_if_no_sound;
 //----------------------------------------------------------------------------------------------------------------------
 
 #define PI 3.1415926535
+#define FACE_TRIANGLES_COUNT 898
+#define FACE_POINTS_COUNT 478.0
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -39,23 +42,6 @@ sampler_state pointsSampler {
     AddressU  = Clamp;
     AddressV  = Clamp;
 };
-
-struct VertData {
-    float2 uv  : TEXCOORD0;
-    float4 pos : POSITION;
-};
-
-struct FragData {
-    float2 uv  : TEXCOORD0;
-};
-
-VertData VSDefault(VertData v_in)
-{
-    VertData vert_out;
-    vert_out.uv  = v_in.uv;
-    vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
-    return vert_out;
-}
 //----------------------------------------------------------------------------------------------------------------------
 
 float3 rgb2yuv(float3 rgb) {
@@ -106,99 +92,47 @@ float2 barycentricCoordinates(float2 p1, float2 p2, float2 p3, float2 point_to_c
 }
 //----------------------------------------------------------------------------------------------------------------------
 
+int3 inside_face_triangle(int idx) {
+    float mult = 1.0 / FACE_POINTS_COUNT;
+
+    float is_second = step(FACE_POINTS_COUNT, float(idx)); // (idx >= 478) ? 1 : 0;
+    float x = float(idx) - FACE_POINTS_COUNT * is_second;
+    float y = 0.25 + 0.25*is_second;
+    float3 data = fd_points_tex.Sample(pointsSampler, float2((float(x) + 0.5) * mult, y)).xyz;
+
+    return int3(data * float3(FACE_POINTS_COUNT, FACE_POINTS_COUNT, FACE_POINTS_COUNT));
+}
+//----------------------------------------------------------------------------------------------------------------------
+
 int3 get_best_triangle(float2 uv) {
-    #ifdef _D3D11
-    static const int3 triangles[28] = {
-    #else
-    const ivec3 triangles[28] = ivec3[28](
-    #endif
-        // LEFT EYE
-        int3(  7, 163, 246),
-        int3(  7, 246,  33),
-        int3(144, 161, 163),
-        int3(144, 160, 161),
-        int3(145, 159, 160),
-        int3(161, 246, 163),
-        int3(144, 145, 160),
-        int3(145, 153, 159),
-        int3(153, 158, 159),
-        int3(153, 154, 158),
-        int3(154, 157, 158),
-        int3(154, 155, 157),
-        int3(155, 173, 157),
-        int3(133, 173, 155),
+    float4 preraster_px = fd_preraster_tex.Sample(pointsSampler, uv);
+    int best_triangle_idx = max(-1, int(preraster_px.r * FACE_TRIANGLES_COUNT));
 
-        // RIGHT EYE
-        int3(249, 263, 466),
-        int3(249, 466, 390),
-        int3(362, 382, 398),
-        int3(373, 387, 374),
-        int3(373, 388, 387),
-        int3(373, 390, 388),
-        int3(374, 386, 380),
-        int3(374, 387, 386),
-        int3(380, 385, 381),
-        int3(380, 386, 385),
-        int3(381, 384, 382),
-        int3(381, 385, 384),
-        int3(382, 384, 398),
-        int3(388, 390, 466)
-    #ifdef _D3D11
-    };
-    #else
+    bool is_inside_leye = (
+        best_triangle_idx == 38 ||
+        best_triangle_idx == 39 ||
+        best_triangle_idx == 406 ||
+        (best_triangle_idx >= 427 && best_triangle_idx <= 431) ||
+        (best_triangle_idx >= 443 && best_triangle_idx <= 447) ||
+        best_triangle_idx == 449
     );
-    #endif
+    bool is_inside_reye = (
+        best_triangle_idx == 506 ||
+        best_triangle_idx == 509 ||
+        best_triangle_idx == 821 ||
+        best_triangle_idx == 822 ||
+        best_triangle_idx == 857 ||
+        (best_triangle_idx >= 842 && best_triangle_idx <= 846) ||
+        (best_triangle_idx >= 853 && best_triangle_idx <= 856) ||
+        best_triangle_idx == 859
+    );
 
-    float2 best_uv = float2(-1.0, -1.0);
-    float best_z = 10000.0;
-    int3 best_triangle = int3(-1, -1, -1);
-    int3 prev_triangle = int3(-1, -1, -1);
-    float4 edge1;
-    float4 edge2;
-    float4 edge3;
-    for (int i=0; i<28; ++i) {
-        int3 current_triangle = triangles[i];
-        if (current_triangle[0] != prev_triangle[0]) {
-            edge1 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[0] + 0.5)/478.0, 0.0));
-        }
-        if (current_triangle[1] == prev_triangle[2]) {
-            edge2 = edge3;
-            edge3 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[2] + 0.5)/478.0, 0.0));
-        }
-        else if (current_triangle[2] == prev_triangle[1]) {
-            edge3 = edge2;
-            edge2 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[1] + 0.5)/478.0, 0.0));
-        }
-        else {
-            edge2 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[1] + 0.5)/478.0, 0.0));
-            edge3 = fd_points_tex.Sample(pointsSampler, float2((current_triangle[2] + 0.5)/478.0, 0.0));
-        }
-        prev_triangle = current_triangle;
-
-        if (uv.x < edge1.x && uv.x < edge2.x && uv.x < edge3.x) {
-            continue;
-        }
-        if (uv.x > edge1.x && uv.x > edge2.x && uv.x > edge3.x) {
-            continue;
-        }
-        if (uv.y < edge1.y && uv.y < edge2.y && uv.y < edge3.y) {
-            continue;
-        }
-        if (uv.y > edge1.y && uv.y > edge2.y && uv.y > edge3.y) {
-            continue;
-        }
-
-        float2 triangleUV = barycentricCoordinates(edge1.xy, edge2.xy, edge3.xy, uv);
-        if ((0 <= triangleUV.x && triangleUV.x <= 1) && (0 <= triangleUV.y && triangleUV.y <= 1) && (triangleUV.x + triangleUV.y <= 1)) {
-            if (edge1.z < best_z) {
-                best_triangle = current_triangle;
-                best_uv = triangleUV;
-                best_z = edge1.z;
-            }
-        }
+    if (is_inside_leye || is_inside_reye) {
+        return inside_face_triangle(best_triangle_idx);
     }
-
-    return best_triangle;
+    else {
+        return int3(-1, -1, -1);
+    }
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -345,12 +279,12 @@ float laserRay(float2 uv, float2 lineStart, float2 direction) {
 //----------------------------------------------------------------------------------------------------------------------
 
 float4 EffectLinear__step0(float2 uv) {
-    float2 positionL = fd_points_tex.Sample(pointsSampler, float2((468.5)/478.0, 0)).xy;
-    float2 positionR = fd_points_tex.Sample(pointsSampler, float2((473.5)/478.0, 0)).xy;
+    float2 positionL = fd_points_tex.Sample(pointsSampler, float2((468.5)/FACE_POINTS_COUNT, 0)).xy;
+    float2 positionR = fd_points_tex.Sample(pointsSampler, float2((473.5)/FACE_POINTS_COUNT, 0)).xy;
 
-    float2 fd_leye_top = fd_points_tex.Sample(pointsSampler, float2((470.5)/478.0, 0)).xy;
+    float2 fd_leye_top = fd_points_tex.Sample(pointsSampler, float2((470.5)/FACE_POINTS_COUNT, 0)).xy;
     float fd_leye_radius = abs(positionL.y - fd_leye_top.y);
-    float2 fd_reye_top = fd_points_tex.Sample(pointsSampler, float2((475.5)/478.0, 0)).xy;
+    float2 fd_reye_top = fd_points_tex.Sample(pointsSampler, float2((475.5)/FACE_POINTS_COUNT, 0)).xy;
     float fd_reye_radius = abs(positionR.y - fd_reye_top.y);
 
     float eye_intensity = 2.0;
@@ -408,8 +342,8 @@ float4 EffectLinear__step3(float2 uv) {
 
     float4 px_interm = tex_interm.Sample(textureSampler, uv);
 
-    float2 positionL = fd_points_tex.Sample(pointsSampler, float2((468.5)/478.0, 0)).xy;
-    float2 positionR = fd_points_tex.Sample(pointsSampler, float2((473.5)/478.0, 0)).xy;
+    float2 positionL = fd_points_tex.Sample(pointsSampler, float2((468.5)/FACE_POINTS_COUNT, 0)).xy;
+    float2 positionR = fd_points_tex.Sample(pointsSampler, float2((473.5)/FACE_POINTS_COUNT, 0)).xy;
 
     float intensityOfLaser = (
           laserIntensity(uv, positionL, flare_width, distance(positionL, positionR), 30.0 * sqrt(flare_width/0.3))
@@ -463,6 +397,23 @@ float4 EffectLinear(float2 uv) {
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
+
+struct VertData {
+    float2 uv  : TEXCOORD0;
+    float4 pos : POSITION;
+};
+
+struct FragData {
+    float2 uv  : TEXCOORD0;
+};
+
+VertData VSDefault(VertData v_in)
+{
+    VertData vert_out;
+    vert_out.uv  = v_in.uv;
+    vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+    return vert_out;
+}
 
 float4 PSEffect(FragData f_in) : TARGET
 {

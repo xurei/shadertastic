@@ -10,7 +10,8 @@
   "parameters": [
     {
       "type": "facetracking",
-      "name": "fd"
+      "name": "fd",
+      "use_preraster": true
     },
     {
       "name": "audio_level",
