@@ -1,0 +1,17 @@
+{
+  "metafileVersion": 1,
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io"
+  },
+  "label": "AAA Text test",
+  "revision": 1,
+  "steps": 1,
+  "parameters": [
+    {
+      "name": "doc_text",
+      "type": "text",
+      "value": "All the parameters and usages can be found on <br><a href=\"https://doc.shadertastic.com/effect-development/param/audiolevel/\">https://doc.shadertastic.com/effect-development/param/audiolevel/</a>"
+    }
+  ]
+}

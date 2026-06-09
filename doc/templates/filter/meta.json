@@ -1,0 +1,28 @@
+{
+  "about": {
+    "author_name": "my_author_name",
+    "author_url": "",
+    "description": "Template filter"
+  },
+  "label": "TEMPLATE - Please set the label in meta.json",
+  "metafileVersion": 1,
+  "revision": 1,
+  "steps": 1,
+  "parameters": [
+    {
+      "name": "doc_text",
+      "type": "text",
+      "value": "All the parameters and usages can be found on <br><a href=\"https://doc.shadertastic.com/effect-development/param\">https://doc.shadertastic.com/effect-development/param</a>"
+    },
+    {
+      "name": "template_float",
+      "label": "Template parameter - float",
+      "type": "float",
+      "slider": true,
+      "min": 0,
+      "max": 100,
+      "default": 10,
+      "step": 0.01
+    }
+  ]
+}
