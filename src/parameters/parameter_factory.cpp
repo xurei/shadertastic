@@ -44,7 +44,6 @@ effect_parameter * effect_parameter_factory::create(const std::string &effect_na
         param_name = json_string_value(name_json);
     }
 
-    gs_eparam_t *shader_param = main_shader->get_param_by_name(param_name);
     const char *data_type = nullptr;
     json_t *type_json = json_object_get(param_metadata, "type");
     if (json_is_string(type_json)) {
@@ -59,6 +58,7 @@ effect_parameter * effect_parameter_factory::create(const std::string &effect_na
         return nullptr;
     }
     else {
+        gs_eparam_t *shader_param = main_shader->get_param_by_name(param_name);
         effect_param_datatype datatype = effect_parse_datatype(data_type);
         effect_parameter *out;
         switch(datatype) {

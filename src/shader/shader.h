@@ -53,9 +53,9 @@ class effect_shader {
 
     std::string load(const char *shader_path);
 
-    [[nodiscard]] inline gs_eparam_t * get_param_by_name(const char *param_name) const { return gs_effect_get_param_by_name(gs_effect, param_name); }
+    [[nodiscard]] inline gs_eparam_t * get_param_by_name(const char *param_name) const { return param_name == nullptr ? nullptr : gs_effect_get_param_by_name(gs_effect, param_name); }
     [[nodiscard]] inline gs_eparam_t * get_param_by_name(const std::string &param_name) const { return get_param_by_name(param_name.c_str()); }
-    [[nodiscard]] inline gs_technique_t * get_technique(const char *tech_name) const { return gs_effect_get_technique(gs_effect, tech_name); }
+    [[nodiscard]] inline gs_technique_t * get_technique(const char *tech_name) const { return tech_name == nullptr ? nullptr : gs_effect_get_technique(gs_effect, tech_name); }
     [[nodiscard]] inline gs_technique_t * get_technique(const std::string &tech_name) const { return get_technique(tech_name.c_str()); }
 
     void render(const gs_texrender_t *texrender, const char *tech_name, uint32_t cx, uint32_t cy);
