@@ -5,16 +5,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-## [1.0.4] - 2026-05-20
+## [1.1.0] - 2026-06-09
 ### Added
-- Face Tracking: preraster mode
+- Face Tracking: preraster mode and precomputed normals
 - Dev effects: identity and group_test
+- Conditional parameters (experimental)
 
 ### Changed
 - Face tracking: Better lip and chin refinement
 - Rewritten several parts of the code for performance and clarity
 - Gaussian blur effect: rewritten for better clarity
 - Face Detection reference: darker color for lower lip; add the `preraster` texture; add param `show_eyes_balls`
+- Face Detection Laser Eyes: using preraster for better performance
+- Changed labels of face tracking effects; kept names for backward compatibility
 - ONXX: centralized session initialization in `onnxmediapipe::SessionsProvider`
 
 ### Fixed
