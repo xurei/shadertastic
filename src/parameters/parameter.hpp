@@ -47,16 +47,16 @@ inline static double json_number_value_or(json_t *value, double default_value) {
 
 class effect_parameter {
     private:
-        std::unique_ptr<condition_t> condition;
+        std::unique_ptr<condition_t> condition{};
 
     protected:
-        void *data;
-        gs_eparam_t *shader_param;
-        std::string name;
-        std::string label;
+        void *data{};
+        gs_eparam_t *shader_param{};
+        std::string name{};
+        std::string label{};
         bool devmode{};
-        std::string description;
-        size_t data_size;
+        std::string description{};
+        size_t data_size{};
 
     public:
         /**

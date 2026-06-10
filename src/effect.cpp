@@ -271,4 +271,5 @@ void shadertastic_effect_t::release() {
     for (auto effect_param: effect_params) {
         delete effect_param;
     }
+    effect_params.clear();
 }

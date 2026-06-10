@@ -33,11 +33,17 @@ class effect_parameter_group : public effect_parameter {
     private:
         double value{};
         params_list effect_params;
-        obs_properties_t *parent_props{nullptr};
         obs_property_t *ui_prop{nullptr};
 
     public:
         explicit effect_parameter_group(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
+        }
+
+        ~effect_parameter_group() override {
+            for (auto param: effect_params) {
+                delete param;
+            }
+            effect_params.clear();
         }
 
         [[nodiscard]] effect_param_datatype type() const override {
@@ -107,7 +113,6 @@ class effect_parameter_group : public effect_parameter {
                 }
             }
 
-            parent_props = props;
             ui_prop = obs_properties_add_group(props, full_param_name.c_str(), label.c_str(), OBS_GROUP_NORMAL, params_group);
             std::string param_val1 = get_full_param_name_static(effect_name, "val1");
         }
