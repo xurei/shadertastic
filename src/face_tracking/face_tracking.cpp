@@ -168,6 +168,7 @@ gs_texrender_t* face_tracking_raster_mesh_uv_gpu(
         if (raster_effect == nullptr) {
             char *raster_effect_path = obs_module_file("effects/facetracking_raster.hlsl");
             raster_effect = gs_effect_create_from_file(raster_effect_path, nullptr);
+            bfree(raster_effect_path);
         }
 
         gs_technique_t *tech = gs_effect_get_technique(raster_effect, "Draw");
