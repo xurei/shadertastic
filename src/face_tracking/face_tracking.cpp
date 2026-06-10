@@ -495,8 +495,6 @@ void face_tracking_tick(face_tracking_state *s, gs_texture_t *source_tex, const 
         debug_trace("G2 %lu", get_time_us()-tic);
         obs_enter_graphics();
         {
-            s->facedetection_texrender = gs_texrender_create(GS_RGBA32F, GS_ZS_NONE);
-
             if (!s->fd_points_texture) {
                 s->fd_points_texture = gs_texture_create(refined_landmarks_num_points, 4, GS_RGBA32F, 1, nullptr, GS_DYNAMIC);
             }
