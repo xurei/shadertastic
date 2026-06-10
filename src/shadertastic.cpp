@@ -119,6 +119,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
 
 #include "shader_filter.hpp"
 #include "shader_transition.hpp"
+#include "src/face_tracking/face_tracking_raster.h"
 //----------------------------------------------------------------------------------------------------------------------
 
 [[maybe_unused]] bool obs_module_load(void) {
@@ -210,6 +211,7 @@ bool is_module_loaded() {
     }
     obs_leave_graphics();
 
+    FaceTrackingRaster::unload();
     FaceTrackingCropShader::release();
 }
 //----------------------------------------------------------------------------------------------------------------------

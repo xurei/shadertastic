@@ -19,7 +19,6 @@
 #define SHADERTASTIC_PARAMETER_FACTORY_H
 
 #include "parameter.hpp"
-#include <jansson.h>
 
 class effect_parameter_factory {
     public:

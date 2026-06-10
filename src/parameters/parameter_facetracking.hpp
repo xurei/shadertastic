@@ -21,8 +21,9 @@
 #include <string>
 #include "parameter.hpp"
 #include "onnxmediapipe/face_landmarks_triangles.h"
-#include "../face_tracking/face_tracking_state.h"
-#include "../face_tracking/face_tracking.h"
+#include "src/face_tracking/face_tracking_state.h"
+#include "src/face_tracking/face_tracking.h"
+#include "src/face_tracking/face_tracking_raster.h"
 
 class effect_parameter_facetracking : public effect_parameter {
     private:
@@ -119,18 +120,8 @@ class effect_parameter_facetracking : public effect_parameter {
 
                 //Pre-raster texture
                 if (use_preraster) {
-                    auto *raster_texrender = face_tracking_raster_mesh_uv_gpu(
-                        face_tracking->average_results.refined_landmarks,
-                        onnxmediapipe::face_triangles,
-                        (int)cx,
-                        (int)cy
-                    );
-                    obs_enter_graphics();
-                    {
-                        gs_texture_t *fd_preraster_texture = gs_texrender_get_texture(raster_texrender);
-                        try_gs_effect_set_texture(points_tex.c_str(), param_fd_preraster_tex, fd_preraster_texture);
-                    }
-                    obs_leave_graphics();
+                    auto *fd_preraster_texture = FaceTrackingRaster::mesh_uv_gpu(face_tracking->average_results.refined_landmarks, onnxmediapipe::face_triangles, (int)cx, (int)cy);
+                    try_gs_effect_set_texture(points_tex.c_str(), param_fd_preraster_tex, fd_preraster_texture);
                 }
             }
         }
