@@ -119,9 +119,10 @@ class effect_parameter_image : public effect_parameter {
             param_texture_size = shader->get_param_by_name(texture_size.c_str());
         }
 
-        void set_default(obs_data_t *settings, const char *full_param_name) override {
-            std::string full_param_name_list = std::string(full_param_name) + "__list";
-            obs_data_set_default_string(settings, full_param_name, default_value.c_str());
+        void set_default(obs_data_t *settings, const char *effect_name) override {
+            std::string full_param_name = get_full_param_name(effect_name);
+            std::string full_param_name_list = full_param_name + "__list";
+            obs_data_set_default_string(settings, full_param_name.c_str(), default_value.c_str());
             obs_data_set_default_string(settings, full_param_name_list.c_str(), default_value.c_str());
         }
 

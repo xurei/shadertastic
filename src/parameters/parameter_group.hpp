@@ -95,10 +95,9 @@ class effect_parameter_group : public effect_parameter {
             }
         }
 
-        void set_default(obs_data_t *settings, const char *full_param_name) override {
+        void set_default(obs_data_t *settings, const char *effect_name) override {
             for (auto param: effect_params) {
-                std::string sub_full_param_name = param->get_full_param_name(full_param_name);
-                param->set_default(settings, sub_full_param_name.c_str());
+                param->set_default(settings, effect_name);
             }
         }
 
@@ -122,7 +121,7 @@ class effect_parameter_group : public effect_parameter {
                 obs_property_set_visible(ui_prop, visible);
             }
         }
-        [[nodiscard]] virtual bool is_visible() const override {
+        [[nodiscard]] bool is_visible() const override {
             return obs_property_visible(ui_prop);
         }
 
@@ -130,6 +129,12 @@ class effect_parameter_group : public effect_parameter {
             std::string full_param_name = get_full_param_name(effect_name);
             for (auto param: effect_params) {
                 param->set_data_from_settings(settings, effect_name);
+            }
+        }
+
+        void tick(shadertastic_common *s) override {
+            for (auto param: effect_params) {
+                param->tick(s);
             }
         }
 

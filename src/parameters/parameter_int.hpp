@@ -54,8 +54,9 @@ class effect_parameter_int : public effect_parameter {
             param_step = json_is_integer(step_json) ? (int)json_integer_value(step_json) : 1;
         }
 
-        void set_default(obs_data_t *settings, const char *full_param_name) override {
-            obs_data_set_default_int(settings, full_param_name, default_value);
+        void set_default(obs_data_t *settings, const char *effect_name) override {
+            std::string full_param_name = get_full_param_name(effect_name);
+            obs_data_set_default_int(settings, full_param_name.c_str(), default_value);
         }
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {

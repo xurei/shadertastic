@@ -227,15 +227,12 @@ const char *shadertastic_filter_get_name(void *type_data) {
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_effect_set_defaults(obs_data_t *settings, shadertastic_effect_t *effect) {
-    if (effect == nullptr) {
+    if (effect == nullptr || settings == nullptr) {
         return;
     }
 
-    if (settings) {
-        for (auto param: effect->effect_params) {
-            std::string full_param_name = param->get_full_param_name(effect->name.c_str());
-            param->set_default(settings, full_param_name.c_str());
-        }
+    for (auto param: effect->effect_params) {
+        param->set_default(settings, effect->name.c_str());
     }
 }
 //----------------------------------------------------------------------------------------------------------------------

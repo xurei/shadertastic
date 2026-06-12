@@ -88,9 +88,9 @@ class effect_parameter_facetracking : public effect_parameter {
             cy = obs_source_get_height(s->source);
         }
 
-        void set_default(obs_data_t *settings, const char *full_param_name) override {
+        void set_default(obs_data_t *settings, const char *effect_name) override {
             UNUSED_PARAMETER(settings);
-            UNUSED_PARAMETER(full_param_name);
+            UNUSED_PARAMETER(effect_name);
         }
 
         void try_gs_set_val() override {

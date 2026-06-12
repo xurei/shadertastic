@@ -87,9 +87,9 @@ class effect_parameter_source : public effect_parameter {
             param_texture_size = shader->get_param_by_name(get_full_subparam_name_static(name, PARAM_STR_SIZE).c_str());
         }
 
-        void set_default(obs_data_t *settings, const char *full_param_name) override {
+        void set_default(obs_data_t *settings, const char *effect_name) override {
             UNUSED_PARAMETER(settings);
-            UNUSED_PARAMETER(full_param_name);
+            UNUSED_PARAMETER(effect_name);
         }
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {

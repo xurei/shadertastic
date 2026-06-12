@@ -54,8 +54,9 @@ class effect_parameter_float : public effect_parameter {
             default_value = json_number_value_or(default_json, 50.0);
         }
 
-        void set_default(obs_data_t *settings, const char *full_param_name) override {
-            obs_data_set_default_double(settings, full_param_name, default_value);
+        void set_default(obs_data_t *settings, const char *effect_name) override {
+            std::string full_param_name = get_full_param_name(effect_name);
+            obs_data_set_default_double(settings, full_param_name.c_str(), default_value);
         }
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {

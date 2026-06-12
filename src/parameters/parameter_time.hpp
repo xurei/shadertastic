@@ -89,7 +89,8 @@ class effect_parameter_time : public effect_parameter {
             *time = 0.0;
         }
 
-        void set_default(obs_data_t *settings, const char *full_param_name) override {
+        void set_default(obs_data_t *settings, const char *effect_name) override {
+            std::string full_param_name = get_full_param_name(effect_name);
             obs_data_set_default_double(settings, get_full_subparam_name_static(full_param_name, std::string("speed")).c_str(), default_speed);
             obs_data_set_default_bool(settings, get_full_subparam_name_static(full_param_name, std::string("reset_on_show")).c_str(), false);
         }

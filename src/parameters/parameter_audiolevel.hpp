@@ -77,8 +77,9 @@ class effect_parameter_audiolevel : public effect_parameter {
             UNUSED_PARAMETER(effect_path);
         }
 
-        void set_default(obs_data_t *settings, const char *full_param_name) override {
-            obs_data_set_default_double(settings, full_param_name, 0.5);
+        void set_default(obs_data_t *settings, const char *effect_name) override {
+            std::string full_param_name = get_full_param_name(effect_name);
+            obs_data_set_default_double(settings, full_param_name.c_str(), 0.5);
         }
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {
