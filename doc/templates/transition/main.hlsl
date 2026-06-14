@@ -3,7 +3,7 @@
 uniform texture2d tex_a;       // Texture of the previous scene (transitions only)
 uniform texture2d tex_b;       // Texture of the next scene (transitions only)
 uniform float time;            // Time since the shader is running. Goes from 0 to 1 for transition effects
-uniform float delta_time;      // Time elapsed since the previous frame
+uniform float delta_time;      // Time elapsed (in seconds!) since the previous frame.
 uniform int frame_index;       // Number of frames since the transition has started
 uniform float upixel;          // Width of a pixel in the UV space; equivalent of 1.0 / texture_width
 uniform float vpixel;          // Height of a pixel in the UV space; equivalent of 1.0 / texture_height
@@ -15,7 +15,7 @@ uniform texture2d tex_interm;  // Intermediate texture where the previous step w
 */
 
 // Specific parameters of the shader. They must be defined in the meta.json file next to this one.
-uniform float random_amount;
+uniform float template_float;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.

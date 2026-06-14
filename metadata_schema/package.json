@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "serve": "http-server -p 9876 --cors -c-1",
-    "build": "ts-json-schema-generator --markdown-description --validation-keywords shaderparam --validation-keywords default --path src/meta.d.ts --type meta > meta.json.schema.json --id meta.json"
+    "build": "ts-json-schema-generator --markdown-description --validation-keywords shaderparam --validation-keywords default --path src/meta.d.ts --type meta > meta.jsonschema.json --id meta.json"
   },
   "author": "",
   "license": "ISC",

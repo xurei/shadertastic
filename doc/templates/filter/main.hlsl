@@ -1,8 +1,7 @@
 // Common parameters for all shaders, as reference. Do not uncomment this (but you can remove it safely).
 /*
 uniform texture2d image;       // Texture of the source (filters only)
-uniform float time;            // Time since the shader is running. Goes from 0 to infinity for filter effects
-uniform float delta_time;      // Time elapsed since the previous frame
+uniform float delta_time;      // Time elapsed in seconds since the previous frame
 uniform int frame_index;       // Number of frames since the filter has been activated, or reset (see the "time" parameter type)
 uniform float upixel;          // Width of a pixel in the UV space; equivalent of 1.0 / texture_width
 uniform float vpixel;          // Height of a pixel in the UV space; equivalent of 1.0 / texture_height
@@ -13,7 +12,7 @@ uniform texture2d tex_interm;  // Intermediate texture where the previous step w
 */
 
 // Specific parameters of the shader. They must be defined in the meta.json file next to this one.
-uniform float random_amount;
+uniform float template_float;
 //----------------------------------------------------------------------------------------------------------------------
 
 // Samplers: these define how the texture pixels are interpolated when you sample them.
