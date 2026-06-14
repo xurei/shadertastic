@@ -200,7 +200,7 @@ class effect_parameter {
                         UNUSED_PARAMETER(property);
                         debug("obs_property_set_modified_callback2 B");
                         auto *self = static_cast<effect_parameter *>(self_);
-                        if (!self) {
+                        if (!self || !self->condition) {
                             return false;
                         }
                         bool should_be_visible = self->condition->check(settings);

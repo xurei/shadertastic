@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Fixed null pointer crash due to event listener being destroyed
+- Fixed unnecessary errors when no source is selected in a param
+
 ## [1.1.0] - 2026-06-09
 ### Added
 - Face Tracking: preraster mode and precomputed normals

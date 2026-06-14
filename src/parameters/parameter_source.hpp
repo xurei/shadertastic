@@ -171,6 +171,11 @@ class effect_parameter_source : public effect_parameter {
             }
 
             if (!this->source_texrender || !source_rendered) {
+                vec2 no_size = {
+                    .x = -1.0f,
+                    .y = -1.0f,
+                };
+                try_gs_effect_set_vec2(PARAM_STR_SIZE, param_texture_size, &no_size);
                 return;
             }
             gs_texture_t *texture = gs_texrender_get_texture(this->source_texrender);
