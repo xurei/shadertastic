@@ -1,0 +1,21 @@
+{
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io"
+  },
+  "metafileVersion": 1,
+  "label": "Recur Test",
+  "steps": 1,
+  "parameters": [
+    {
+      "name": "prev_tex0",
+      "type": "prev_frame",
+      "step": 0
+    },
+    {
+      "name": "prev_tex1",
+      "type": "prev_frame",
+      "step": 1
+    }
+  ]
+}

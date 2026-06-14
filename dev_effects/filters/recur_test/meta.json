@@ -1,0 +1,11 @@
+{
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io"
+  },
+  "metafileVersion": 1,
+  "label": "Recur Test",
+  "steps": 1,
+  "parameters": [
+  ]
+}

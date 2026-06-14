@@ -1,0 +1,58 @@
+{
+  "label": "test_param_image",
+  "revision": 1,
+  "steps": 1,
+  "parameters": [
+    {
+      "name": "tex_orig",
+      "label": "Original format (tex_orig)",
+      "type": "image",
+      "devmode": true
+    },
+    {
+      "name": "tex_editable",
+      "label": "Values, Custom allowed (tex_editable)",
+      "type": "image",
+      "values": [
+        {"label": "No pattern", "value": null},
+        {"label": "Pattern1", "value": "pattern1.png"},
+        {"label": "Pattern2", "value": "pattern2.png"},
+        {"label": "Pattern3 (missing)", "value": "pattern3.png"}
+      ],
+      "default": "pattern1.png",
+      "allow_custom": true,
+      "hidden": false,
+      "devmode": true
+    },
+    {
+      "name": "tex_mdr",
+      "label": "Hidden, Custom not allowed (tex_empty)",
+      "type": "image",
+      "allow_custom": false,
+      "hidden": true,
+      "devmode": true
+    },
+    {
+      "name": "tex_empty",
+      "label": "Empty, Custom not allowed (tex_empty)",
+      "type": "image",
+      "values": [
+      ],
+      "allow_custom": false,
+      "hidden": false,
+      "devmode": true
+    },
+    {
+      "name": "tex_fixed",
+      "label": "Fixed, Hidden, Custom not allowed (tex_fixed)",
+      "type": "image",
+      "values": [
+        {"label": "Pattern1", "value": "pattern1.png"}
+      ],
+      "default": "pattern1.png",
+      "allow_custom": false,
+      "hidden": true,
+      "devmode": true
+    }
+  ]
+}
