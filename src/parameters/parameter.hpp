@@ -187,7 +187,6 @@ class effect_parameter {
 
         /**
          * Apply the visibility conditions and register the event listeners
-         * @param effect_name
          * @param props
          */
         virtual void apply_visibility_condition(obs_properties_t *props) {

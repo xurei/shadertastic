@@ -6,8 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Fixed
-- Fixed null pointer crash due to event listener being destroyed
+- Fixed crashes due to event listeners called after delete
 - Fixed unnecessary errors when no source is selected in a param
+- Fixed missng `apply_visibility_condition()` in group params
+
+### Added
+- Added multiple dev effects: `recur_test`, `test_param_image`, `test_param_number`, `test_param_source`
 
 ## [1.1.0] - 2026-06-09
 ### Added
