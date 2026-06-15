@@ -5,10 +5,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [1.1.1] - 2026-06-14
 ### Fixed
 - Fixed crashes due to event listeners called after delete
 - Fixed unnecessary errors when no source is selected in a param
 - Fixed missng `apply_visibility_condition()` in group params
+
+### Added
+- Added multiple dev effects: `recur_test`, `test_param_image`, `test_param_number`, `test_param_source`
 
 ### Added
 - Added multiple dev effects: `recur_test`, `test_param_image`, `test_param_number`, `test_param_source`
