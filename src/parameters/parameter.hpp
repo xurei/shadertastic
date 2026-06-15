@@ -45,9 +45,12 @@ inline static double json_number_value_or(json_t *value, double default_value) {
     return default_value;
 }
 
+#define EFFECT_PARAMETER_SIGNATURE 0x54cd891bfea1749f
+
 class effect_parameter {
     private:
         std::unique_ptr<condition_t> condition{};
+        long long int signature = EFFECT_PARAMETER_SIGNATURE; // Used to memory-check the event listeners. Set to zero when deleted
 
     protected:
         void *data{};
@@ -84,6 +87,8 @@ class effect_parameter {
         }
 
         virtual ~effect_parameter() {
+            signature = 0;
+            condition.reset(nullptr);
             if (this->data != nullptr) {
                 bfree(this->data);
             }
@@ -198,9 +203,12 @@ class effect_parameter {
                     obs_property_add_modified_callback2(p, [](void *self_, obs_properties_t *props, obs_property_t *property, obs_data_t *settings) {
                         UNUSED_PARAMETER(props);
                         UNUSED_PARAMETER(property);
-                        debug("obs_property_set_modified_callback2 B");
                         auto *self = static_cast<effect_parameter *>(self_);
                         if (!self || !self->condition) {
+                            return false;
+                        }
+                        if (self->signature != EFFECT_PARAMETER_SIGNATURE) {
+                            // Invalid signature. This means the effect has been deleted. Early stop
                             return false;
                         }
                         bool should_be_visible = self->condition->check(settings);
