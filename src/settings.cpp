@@ -34,7 +34,9 @@ obs_data_t * load_settings() {
 
     if (!settings) {
         info("Settings not found. Creating default settings in %s ...", file);
-        os_mkdirs(obs_module_config_path(""));
+        char *obs_base_config_path = obs_module_config_path("");
+        os_mkdirs(obs_base_config_path);
+        bfree(obs_base_config_path);
         // Create default settings
         settings = obs_data_create();
         if (obs_data_save_json(settings, file)) {
