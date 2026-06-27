@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Fixed
 - Fixed minor memory leak in settings `load_settings()`
+- Fixed sources shown twice in source parameter
 
 ## [1.1.1] - 2026-06-14
 ### Fixed

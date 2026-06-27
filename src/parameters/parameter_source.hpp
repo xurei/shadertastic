@@ -99,6 +99,7 @@ class effect_parameter_source : public effect_parameter {
             obs_enum_sources(effect_parameter_source_add, &sources_list);
             obs_enum_scenes(effect_parameter_source_add, &sources_list);
             sources_list.sort(compare_nocase);
+            sources_list.unique();
             obs_property_list_add_string(ui_prop, "-- Choose one --", "");
             for (const std::string &str: sources_list) {
                 obs_property_list_add_string(ui_prop, str.c_str(), str.c_str());
