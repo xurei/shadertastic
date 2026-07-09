@@ -29,6 +29,7 @@
             const std::string& full_param_name = member;
             auto *data_item = obs_data_item_byname((obs_data_t *)settings, full_param_name.c_str());
             auto item_type = obs_data_item_gettype(data_item);
+            obs_data_item_release(&data_item);
             switch (item_type) {
                 case OBS_DATA_NUMBER: {
                     double v = obs_data_item_get_double(data_item);
