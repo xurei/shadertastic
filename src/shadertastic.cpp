@@ -60,6 +60,78 @@ bool shadertastic_is_direct3d() {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
+obs_source_t *get_transition(obs_frontend_source_list &transitions, const char *transition_name) {
+    for (size_t i = 0; i < transitions.sources.num; i++) {
+        if (strcmp(obs_source_get_name(transitions.sources.array[i]), transition_name) == 0) {
+            return transitions.sources.array[i];
+        }
+    }
+    return nullptr;
+}
+
+void obs_module_frontend_saveload(obs_data_t *save_data, bool saving, void *data)
+{
+    UNUSED_PARAMETER(data);
+    UNUSED_PARAMETER(saving);
+    UNUSED_PARAMETER(save_data);
+    obs_frontend_source_list transitions = {0};
+    obs_frontend_get_transitions(&transitions);
+
+    if (saving) {
+        auto *transi_backup_array = obs_data_array_create();
+        for (size_t i = 0; i < transitions.sources.num; i++) {
+            /* Do NOT call `obs_source_release` or `obs_scene_release`
+             * on these sources
+             */
+            obs_source_t *transi = transitions.sources.array[i];
+            if (strcmp(obs_source_get_id(transi), SHADERTASTIC_TRANSITION_NAME) == 0) {
+                auto *settings = obs_source_get_settings(transi);
+                if (settings != nullptr) {
+                    auto *obj = obs_data_create();
+                    obs_data_set_string(obj, "id", SHADERTASTIC_TRANSITION_NAME);
+                    obs_data_set_string(obj, "name", obs_source_get_name(transi));
+                    obs_data_set_obj(obj, "settings", settings);
+                    obs_data_array_push_back(transi_backup_array, obj);
+                    obs_data_release(settings);
+                    obs_data_release(obj);
+                }
+            }
+        }
+        obs_data_set_array(save_data, "shadertastic_transitions", transi_backup_array);
+        obs_data_array_release(transi_backup_array);
+//        debug("%s", obs_data_get_json(save_data));
+//        debug("saved settings");
+    }
+    else {
+        auto *transi_backup_array = obs_data_get_array(save_data, "shadertastic_transitions");
+        if (transi_backup_array != nullptr) {
+            // Comparing the transitions with the saved ones, adding those missing if they are not present
+            // This makes sure the transitions are not lost when the plugin is absent or in safe mode.
+            size_t transitions_count = obs_data_array_count(transi_backup_array);
+            for (size_t i = 0; i < transitions_count; i++) {
+                auto *transi = obs_data_array_item(transi_backup_array, i);
+                if (transi != nullptr) {
+                    const char *transi_name = obs_data_get_string(transi, "name");
+                    UNUSED_PARAMETER(transi_name);
+                    auto *settings = obs_data_get_obj(transi, "settings");
+                    if (transi_name != nullptr) {
+                        auto *obs_transi = get_transition(transitions, transi_name);
+                        if (obs_transi == nullptr) {
+                            obs_transi = obs_frontend_add_transition(SHADERTASTIC_TRANSITION_NAME, transi_name, settings);
+                            release_resource(obs_source_release, obs_transi);
+                            debug("ok");
+                        }
+                    }
+                    release_resource(obs_data_release, settings);
+                    obs_data_release(transi);
+                }
+            }
+            obs_data_array_release(transi_backup_array);
+        }
+    }
+    obs_frontend_source_list_free(&transitions);
+}
+
 void load_effects(shadertastic_common *s, obs_data_t *settings, const std::string &effects_dir, const std::string &effects_type) {
     std::vector<std::string> dirs = list_directories((effects_dir + "/" + effects_type + "s").c_str());
 
@@ -191,6 +263,8 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
     if (graphics_module.find("opengl") == std::string::npos) {
         is_direct3d = true;
     }
+
+    obs_frontend_add_save_callback(obs_module_frontend_saveload, nullptr);
 
     return true;
 }
