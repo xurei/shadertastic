@@ -3,20 +3,9 @@
 #include <algorithm>
 #include "./obs_property_add_modified_callback2.h"
 
-struct obs_modified_callback_entry {
-    uint64_t id;
-    obs_property_modified2_t cb;
-    void *data;
-};
+static std::map<obs_property_t*, obs_modified_callback_group_t> callback_groups;
 
-struct obs_modified_callback_group {
-    std::vector<obs_modified_callback_entry> callbacks;
-    uint64_t next_id = 1;
-};
-
-static std::map<obs_property_t*, obs_modified_callback_group> callback_groups;
-
-static obs_modified_callback_group* get_callback_group(obs_property_t *p) {
+static obs_modified_callback_group_t* get_callback_group(obs_property_t *p) {
     if (callback_groups.find(p) == callback_groups.end()) {
         callback_groups[p].next_id = 0;
     }
@@ -25,7 +14,7 @@ static obs_modified_callback_group* get_callback_group(obs_property_t *p) {
 }
 
 static bool obs_modified_callback_dispatch(void *data, obs_properties_t *props, obs_property_t *property, obs_data_t *settings) {
-    auto *group = static_cast<obs_modified_callback_group *>(data);
+    auto *group = static_cast<obs_modified_callback_group_t *>(data);
 
     bool result = false;
 
@@ -63,7 +52,7 @@ void obs_property_remove_modified_callback2(obs_property_t *p, uint64_t id) {
 
     vec.erase(
         std::remove_if(vec.begin(), vec.end(),
-            [id](const obs_modified_callback_entry &e) {
+            [id](const obs_modified_callback_entry_t &e) {
                 return e.id == id;
             }),
         vec.end()
