@@ -6,8 +6,11 @@
   "metafileVersion": 1,
   "label": "[Face Tracking] Distort",
   "steps": 1,
-  "input_facedetection": true,
   "parameters": [
+    {
+      "type": "facetracking",
+      "name": "fd"
+    },
     {
       "name": "screen_distortion",
       "label": "Screen Distortion",

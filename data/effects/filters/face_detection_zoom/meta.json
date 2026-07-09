@@ -6,8 +6,11 @@
   "metafileVersion": 1,
   "label": "[Face Tracking] Zoom to face",
   "steps": 1,
-  "input_facedetection": true,
   "parameters": [
+    {
+      "type": "facetracking",
+      "name": "fd"
+    },
     {
       "name": "zoom_level",
       "label": "Zoom level",
