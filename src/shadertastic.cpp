@@ -31,18 +31,17 @@
 
 #ifdef DEV_MODE
 // ReSharper disable once CppUnusedIncludeDirective
-#include "util/enum_util.hpp"
 #include "util/debug_util.hpp"
 #endif
 
 #include "effect.h"
-#include "face_tracking/face_tracking.h"
 #include "is_module_loaded.h"
 #include "logging_functions.hpp"
 #include "settings.h"
 #include "shader/shaders_library.h"
 #include "shadertastic.hpp"
 #include "util/file_util.h"
+#include "shader_transition.hpp"
 // ReSharper disable once CppUnusedIncludeDirective
 #include "util/time_util.hpp"
 //----------------------------------------------------------------------------------------------------------------------
@@ -140,7 +139,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
     obs_leave_graphics();
 
     struct obs_source_info shadertastic_transition_info = {};
-    shadertastic_transition_info.id = "shadertastic_transition";
+    shadertastic_transition_info.id = SHADERTASTIC_TRANSITION_NAME;
     shadertastic_transition_info.type = OBS_SOURCE_TYPE_TRANSITION;
     shadertastic_transition_info.get_name = shadertastic_transition_get_name;
     shadertastic_transition_info.create = shadertastic_transition_create;
@@ -159,7 +158,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
     obs_register_source(&shadertastic_transition_info);
 
     struct obs_source_info shadertastic_filter_info = {};
-    shadertastic_filter_info.id = "shadertastic_filter";
+    shadertastic_filter_info.id = SHADERTASTIC_FILTER_NAME;
     shadertastic_filter_info.type = OBS_SOURCE_TYPE_FILTER;
     shadertastic_filter_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW /*| OBS_SOURCE_SRGB *//*| OBS_SOURCE_COMPOSITE*/;
     shadertastic_filter_info.get_name = shadertastic_filter_get_name;

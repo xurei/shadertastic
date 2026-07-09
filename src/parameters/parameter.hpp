@@ -191,7 +191,7 @@ class effect_parameter {
          */
         virtual void apply_visibility_condition(obs_properties_t *props) {
             if (condition != nullptr) {
-                debug("if node found");
+                debug("display condition found");
                 std::vector<std::string> referenced_param_names;
                 collect_strings_from_condition(condition.get(), referenced_param_names);
 

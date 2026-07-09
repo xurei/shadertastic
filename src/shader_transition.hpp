@@ -18,6 +18,8 @@
 #ifndef SHADERTASTIC_SHADER_TRANSITION_HPP
 #define SHADERTASTIC_SHADER_TRANSITION_HPP
 
+#define SHADERTASTIC_TRANSITION_NAME "shadertastic_transition"
+
 #include <obs-module.h>
 #include <QApplication>
 #include <QClipboard>
@@ -494,7 +496,7 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
 
         // Reload settings (for development)
         if (shadertastic_settings().dev_mode_enabled) {
-            obs_properties_add_button(error_group, "reload_btn", "Refresh error message", shadertastic_transition_reload_button_click);
+            obs_properties_add_button2(error_group, "reload_btn", "Refresh error message", shadertastic_transition_reload_button_click, nullptr);
         }
 
         // Hidin error group by default. It will be shown in the update() function if required
@@ -513,8 +515,8 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
     }
 
     // Import/Export preferences
-    obs_properties_add_button(props, "export_btn", obs_module_text("TransitionExport"), shadertastic_transition_export_button_click);
-    obs_properties_add_button(props, "import_btn", obs_module_text("TransitionImport"), shadertastic_transition_import_button_click);
+    obs_properties_add_button2(props, "export_btn", obs_module_text("TransitionExport"), shadertastic_transition_export_button_click, nullptr);
+    obs_properties_add_button2(props, "import_btn", obs_module_text("TransitionImport"), shadertastic_transition_import_button_click, nullptr);
 
     about_property(props);
 

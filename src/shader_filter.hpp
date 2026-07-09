@@ -18,6 +18,8 @@
 #ifndef SHADERTASTIC_SHADER_FILTER_HPP
 #define SHADERTASTIC_SHADER_FILTER_HPP
 
+#define SHADERTASTIC_FILTER_NAME "shadertastic_filter"
+
 // ReSharper disable CppNonInlineFunctionDefinitionInHeaderFile
 // ReSharper disable CppDFAConstantParameter
 
@@ -333,7 +335,10 @@ bool shadertastic_filter_properties_change_effect_callback(void *priv, obs_prope
     if (selected_effect != s->effects->end()) {
         debug("CALLBACK : %s -> %s", select_effect_name, selected_effect->second.name.c_str());
         obs_property_set_visible(obs_properties_get(props, (selected_effect->second.name + "__params").c_str()), true);
-        obs_property_set_visible(obs_properties_get(props, (selected_effect->second.name + "__warning").c_str()), true);
+
+        if (selected_effect->second.has_error()) {
+            obs_property_set_visible(obs_properties_get(props, (selected_effect->second.name + "__warning").c_str()), true);
+        }
     }
 
     return true;
@@ -363,7 +368,7 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
 
     // Dev mode settings
     if (shadertastic_settings().dev_mode_enabled) {
-        obs_properties_add_button(props, "reload_btn", "Reload", shadertastic_filter_reload_button_click);
+        obs_properties_add_button2(props, "reload_btn", "Reload", shadertastic_filter_reload_button_click, nullptr);
     }
 
     // Shader mode
@@ -395,8 +400,11 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
         obs_properties_t *effect_group = obs_properties_create();
         //obs_properties_add_text(effect_group, "", effect_name, OBS_TEXT_INFO);
 
+        obs_properties_t *error_group = obs_properties_create();
+        std::string warning_group_name = (effect_name + "__warning");
+        auto *warning_group = obs_properties_add_group(props, warning_group_name.c_str(), "⚠ Shader error", OBS_GROUP_NORMAL, error_group);
+        obs_property_set_visible(warning_group, false);
         if (effect.has_error()) {
-            obs_properties_t *error_group = obs_properties_create();
             auto prop = obs_properties_add_text(
                 error_group,
                 (effect_name + "__compile_error").c_str(),
@@ -405,9 +413,8 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
             );
             obs_property_text_set_info_type(prop, OBS_TEXT_INFO_WARNING);
 
-            obs_properties_add_group(props, (effect_name + "__warning").c_str(), "⚠ Shader error", OBS_GROUP_NORMAL, error_group);
-            if (s->selected_effect != &effect) {
-                obs_property_set_visible(obs_properties_get(props, (effect_name + "__warning").c_str()), false);
+            if (s->selected_effect == &effect) {
+                obs_property_set_visible(warning_group, true);
             }
         }
 
@@ -422,7 +429,12 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
     }
     if (s->selected_effect != nullptr) {
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), true);
-        obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__warning").c_str()), true);
+        if (s->selected_effect->has_error()) {
+            obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__warning").c_str()), true);
+        }
+        else {
+            obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__warning").c_str()), false);
+        }
     }
 
     about_property(props);
