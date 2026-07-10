@@ -44,6 +44,7 @@
 #include "shader_transition.hpp"
 // ReSharper disable once CppUnusedIncludeDirective
 #include "util/time_util.hpp"
+#include "src/util/obs-retrocompat.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
 OBS_DECLARE_MODULE()
@@ -104,7 +105,7 @@ void obs_module_frontend_saveload(obs_data_t *save_data, bool saving, void *data
     }
     else {
         auto *transi_backup_array = obs_data_get_array(save_data, "shadertastic_transitions");
-        if (transi_backup_array != nullptr) {
+        if (obs_retrocompat_frontend_add_transition != nullptr && transi_backup_array != nullptr) {
             // Comparing the transitions with the saved ones, adding those missing if they are not present
             // This makes sure the transitions are not lost when the plugin is absent or in safe mode.
             size_t transitions_count = obs_data_array_count(transi_backup_array);
@@ -117,7 +118,7 @@ void obs_module_frontend_saveload(obs_data_t *save_data, bool saving, void *data
                     if (transi_name != nullptr) {
                         auto *obs_transi = get_transition(transitions, transi_name);
                         if (obs_transi == nullptr) {
-                            obs_transi = obs_frontend_add_transition(SHADERTASTIC_TRANSITION_NAME, transi_name, settings);
+                            obs_transi = obs_retrocompat_frontend_add_transition(SHADERTASTIC_TRANSITION_NAME, transi_name, settings);
                             release_resource(obs_source_release, obs_transi);
                             debug("ok");
                         }
@@ -264,6 +265,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
         is_direct3d = true;
     }
 
+    obs_retrocompat_init();
     obs_frontend_add_save_callback(obs_module_frontend_saveload, nullptr);
 
     return true;
