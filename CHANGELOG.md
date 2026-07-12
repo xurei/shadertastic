@@ -6,9 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Fixed
-- Fixed minor memory leak in settings `load_settings()`
+- Fixed minor memory leak in `load_settings()`
 - Fix memory leak in condition evaluation
+- Fixed memory leak in transition auto-reload (dev mode only)
 - Fixed sources shown twice in source parameter
+
+### Added
 - Transition backup system (not enabled in vanilla OBS, needs [this PR](https://github.com/obsproject/obs-studio/pull/13633))
 
 ## [1.1.1] - 2026-06-14

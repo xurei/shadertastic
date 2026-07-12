@@ -322,6 +322,7 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
                 param->set_data_from_settings(settings, s->selected_effect->name.c_str());
             }
             obs_source_update(s->source, nullptr);
+            release_resource(obs_data_release, settings);
         }
 
         //obs_transition_video_render(s->source, shadertastic_transition_render_init);
@@ -394,7 +395,7 @@ bool shadertastic_transition_export_button_click(obs_properties_t *props, obs_pr
     clipboard->setText(obs_data_get_json(settings), QClipboard::Clipboard);
     QMessageBox::information(nullptr, obs_module_text("TransitionExport"), obs_module_text("TransitionExportConfirm"));
 
-    obs_data_release(settings);
+    release_resource(obs_data_release, settings);
     return true;
 }
 
@@ -416,8 +417,8 @@ bool shadertastic_transition_import_button_click(obs_properties_t *props, obs_pr
     obs_source_update(s->source, new_data);
     QMessageBox::information(nullptr, obs_module_text("TransitionImport"), obs_module_text("TransitionImportConfirm"));
 
-    obs_data_release(settings);
-    obs_data_release(new_data);
+    release_resource(obs_data_release, settings);
+    release_resource(obs_data_release, new_data);
     return true;
 }
 //----------------------------------------------------------------------------------------------------------------------
