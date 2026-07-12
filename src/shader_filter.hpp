@@ -396,37 +396,10 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
     obs_property_set_modified_callback2(p, shadertastic_filter_properties_change_effect_callback, data);
 
     for (auto& [effect_name, effect] : *(s->effects)) {
-        const char *effect_label = effect.label.c_str();
-        obs_properties_t *effect_group = obs_properties_create();
-        //obs_properties_add_text(effect_group, "", effect_name, OBS_TEXT_INFO);
-
-        obs_properties_t *error_group = obs_properties_create();
-        std::string warning_group_name = (effect_name + "__warning");
-        auto *warning_group = obs_properties_add_group(props, warning_group_name.c_str(), "⚠ Shader error", OBS_GROUP_NORMAL, error_group);
-        obs_property_set_visible(warning_group, false);
-        if (effect.has_error()) {
-            auto prop = obs_properties_add_text(
-                error_group,
-                (effect_name + "__compile_error").c_str(),
-                effect.error_str().c_str(),
-                OBS_TEXT_INFO
-            );
-            obs_property_text_set_info_type(prop, OBS_TEXT_INFO_WARNING);
-
-            if (s->selected_effect == &effect) {
-                obs_property_set_visible(warning_group, true);
-            }
-        }
-
-        for (auto param: effect.effect_params) {
-            if (!param->is_dev_mode() || shadertastic_settings().dev_mode_enabled) {
-                param->render_property_ui(effect_name.c_str(), effect_group);
-                param->apply_visibility_condition(effect_group);
-            }
-        }
-        obs_properties_add_group(props, (effect_name + "__params").c_str(), effect_label, OBS_GROUP_NORMAL, effect_group);
-        obs_property_set_visible(obs_properties_get(props, (effect_name + "__params").c_str()), false);
+        effect.create_properties(props);
+        effect.attach_listeners(props);
     }
+
     if (s->selected_effect != nullptr) {
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), true);
         if (s->selected_effect->has_error()) {

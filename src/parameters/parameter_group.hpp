@@ -21,12 +21,10 @@
 #include <string>
 #include <variant>
 #include "parameter.hpp"
-#include "src/condition/collect_strings.h"
 #include "src/condition/condition_parser.h"
 #include "src/effect.h"
 #include "src/params_list.hpp"
 #include "src/settings.h"
-#include "src/util/obs_property_add_modified_callback2.h"
 #include "parameter_factory.h"
 
 class effect_parameter_group : public effect_parameter {
@@ -114,13 +112,6 @@ class effect_parameter_group : public effect_parameter {
 
             ui_prop = obs_properties_add_group(props, full_param_name.c_str(), label.c_str(), OBS_GROUP_NORMAL, params_group);
             std::string param_val1 = get_full_param_name_static(effect_name, "val1");
-        }
-        
-        void apply_visibility_condition(obs_properties_t *props) override {
-            effect_parameter::apply_visibility_condition(props);
-            for (auto param: group_params) {
-                param->apply_visibility_condition(props);
-            }
         }
 
         void set_visible(const bool visible) override {

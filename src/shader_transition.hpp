@@ -422,20 +422,6 @@ bool shadertastic_transition_import_button_click(obs_properties_t *props, obs_pr
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-bool shadertastic_transition_reload_button_click(obs_properties_t *props, obs_property_t *property, void *data) {
-    UNUSED_PARAMETER(property);
-    shadertastic_transition *s = shadertastic_transition_cast(data);
-    if (s->selected_effect != nullptr) {
-        s->selected_effect->reload();
-        obs_property_set_description(obs_properties_get(props,
-            (s->selected_effect->name + "__compile_error").c_str()),
-            s->selected_effect->error_str().c_str()
-        );
-    }
-    return true;
-}
-//----------------------------------------------------------------------------------------------------------------------
-
 obs_properties_t *shadertastic_transition_properties(void *data) {
     shadertastic_transition *s = shadertastic_transition_cast(data);
     obs_properties_t *props = obs_properties_create();
@@ -481,35 +467,28 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
     obs_property_set_modified_callback2(p, shadertastic_transition_properties_change_effect_callback, data);
 
     for (auto& [effect_name, effect] : *(s->effects)) {
-        const char *effect_label = effect.label.c_str();
-        obs_properties_t *effect_group = obs_properties_create();
-
-        obs_properties_t *error_group = obs_properties_create();
-        obs_properties_add_group(effect_group, (effect_name + "__warning").c_str(), "⚠ Shader error", OBS_GROUP_NORMAL, error_group);
-        auto prop = obs_properties_add_text(
-            error_group,
-            (effect_name + "__compile_error").c_str(),
-            effect.error_str().c_str(),
-            OBS_TEXT_INFO
-        );
-        obs_property_text_set_info_type(prop, OBS_TEXT_INFO_WARNING);
+        effect.create_properties(props);
+        effect.attach_listeners(props);
 
         // Reload settings (for development)
         if (shadertastic_settings().dev_mode_enabled) {
-            obs_properties_add_button2(error_group, "reload_btn", "Refresh error message", shadertastic_transition_reload_button_click, nullptr);
+            std::string warning_group_name = (effect_name + "__warning");
+            auto *warning_group = obs_property_group_content(obs_properties_get(props, warning_group_name.c_str()));
+            obs_properties_add_button2(warning_group, "reload_btn", "Refresh error message", [](obs_properties_t *props, obs_property_t *property, void *data) {
+                UNUSED_PARAMETER(property);
+                shadertastic_transition *s = shadertastic_transition_cast(data);
+                if (s->selected_effect != nullptr) {
+                    s->selected_effect->reload();
+                    obs_property_set_description(
+                        obs_properties_get(props, (s->selected_effect->name + "__compile_error").c_str()),
+                        s->selected_effect->error_str().c_str()
+                    );
+                }
+                return true;
+            }, s);
         }
-
-        // Hidin error group by default. It will be shown in the update() function if required
-        obs_property_set_visible(obs_properties_get(props, (effect_name + "__warning").c_str()), false);
-
-        for (auto param: effect.effect_params) {
-            std::string full_param_name = param->get_full_param_name(effect_name);
-            param->render_property_ui(effect_name.c_str(), effect_group);
-            param->apply_visibility_condition(effect_group);
-        }
-        obs_properties_add_group(props, (effect_name + "__params").c_str(), effect_label, OBS_GROUP_NORMAL, effect_group);
-        obs_property_set_visible(obs_properties_get(props, (effect_name + "__params").c_str()), false);
     }
+
     if (s->selected_effect != nullptr) {
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), true);
     }

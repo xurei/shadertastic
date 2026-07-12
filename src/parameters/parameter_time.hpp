@@ -118,8 +118,10 @@ class effect_parameter_time : public effect_parameter {
                 obs_property_set_visible(ui_reset_prop, visible);
             }
         }
-        [[nodiscard]] virtual bool is_visible() const override {
         [[nodiscard]] bool is_visible() const override {
+            if (!show_speed_ui && reset_on_show_type != CHOICE_PROMPT) {
+                return false;
+            }
             return obs_property_visible(ui_speed_prop) || obs_property_visible(ui_reset_prop);
         }
 

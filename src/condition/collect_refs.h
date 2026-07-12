@@ -15,8 +15,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#ifndef SHADERTASTIC_COLLECT_STRINGS_H
-#define SHADERTASTIC_COLLECT_STRINGS_H
+#ifndef SHADERTASTIC_COLLECT_REFS_H
+#define SHADERTASTIC_COLLECT_REFS_H
 
 #include <string>
 #include "condition.hpp"
@@ -33,7 +33,7 @@ inline void collect_strings_from_member(const condition_member &member, std::vec
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "misc-no-recursion"
 #endif
-static void collect_strings_from_condition(const condition_t *cond, std::vector<std::string> &out) {
+static void collect_refs_from_condition_static(condition_t *cond, std::vector<std::string> &out) {
     if (cond == nullptr) {
         return;
     }
@@ -48,14 +48,14 @@ static void collect_strings_from_condition(const condition_t *cond, std::vector<
     const auto *grouped_conditions = dynamic_cast<const condition_bool_group*>(cond);
     if (grouped_conditions != nullptr) {
         for (const auto &child : *grouped_conditions) {
-            collect_strings_from_condition(child.get(), out);
+            collect_refs_from_condition_static(child.get(), out);
         }
         return;
     }
 
     const auto *not_condition = dynamic_cast<const condition_not*>(cond);
     if (not_condition != nullptr) {
-        collect_strings_from_condition(not_condition->get_rval(), out);
+        collect_refs_from_condition_static(not_condition->get_rval(), out);
         return;
     }
 }
@@ -63,4 +63,4 @@ static void collect_strings_from_condition(const condition_t *cond, std::vector<
 #pragma clang diagnostic pop
 #endif
 
-#endif // SHADERTASTIC_COLLECT_STRINGS_H
+#endif // SHADERTASTIC_COLLECT_REFS_H

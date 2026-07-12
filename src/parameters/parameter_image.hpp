@@ -147,7 +147,6 @@ class effect_parameter_image : public effect_parameter {
                 if (allow_custom) {
                     obs_property_list_add_string(ui_prop, "Use custom file", "__CUSTOM__");
 
-                    // FIXME Maybe we should use obs_property_add_modified_callback2 here, but actually it is not allowed to use conditionals with string
                     obs_property_set_modified_callback(ui_prop, [](obs_properties_t *props, obs_property_t *property, obs_data_t *settings) {
                         const char *full_param_name = obs_property_name(property);
 

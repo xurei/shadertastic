@@ -25,6 +25,7 @@
 #include "parameters/parameter_factory.h"
 #include "shader/shaders_library.h"
 #include "util/file_util.h"
+#include "settings.h"
 
 void shadertastic_effect_t::load() {
     std::string metadata_path = normalize_path(this->path + "/meta.json");
@@ -117,6 +118,9 @@ void shadertastic_effect_t::load() {
             json_array_insert_new(parameters, 0, param);
         }
 
+        // Clear referenced parameters
+        referenced_params.clear();
+
         // Copy the effect params map to allow recycling
         params_list previous_effect_params(effect_params);
         effect_params.clear();
@@ -181,6 +185,19 @@ void shadertastic_effect_t::load() {
                 }
 
                 effect_params.put(param_name_str, effect_param);
+
+                if (effect_param->has_condition()) {
+                    debug("display condition found");
+                    std::vector<std::string> refs;
+                    effect_param->collect_refs_from_condition(refs);
+                    for (auto &n : refs) {
+                        //effect_params.add_inter_ref(n, effect_param->get_name());
+                        if (referenced_params.find(n) == referenced_params.end()) {
+                            referenced_params[n] = {};
+                        }
+                        referenced_params[n].push_back(effect_param);
+                    }
+                }
             }
         }
 
@@ -200,6 +217,53 @@ void shadertastic_effect_t::load() {
 void shadertastic_effect_t::reload() {
     shaders_library.reload(this->path);
     load();
+}
+
+void shadertastic_effect_t::create_properties(obs_properties *props) {
+    const char *effect_label = label.c_str();
+    obs_properties_t *effect_group = obs_properties_create();
+
+    obs_properties_t *warning_group = obs_properties_create();
+    std::string warning_group_name = (name + "__warning");
+    auto *warning_group_prop = obs_properties_add_group(props, warning_group_name.c_str(), "⚠ Shader error", OBS_GROUP_NORMAL, warning_group);
+    obs_property_set_visible(warning_group_prop, false);
+    auto prop = obs_properties_add_text(
+        warning_group,
+        (name + "__compile_error").c_str(),
+        error_str().c_str(),
+        OBS_TEXT_INFO
+    );
+    obs_property_text_set_info_type(prop, OBS_TEXT_INFO_WARNING);
+
+    for (auto param: effect_params) {
+        if (!param->is_dev_mode() || shadertastic_settings().dev_mode_enabled) {
+            param->render_property_ui(name.c_str(), effect_group);
+        }
+    }
+    obs_properties_add_group(props, (name + "__params").c_str(), effect_label, OBS_GROUP_NORMAL, effect_group);
+    obs_property_set_visible(obs_properties_get(props, (name + "__params").c_str()), false);
+}
+
+void shadertastic_effect_t::attach_listeners(obs_properties *props) {
+    for (auto &[referenced_param_name, listeners_list] : referenced_params) {
+        auto *prop = obs_properties_get(props, referenced_param_name.c_str());
+        obs_property_set_modified_callback2(prop, [](void *data, obs_properties_t *props, obs_property_t *property, obs_data_t *settings) {
+            UNUSED_PARAMETER(props);
+            const char *prop_name = obs_property_name(property);
+            auto *self = static_cast<shadertastic_effect_t *>(data);
+            auto &listeners = self->referenced_params[prop_name];
+            bool changed = false;
+            for (auto *listener : listeners) {
+                if (listener != nullptr) {
+                    bool should_be_visible = listener->condition_check(settings);
+                    bool currently_visible = listener->is_visible();
+                    listener->set_visible(should_be_visible);
+                    changed |= (should_be_visible != currently_visible);
+                }
+            }
+            return changed;
+        }, (void *) this);
+    }
 }
 
 void shadertastic_effect_t::set_params(

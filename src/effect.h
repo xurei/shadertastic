@@ -37,6 +37,7 @@ struct shadertastic_effect_t {
     effect_parameter *param_facetracking{};
 
     params_list effect_params;
+    std::unordered_map<std::string, std::list<effect_parameter *>> referenced_params;
     std::shared_ptr<effect_shader> main_shader{};
 
     [[nodiscard]] inline bool has_error() const {
@@ -51,6 +52,9 @@ struct shadertastic_effect_t {
     void load();
 
     void reload();
+
+    void attach_listeners(obs_properties *props);
+    void create_properties(obs_properties *props);
 
     void set_params(gs_texture_t *a, gs_texture_t *b, int frame_index, bool is_studio_mode, float t, float delta_t, uint32_t cx, uint32_t cy, float rand_seed);
 

@@ -20,12 +20,11 @@
 
 #include <jansson.h>
 #include "parameter_datatype.hpp"
-#include "src/condition/collect_strings.h"
+#include "src/condition/collect_refs.h"
 #include "src/condition/condition_parser.h"
 #include "src/shader/shader.h"
 #include "src/shadertastic_common.hpp"
 #include "src/try_gs_effect_set.h"
-#include "src/util/obs_property_add_modified_callback2.h"
 
 inline static std::string get_full_param_name_static(const std::string &effect_name, const std::string &param_name) {
     return effect_name + '.' + param_name;
@@ -186,42 +185,6 @@ class effect_parameter {
         [[nodiscard]] virtual bool is_visible() const = 0;
 
         /**
-         * Apply the visibility conditions and register the event listeners
-         * @param props
-         */
-        virtual void apply_visibility_condition(obs_properties_t *props) {
-            if (condition != nullptr) {
-                debug("display condition found");
-                std::vector<std::string> referenced_param_names;
-                collect_strings_from_condition(condition.get(), referenced_param_names);
-
-                for (std::string &referenced_param_name : referenced_param_names) {
-                    debug("PARAM: %s", referenced_param_name.c_str());
-                    auto p = obs_properties_get(props, referenced_param_name.c_str());
-                    debug("prop: %p", p);
-                    obs_property_add_modified_callback2(p, [](void *self_, obs_properties_t *props, obs_property_t *property, obs_data_t *settings) {
-                        UNUSED_PARAMETER(props);
-                        UNUSED_PARAMETER(property);
-                        auto *self = static_cast<effect_parameter *>(self_);
-                        if (!self || !self->condition) {
-                            return false;
-                        }
-                        if (self->signature != EFFECT_PARAMETER_SIGNATURE) {
-                            // Invalid signature. This means the effect has been deleted. Early stop
-                            return false;
-                        }
-                        bool should_be_visible = self->condition->check(settings);
-                        bool currently_visible = self->is_visible();
-                        self->set_visible(should_be_visible);
-                        return (should_be_visible != currently_visible);
-                    }, (void *) this);
-                }
-
-                debug("%lu params used in condition", referenced_param_names.size());
-            }
-        }
-
-        /**
          * Update function of the parameter, will be called when a filter is loaded or when the
          * effect settings are changed through the UI or an OBS internal call.
          * This function should update the internal state of the parameter to reflect any value change for its given settings.
@@ -268,6 +231,24 @@ class effect_parameter {
          */
         virtual void hide() {
             // By default, do nothing
+        }
+
+        /**
+         * @return true if the parameter has a condition
+         */
+        inline bool has_condition() {
+            return condition != nullptr;
+        }
+
+        /**
+         * Populates out with the referenced names in a condition
+         */
+        void collect_refs_from_condition(std::vector<std::string> &out) {
+            collect_refs_from_condition_static(condition.get(), out);
+        }
+
+        inline bool condition_check(obs_data_t *settings) {
+            return condition == nullptr || condition->check(settings);
         }
 };
 
