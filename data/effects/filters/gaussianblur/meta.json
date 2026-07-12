@@ -5,6 +5,7 @@
   },
   "metafileVersion": 1,
   "label": "Gaussian Blur",
+  "revision": 2,
   "steps": 2,
   "parameters": [
     {
@@ -24,6 +25,20 @@
       "min": 1,
       "max": 100,
       "default": 10
+    },
+    {
+      "name": "sigma",
+      "label": "Sigma",
+      "type": "float",
+      "slider": true,
+      "min": 2.0,
+      "max": 5.0,
+      "default": 1.0
+    },
+    {
+      "name": "sigma_text",
+      "type": "text",
+      "value": "Higher is smoother, but has a shorter range"
     }
   ]
 }

@@ -1,5 +1,6 @@
 uniform int blur_level_x;
 uniform int blur_level_y;
+uniform float sigma;
 //----------------------------------------------------------------------------------------------------------------------
 
 sampler_state textureSampler {
@@ -29,7 +30,7 @@ float4 getGaussianU(float2 uv, int nb_samples) {
         float4 px_right = image.Sample(textureSampler, float2(uv[0]+du, uv[1]));
         float4 px_left = image.Sample(textureSampler, float2(uv[0]-du, uv[1]));
 
-        float k = gaussian(float(i) / nb_samples_f);
+        float k = gaussian(float(i) / nb_samples_f * clamp(sigma, 1.0, 100.0));
         float alpha_impact = k * (px_right.a + px_left.a);
         px_out.rgb += k * (px_right.rgb*px_right.a + px_left.rgb*px_left.a);
         px_out.a += alpha_impact;
@@ -55,7 +56,7 @@ float4 getGaussianV(float2 uv, int nb_samples) {
         float4 px_right = tex_interm.Sample(textureSampler, float2(uv[0], uv[1]+dv));
         float4 px_left = tex_interm.Sample(textureSampler, float2(uv[0], uv[1]-dv));
 
-        float k = gaussian(float(i) / nb_samples_f);
+        float k = gaussian(float(i) / nb_samples_f * clamp(sigma, 1.0, 100.0));
         float alpha_impact = k * (px_right.a + px_left.a);
         px_out.rgb += k * (px_right.rgb*px_right.a + px_left.rgb*px_left.a);
         px_out.a += alpha_impact;

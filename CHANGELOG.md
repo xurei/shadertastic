@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Transition backup system (not enabled in vanilla OBS, needs [this PR](https://github.com/obsproject/obs-studio/pull/13633))
 
+### Changed
+- Gaussian Blur: add `sigma` parameter for control over smoothness of the blur
+
 ## [1.1.1] - 2026-06-14
 ### Fixed
 - Fixed crashes due to event listeners called after delete
