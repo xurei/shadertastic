@@ -24,7 +24,7 @@ struct FragData {
 VertData VSDefault(VertData v_in)
 {
 	VertData vert_out;
-	vert_out.uv  = v_in.uv;
+	vert_out.uv  = vs _in.uv;
 	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
 	return vert_out;
 }

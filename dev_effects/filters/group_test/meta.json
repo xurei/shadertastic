@@ -70,6 +70,23 @@
           "default": 10
         }
       ]
+    },
+    {
+      "name": "group3",
+      "label": "Val3 true",
+      "type": "group",
+      "if": [ "val3", "==", true ],
+      "parameters": [
+        {
+          "name": "valG3",
+          "label": "valG3",
+          "type": "float",
+          "slider": true,
+          "min": 0,
+          "max": 100,
+          "default": 10
+        }
+      ]
     }
   ]
 }
