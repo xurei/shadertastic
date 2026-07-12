@@ -114,7 +114,7 @@ class effect_parameter_source : public effect_parameter {
                 obs_property_set_visible(ui_prop, visible);
             }
         }
-        [[nodiscard]] virtual bool is_visible() const override {
+        [[nodiscard]] bool is_visible() const override {
             return obs_property_visible(ui_prop);
         }
 
@@ -122,13 +122,6 @@ class effect_parameter_source : public effect_parameter {
             std::string full_param_name = get_full_param_name(effect_name);
             if (this->source != nullptr) {
                 this->hide();
-                #ifdef DEV_MODE
-                    obs_source_t *ref_source2 = obs_weak_source_get_source(this->source);
-                    if (ref_source2 != nullptr) {
-                        debug("Release source %s", obs_source_get_name(ref_source2));
-                        obs_source_release(ref_source2);
-                    }
-                #endif
                 obs_weak_source_release(this->source);
                 this->source = nullptr;
             }

@@ -51,7 +51,7 @@ class effect_parameter_unknown : public effect_parameter {
         void set_visible(const bool visible) override {
             UNUSED_PARAMETER(visible);
         }
-        [[nodiscard]] virtual bool is_visible() const override {
+        [[nodiscard]] bool is_visible() const override {
             return true;
         }
 

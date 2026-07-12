@@ -102,7 +102,7 @@ class effect_parameter_audiolevel : public effect_parameter {
                 obs_property_set_visible(ui_prop, visible);
             }
         }
-        [[nodiscard]] virtual bool is_visible() const override {
+        [[nodiscard]] bool is_visible() const override {
             return obs_property_visible(ui_prop);
         }
 

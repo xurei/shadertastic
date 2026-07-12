@@ -119,6 +119,7 @@ class effect_parameter_time : public effect_parameter {
             }
         }
         [[nodiscard]] virtual bool is_visible() const override {
+        [[nodiscard]] bool is_visible() const override {
             return obs_property_visible(ui_speed_prop) || obs_property_visible(ui_reset_prop);
         }
 
