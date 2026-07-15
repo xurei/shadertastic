@@ -19,7 +19,11 @@
 #define SHADERTASTIC_OBS_RETROCOMPAT_HPP
 
 #include <obs-module.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <dlfcn.h>
+#endif
 #include <obs.hpp>
 #include <string>
 
@@ -30,8 +34,10 @@
 
 template<typename fn_type> fn_type get_retrocompat_fn(const char *fn_name) {
     #ifdef _WIN32
-    fn_type fn = reinterpret_cast<type_name>(
-        GetProcAddress(GetModuleHandleA("obs.dll"), fn_name));
+    fn_type fn = reinterpret_cast<fn_type>(GetProcAddress(GetModuleHandleA("obs.dll"), fn_name));
+    if (fn == nullptr) {
+        fn = reinterpret_cast<fn_type>(GetProcAddress(GetModuleHandleA("obs-frontend-api.dll"), fn_name));
+    }
     #else
     fn_type fn = reinterpret_cast<fn_type>(
         dlsym(RTLD_DEFAULT, fn_name));
