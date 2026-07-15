@@ -21,17 +21,19 @@
 #include <string>
 #include "parameter.hpp"
 
-class effect_parameter_int : public effect_parameter {
+namespace effect_parameter_int_detail {
+    using base_param = effect_param_with_unique_prop<effect_parameter>;
+}
+class effect_parameter_int : public effect_parameter_int_detail::base_param {
     private:
         int default_value{};
         bool is_slider{};
         int param_min{};
         int param_max{};
         int param_step{};
-        obs_property_t *ui_prop{nullptr};
 
     public:
-        explicit effect_parameter_int(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
+        explicit effect_parameter_int(gs_eparam_t *shader_param) : effect_parameter_int_detail::base_param(sizeof(int), shader_param) {
         }
 
         [[nodiscard]] effect_param_datatype type() const override {
@@ -61,30 +63,21 @@ class effect_parameter_int : public effect_parameter {
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {
             std::string full_param_name = get_full_param_name(effect_name);
+            obs_property_t *prop;
             if (is_slider) {
-                ui_prop = obs_properties_add_int_slider(props, full_param_name.c_str(), label.c_str(), param_min, param_max, param_step);
+                prop = obs_properties_add_int_slider(props, full_param_name.c_str(), label.c_str(), param_min, param_max, param_step);
             }
             else {
-                ui_prop = obs_properties_add_int(props, full_param_name.c_str(), label.c_str(), param_min, param_max, param_step);
+                prop = obs_properties_add_int(props, full_param_name.c_str(), label.c_str(), param_min, param_max, param_step);
             }
             if (!description.empty()) {
-                obs_property_set_long_description(ui_prop, obs_module_text(description.c_str()));
+                obs_property_set_long_description(prop, obs_module_text(description.c_str()));
             }
-        }
-
-        void set_visible(const bool visible) override {
-            if (ui_prop != nullptr) {
-                obs_property_set_visible(ui_prop, visible);
-            }
-        }
-        [[nodiscard]] bool is_visible() const override {
-            return obs_property_visible(ui_prop);
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
             std::string full_param_name = get_full_param_name(effect_name);
             *((int*)this->data) = (int)obs_data_get_int(settings, full_param_name.c_str());
-            //debug("%s = %d", full_param_name, *((int*)this->data));
         }
 };
 

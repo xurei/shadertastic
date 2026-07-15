@@ -27,14 +27,16 @@
 #include "src/settings.h"
 #include "parameter_factory.h"
 
-class effect_parameter_group : public effect_parameter {
+namespace effect_parameter_group_detail {
+    using base_param = effect_param_with_unique_prop<effect_parameter>;
+}
+class effect_parameter_group : public effect_parameter_group_detail::base_param {
     private:
         double value{};
         params_list group_params;
-        obs_property_t *ui_prop{nullptr};
 
     public:
-        explicit effect_parameter_group(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
+        explicit effect_parameter_group(gs_eparam_t *shader_param) : effect_parameter_group_detail::base_param(sizeof(int), shader_param) {
         }
 
         ~effect_parameter_group() override {
@@ -110,17 +112,7 @@ class effect_parameter_group : public effect_parameter {
                 }
             }
 
-            ui_prop = obs_properties_add_group(props, full_param_name.c_str(), label.c_str(), OBS_GROUP_NORMAL, params_group);
-            std::string param_val1 = get_full_param_name_static(effect_name, "val1");
-        }
-
-        void set_visible(const bool visible) override {
-            if (ui_prop != nullptr) {
-                obs_property_set_visible(ui_prop, visible);
-            }
-        }
-        [[nodiscard]] bool is_visible() const override {
-            return obs_property_visible(ui_prop);
+            obs_properties_add_group(props, full_param_name.c_str(), label.c_str(), OBS_GROUP_NORMAL, params_group);
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {

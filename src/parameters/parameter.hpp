@@ -44,12 +44,9 @@ inline static double json_number_value_or(json_t *value, double default_value) {
     return default_value;
 }
 
-#define EFFECT_PARAMETER_SIGNATURE 0x54cd891bfea1749f
-
 class effect_parameter {
     private:
         std::unique_ptr<condition_t> condition{};
-        long long int signature = EFFECT_PARAMETER_SIGNATURE; // Used to memory-check the event listeners. Set to zero when deleted
 
     protected:
         void *data{};
@@ -59,6 +56,7 @@ class effect_parameter {
         bool devmode{};
         std::string description{};
         size_t data_size{};
+        bool visible{true};
 
     public:
         /**
@@ -86,7 +84,6 @@ class effect_parameter {
         }
 
         virtual ~effect_parameter() {
-            signature = 0;
             condition.reset(nullptr);
             if (this->data != nullptr) {
                 bfree(this->data);
@@ -176,13 +173,23 @@ class effect_parameter {
          * Set visibility of the parameter inputs the UI in the OBS view
          * @param visible
          */
-        virtual void set_visible(bool visible) = 0;
+        inline void set_visible(const bool visible_) {
+            visible = visible_;
+        }
+
+        /**
+         * Apply visibility to the UI through its properties
+         * @param visible
+         */
+        virtual void apply_visible(const char *effect_name, obs_properties_t *props, bool is_visible) = 0;
 
         /**
          * Get visibility of the parameter inputs the UI in the OBS view
          * @param visible
          */
-        [[nodiscard]] virtual bool is_visible() const = 0;
+        inline bool is_visible() const {
+            return visible;
+        }
 
         /**
          * Update function of the parameter, will be called when a filter is loaded or when the
@@ -251,5 +258,49 @@ class effect_parameter {
             return condition == nullptr || condition->check(settings);
         }
 };
+
+template<typename Param>
+class effect_param_with_no_prop : public Param {
+    public:
+        using Param::Param;
+
+        [[maybe_unused]] void apply_visible(const char *effect_name, obs_properties_t *props, const bool visible) override {
+            UNUSED_PARAMETER(effect_name);
+            UNUSED_PARAMETER(props);
+            UNUSED_PARAMETER(visible);
+            /* Nothing to do */
+        }
+
+        void render_property_ui(const char *effect_name, obs_properties_t *props) override {
+            UNUSED_PARAMETER(effect_name);
+            UNUSED_PARAMETER(props);
+            /* Automatic parameter, no UI */
+        }
+
+        void set_default(obs_data_t *settings, const char *effect_name) override {
+            UNUSED_PARAMETER(settings);
+            UNUSED_PARAMETER(effect_name);
+        }
+
+        void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
+            UNUSED_PARAMETER(settings);
+            UNUSED_PARAMETER(effect_name);
+        }
+};
+
+template<typename Param>
+class effect_param_with_unique_prop : public Param {
+    public:
+        using Param::Param;
+
+        [[maybe_unused]] void apply_visible(const char *effect_name, obs_properties_t *props, const bool visible) override {
+            std::string full_param_name = Param::get_full_param_name(effect_name);
+            auto *ui_prop = obs_properties_get(props, full_param_name.c_str());
+            if (ui_prop != nullptr) {
+                obs_property_set_visible(ui_prop, visible);
+            }
+        }
+};
+
 
 #endif // SHADERTASTIC_PARAMETER_HPP

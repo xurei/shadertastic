@@ -25,7 +25,10 @@
 #include "src/face_tracking/face_tracking.h"
 #include "src/face_tracking/face_tracking_raster.h"
 
-class effect_parameter_facetracking : public effect_parameter {
+namespace effect_parameter_facetracking_detail {
+    using base_param = effect_param_with_no_prop<effect_parameter>;
+}
+    class effect_parameter_facetracking : public effect_parameter_facetracking_detail::base_param {
     private:
         static constexpr char PARAM_STR_FACE_FOUND[] = "face_found";
         static constexpr char PARAM_STR_BOX_TL[] = "bbox_tl";
@@ -53,7 +56,7 @@ class effect_parameter_facetracking : public effect_parameter {
         };
 
     public:
-        explicit effect_parameter_facetracking(const effect_shader *shader) : effect_parameter(shader) {
+        explicit effect_parameter_facetracking(const effect_shader *shader) : effect_parameter_facetracking_detail::base_param(shader) {
         }
 
         [[nodiscard]] effect_param_datatype type() const override {
@@ -61,7 +64,7 @@ class effect_parameter_facetracking : public effect_parameter {
         }
 
         void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
-                        UNUSED_PARAMETER(effect_path);
+            UNUSED_PARAMETER(effect_path);
 
             std::string face_found = get_full_subparam_name_static(name, PARAM_STR_FACE_FOUND);
             std::string bbox_tl = get_full_subparam_name_static(name, PARAM_STR_BOX_TL);
@@ -86,11 +89,6 @@ class effect_parameter_facetracking : public effect_parameter {
             face_tracking = s->face_tracking.get();
             cx = obs_source_get_width(s->source);
             cy = obs_source_get_height(s->source);
-        }
-
-        void set_default(obs_data_t *settings, const char *effect_name) override {
-            UNUSED_PARAMETER(settings);
-            UNUSED_PARAMETER(effect_name);
         }
 
         void try_gs_set_val() override {
@@ -124,24 +122,6 @@ class effect_parameter_facetracking : public effect_parameter {
                     try_gs_effect_set_texture(points_tex.c_str(), param_fd_preraster_tex, fd_preraster_texture);
                 }
             }
-        }
-
-        void render_property_ui(const char *effect_name, obs_properties_t *props) override {
-            UNUSED_PARAMETER(effect_name);
-            UNUSED_PARAMETER(props);
-            // TODO faudrait ptetre mettre un message de warning, ou alors si on fait le truc de recyclage mais faut guider l'user
-        }
-
-        void set_visible(const bool visible) override {
-            UNUSED_PARAMETER(visible);
-        }
-        [[nodiscard]] bool is_visible() const override {
-            return true;
-        }
-
-        void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
-            UNUSED_PARAMETER(settings);
-            UNUSED_PARAMETER(effect_name);
         }
 };
 

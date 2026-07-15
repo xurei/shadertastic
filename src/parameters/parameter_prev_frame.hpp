@@ -24,7 +24,10 @@
 #include "../util/string_util.h"
 #include "../util/file_util.h"
 
-class effect_parameter_prev_frame : public effect_parameter {
+namespace effect_parameter_prev_frame_detail {
+    using base_param = effect_param_with_no_prop<effect_parameter>;
+}
+class effect_parameter_prev_frame : public effect_parameter_prev_frame_detail::base_param {
     private:
         int step_{};
 
@@ -32,8 +35,7 @@ class effect_parameter_prev_frame : public effect_parameter {
         int prev_texrender_buffer = 0;
 
     public:
-        explicit effect_parameter_prev_frame(gs_eparam_t *shader_param)
-        : effect_parameter(sizeof(float), shader_param) {
+        explicit effect_parameter_prev_frame(gs_eparam_t *shader_param) : effect_parameter_prev_frame_detail::base_param(sizeof(float), shader_param) {
         }
 
         ~effect_parameter_prev_frame() override {
@@ -76,30 +78,6 @@ class effect_parameter_prev_frame : public effect_parameter {
             step_ = json_is_integer(step_json) ? (int)json_integer_value(step_json) : -1;
 
             init_texrenders();
-        }
-
-        void set_default(obs_data_t *settings, const char *effect_name) override {
-            UNUSED_PARAMETER(settings);
-            UNUSED_PARAMETER(effect_name);
-        }
-
-        void render_property_ui(const char *effect_name, obs_properties_t *props) override {
-            UNUSED_PARAMETER(effect_name);
-            UNUSED_PARAMETER(props);
-            /* Automatic parameter, no UI */
-        }
-
-        void set_visible(const bool visible) override {
-            UNUSED_PARAMETER(visible);
-        }
-        [[nodiscard]] bool is_visible() const override {
-            return true;
-        }
-
-        void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
-            UNUSED_PARAMETER(settings);
-            UNUSED_PARAMETER(effect_name);
-            /* Automatic parameter, no UI */
         }
 
         void try_gs_set_val() override {

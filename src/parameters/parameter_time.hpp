@@ -21,15 +21,21 @@
 #include <string>
 #include "parameter.hpp"
 
-enum effect_parameter_time_reset_t {
-    CHOICE_NO = 0,
-    CHOICE_YES = 1,
-    CHOICE_PROMPT = 2,
-};
+namespace effect_parameter_time_detail {
+    using base_param = effect_parameter;
 
-class effect_parameter_time : public effect_parameter {
+    enum reset_type_t {
+        CHOICE_NO = 0,
+        CHOICE_YES = 1,
+        CHOICE_PROMPT = 2,
+    };
+}
+class effect_parameter_time : public effect_parameter_time_detail::base_param {
     private:
-        effect_parameter_time_reset_t reset_on_show_type{CHOICE_NO};
+        static constexpr char PARAM_STR_SPEED[] = "speed";
+        static constexpr char PARAM_STR_RESET_ON_SHOW[] = "reset_on_show";
+
+        effect_parameter_time_detail::reset_type_t reset_on_show_type{effect_parameter_time_detail::CHOICE_NO};
         bool reset_on_show{false};
         bool show_speed_ui{true};
         float *time;
@@ -38,11 +44,9 @@ class effect_parameter_time : public effect_parameter {
         float max_speed;
         float default_speed;
         std::string speed_label;
-        obs_property_t *ui_speed_prop{nullptr};
-        obs_property_t *ui_reset_prop{nullptr};
 
     public:
-        explicit effect_parameter_time(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param), time((float*)this->data) {
+        explicit effect_parameter_time(gs_eparam_t *shader_param) : effect_parameter_time_detail::base_param(sizeof(float), shader_param), time((float*)this->data) {
             *time = 0.0;
         }
 
@@ -54,16 +58,16 @@ class effect_parameter_time : public effect_parameter {
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
 
-            json_t *reset_on_show_json = json_object_get(metadata, "reset_on_show");
+            json_t *reset_on_show_json = json_object_get(metadata, PARAM_STR_RESET_ON_SHOW);
             if (json_is_string(reset_on_show_json) && strcmp(json_string_value(reset_on_show_json), "prompt") == 0) {
-                reset_on_show_type = CHOICE_PROMPT;
+                reset_on_show_type = effect_parameter_time_detail::CHOICE_PROMPT;
             }
             else {
                 reset_on_show = json_is_boolean(reset_on_show_json) ? json_boolean_value(reset_on_show_json) : false;
-                reset_on_show_type = reset_on_show ? CHOICE_YES : CHOICE_NO;
+                reset_on_show_type = reset_on_show ? effect_parameter_time_detail::CHOICE_YES : effect_parameter_time_detail::CHOICE_NO;
             }
 
-            json_t *speed_obj = json_object_get(metadata, "speed");
+            json_t *speed_obj = json_object_get(metadata, PARAM_STR_SPEED);
             if (json_is_object(speed_obj)) {
                 json_t *show_ui_json = json_object_get(speed_obj, "show_ui");
                 json_t *label_json = json_object_get(speed_obj, "label");
@@ -91,18 +95,18 @@ class effect_parameter_time : public effect_parameter {
 
         void set_default(obs_data_t *settings, const char *effect_name) override {
             std::string full_param_name = get_full_param_name(effect_name);
-            obs_data_set_default_double(settings, get_full_subparam_name_static(full_param_name, std::string("speed")).c_str(), default_speed);
-            obs_data_set_default_bool(settings, get_full_subparam_name_static(full_param_name, std::string("reset_on_show")).c_str(), false);
+            obs_data_set_default_double(settings, get_full_subparam_name_static(full_param_name, PARAM_STR_SPEED).c_str(), default_speed);
+            obs_data_set_default_bool(settings, get_full_subparam_name_static(full_param_name, std::string(PARAM_STR_RESET_ON_SHOW)).c_str(), false);
         }
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {
             std::string full_param_name = get_full_param_name(effect_name);
             if (show_speed_ui) {
-                ui_speed_prop = obs_properties_add_float_slider(props, get_full_subparam_name_static(full_param_name, "speed").c_str(), speed_label.c_str(), min_speed, max_speed, 0.001);
+                obs_properties_add_float_slider(props, get_full_subparam_name_static(full_param_name, PARAM_STR_SPEED).c_str(), speed_label.c_str(), min_speed, max_speed, 0.001);
             }
-            if (reset_on_show_type == CHOICE_PROMPT) {
-                ui_reset_prop = obs_properties_add_list(
-                    props, get_full_subparam_name_static(full_param_name, "reset_on_show").c_str(), "On filter visibility toggle:",
+            if (reset_on_show_type == effect_parameter_time_detail::CHOICE_PROMPT) {
+                auto *ui_reset_prop = obs_properties_add_list(
+                    props, get_full_subparam_name_static(full_param_name, PARAM_STR_RESET_ON_SHOW).c_str(), "On filter visibility toggle:",
                     OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_BOOL
                 );
                 obs_property_list_add_bool(ui_reset_prop, "Do nothing", false);
@@ -110,19 +114,18 @@ class effect_parameter_time : public effect_parameter {
             }
         }
 
-        void set_visible(const bool visible) override {
-            if (ui_speed_prop != nullptr) {
-                obs_property_set_visible(ui_speed_prop, visible);
+        void apply_visible(const char *effect_name, obs_properties_t *props, const bool visible) override {
+            std::string full_param_name = get_full_param_name(effect_name);
+            std::string speed_param_name = get_full_subparam_name_static(full_param_name, PARAM_STR_SPEED);
+            std::string reset_param_name = get_full_subparam_name_static(full_param_name, PARAM_STR_RESET_ON_SHOW);
+            auto *speed_prop = obs_properties_get(props, speed_param_name.c_str());
+            auto *reset_prop = obs_properties_get(props, reset_param_name.c_str());
+            if (speed_prop != nullptr) {
+                obs_property_set_visible(speed_prop, visible);
             }
-            if (ui_reset_prop != nullptr) {
-                obs_property_set_visible(ui_reset_prop, visible);
+            if (reset_prop != nullptr) {
+                obs_property_set_visible(reset_prop, visible);
             }
-        }
-        [[nodiscard]] bool is_visible() const override {
-            if (!show_speed_ui && reset_on_show_type != CHOICE_PROMPT) {
-                return false;
-            }
-            return obs_property_visible(ui_speed_prop) || obs_property_visible(ui_reset_prop);
         }
 
         void tick(shadertastic_common *s) override {
@@ -138,10 +141,10 @@ class effect_parameter_time : public effect_parameter {
 
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
             std::string full_param_name = get_full_param_name(effect_name);
-            if (reset_on_show_type == CHOICE_PROMPT) {
-                reset_on_show = obs_data_get_bool(settings, get_full_subparam_name_static(full_param_name, "reset_on_show").c_str());
+            if (reset_on_show_type == effect_parameter_time_detail::CHOICE_PROMPT) {
+                reset_on_show = obs_data_get_bool(settings, get_full_subparam_name_static(full_param_name, PARAM_STR_RESET_ON_SHOW).c_str());
             }
-            speed = (float)obs_data_get_double(settings, get_full_subparam_name_static(full_param_name, "speed").c_str());
+            speed = (float)obs_data_get_double(settings, get_full_subparam_name_static(full_param_name, PARAM_STR_SPEED).c_str());
         }
 };
 

@@ -21,13 +21,14 @@
 #include <string>
 #include "parameter.hpp"
 
-class effect_parameter_text : public effect_parameter {
-    private:
-        obs_property_t *ui_prop{nullptr};
+namespace effect_parameter_text_detail {
+    using base_param = effect_param_with_unique_prop<effect_parameter>;
+}
+class effect_parameter_text : public effect_parameter_text_detail::base_param {
     public:
         std::string value;
 
-        explicit effect_parameter_text(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
+        explicit effect_parameter_text(gs_eparam_t *shader_param) : effect_parameter_text_detail::base_param(sizeof(int), shader_param) {
         }
 
         [[nodiscard]] effect_param_datatype type() const override {
@@ -49,21 +50,12 @@ class effect_parameter_text : public effect_parameter {
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {
             std::string full_param_name = get_full_param_name(effect_name);
-            ui_prop = obs_properties_add_text(
+            obs_properties_add_text(
                 props,
                 full_param_name.c_str(),
                 value.c_str(),
                 OBS_TEXT_INFO
             );
-        }
-
-        void set_visible(const bool visible) override {
-            if (ui_prop != nullptr) {
-                obs_property_set_visible(ui_prop, visible);
-            }
-        }
-        [[nodiscard]] bool is_visible() const override {
-            return obs_property_visible(ui_prop);
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {

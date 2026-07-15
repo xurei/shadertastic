@@ -248,8 +248,13 @@ void shadertastic_effect_t::attach_listeners(obs_properties *props) {
     for (auto &[referenced_param_name, listeners_list] : referenced_params) {
         auto *prop = obs_properties_get(props, referenced_param_name.c_str());
         obs_property_set_modified_callback2(prop, [](void *data, obs_properties_t *props, obs_property_t *property, obs_data_t *settings) {
-            UNUSED_PARAMETER(props);
-            const char *prop_name = obs_property_name(property);
+            std::string prop_name = obs_property_name(property);
+            if (prop_name.find('.') == std::string::npos) {
+                // Should not happen, but stop if it happens for any reason
+                warn("An observed property has no base effet: '%s'. This is normally impossible.", prop_name.c_str());
+                return false;
+            }
+            std::string effect_name = prop_name.substr(0, prop_name.find('.'));
             auto *self = static_cast<shadertastic_effect_t *>(data);
             auto &listeners = self->referenced_params[prop_name];
             bool changed = false;
@@ -258,6 +263,7 @@ void shadertastic_effect_t::attach_listeners(obs_properties *props) {
                     bool should_be_visible = listener->condition_check(settings);
                     bool currently_visible = listener->is_visible();
                     listener->set_visible(should_be_visible);
+                    listener->apply_visible(effect_name.c_str(), props, should_be_visible);
                     changed |= (should_be_visible != currently_visible);
                 }
             }

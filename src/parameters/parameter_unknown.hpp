@@ -18,9 +18,12 @@
 #ifndef SHADERTASTIC_PARAMETER_UNKNOWN_HPP
 #define SHADERTASTIC_PARAMETER_UNKNOWN_HPP
 
-class effect_parameter_unknown : public effect_parameter {
+namespace effect_parameter_unknown_detail {
+    using base_param = effect_param_with_unique_prop<effect_parameter>;
+}
+class effect_parameter_unknown : public effect_parameter_unknown_detail::base_param {
     public:
-        explicit effect_parameter_unknown(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
+        explicit effect_parameter_unknown(gs_eparam_t *shader_param) : effect_parameter_unknown_detail::base_param(sizeof(int), shader_param) {
         }
 
         [[nodiscard]] effect_param_datatype type() const override {
@@ -46,13 +49,6 @@ class effect_parameter_unknown : public effect_parameter {
                 (std::string("Unknown type for ") + std::string(full_param_name)).c_str(),
                 OBS_TEXT_INFO
             );
-        }
-
-        void set_visible(const bool visible) override {
-            UNUSED_PARAMETER(visible);
-        }
-        [[nodiscard]] bool is_visible() const override {
-            return true;
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {

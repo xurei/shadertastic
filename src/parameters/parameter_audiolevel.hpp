@@ -24,32 +24,34 @@
 #include "../util/compare_nocase.hpp"
 #include "../util/time_util.hpp"
 
-static bool effect_parameter_audiolevel_add(void *data, obs_source_t *source) {
-    std::list<std::string> *sources_list = (std::list<std::string>*)(data);
+namespace effect_parameter_audiolevel_detail {
+    using base_param = effect_parameter;
 
-    uint32_t flags = obs_source_get_output_flags(source);
-    obs_source_type type = obs_source_get_type(source);
+    static bool add_source_to_list(void *data, obs_source_t *source) {
+        std::list<std::string> *sources_list = (std::list<std::string>*)(data);
 
-    if ((flags & OBS_SOURCE_AUDIO) && ((type == OBS_SOURCE_TYPE_INPUT))) {
-        const char *name = obs_source_get_name(source);
-        if (name != nullptr) {
-            sources_list->push_back(std::string(name));
+        uint32_t flags = obs_source_get_output_flags(source);
+        obs_source_type type = obs_source_get_type(source);
+
+        if ((flags & OBS_SOURCE_AUDIO) && ((type == OBS_SOURCE_TYPE_INPUT))) {
+            const char *name = obs_source_get_name(source);
+            if (name != nullptr) {
+                sources_list->push_back(std::string(name));
+            }
         }
+        return true;
     }
-    return true;
 }
-
-class effect_parameter_audiolevel : public effect_parameter {
+class effect_parameter_audiolevel : public effect_parameter_audiolevel_detail::base_param {
     private:
         obs_weak_source_t *source = nullptr;
         obs_volmeter_t *obs_volmeter;
         float smoothing = 0.5;
         unsigned long last_callback_update = 0;
-        obs_property_t *ui_prop{nullptr};
 
     public:
         explicit effect_parameter_audiolevel(gs_eparam_t *shader_param):
-            effect_parameter(sizeof(float), shader_param),
+            effect_parameter_audiolevel_detail::base_param(sizeof(float), shader_param),
             obs_volmeter(obs_volmeter_create(OBS_FADER_LOG))
         {
             obs_volmeter_add_callback(this->obs_volmeter, effect_parameter_audiolevel::callback, this);
@@ -84,26 +86,31 @@ class effect_parameter_audiolevel : public effect_parameter {
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {
             std::string full_param_name = get_full_param_name(effect_name);
-            ui_prop = obs_properties_add_list(props, full_param_name.c_str(), label.c_str(), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+            std::string smoothing_param_name = full_param_name + "__smoothing";
+            auto *source_prop = obs_properties_add_list(props, full_param_name.c_str(), label.c_str(), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
             std::list<std::string> sources_list;
-            obs_enum_sources(effect_parameter_audiolevel_add, &sources_list);
+            obs_enum_sources(effect_parameter_audiolevel_detail::add_source_to_list, &sources_list);
             sources_list.sort(compare_nocase);
             for (const std::string &str: sources_list) {
-                obs_property_list_add_string(ui_prop, str.c_str(), str.c_str());
+                obs_property_list_add_string(source_prop, str.c_str(), str.c_str());
             }
-            auto prop = obs_properties_add_float_slider(props, (std::string(full_param_name) + "__smoothing").c_str(), "∟ Smoothing", 0.0, 0.99, 0.01);
+            auto smoothing_prop = obs_properties_add_float_slider(props, smoothing_param_name.c_str(), "∟ Smoothing", 0.0, 0.99, 0.01);
             if (!description.empty()) {
-                obs_property_set_long_description(prop, obs_module_text(description.c_str()));
+                obs_property_set_long_description(smoothing_prop, obs_module_text(description.c_str()));
             }
         }
 
-        void set_visible(const bool visible) override {
-            if (ui_prop != nullptr) {
-                obs_property_set_visible(ui_prop, visible);
+        void apply_visible(const char *effect_name, obs_properties_t *props, const bool visible) override {
+            std::string full_param_name = get_full_param_name(effect_name);
+            std::string smoothing_param_name = full_param_name + "__smoothing";
+            auto *source_prop = obs_properties_get(props, full_param_name.c_str());
+            auto *smoothing_prop = obs_properties_get(props, smoothing_param_name.c_str());
+            if (source_prop != nullptr) {
+                obs_property_set_visible(source_prop, visible);
             }
-        }
-        [[nodiscard]] bool is_visible() const override {
-            return obs_property_visible(ui_prop);
+            if (smoothing_prop != nullptr) {
+                obs_property_set_visible(smoothing_prop, visible);
+            }
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
