@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-## [1.1.2] - 2026-07-15
+## [1.1.3] - 2026-07-17
 ### Fixed
 - Fixed sources shown twice in source parameter
 - Fixed minor memory leak in `load_settings()`
