@@ -16,7 +16,7 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_COMPILE_WARNING_AS_ERROR": true,
         "ENABLE_CCACHE": true,
-        "SHADERTASTIC_COMMIT": "localbuild",
+        "PROJECT_COMMIT": "localbuild",
         "DEV_MODE": true,
         "DEV_LOG_PATH": "/tmp/shadertastic_debug_logs"
       }

@@ -57,6 +57,15 @@ function Build {
         $CmakeInstallArgs += ('--verbose')
     }
 
+    $commit = if ($env:GITHUB_SHA) {
+        $env:GITHUB_SHA
+    } else {
+        git rev-parse HEAD
+    }
+    $CmakeArgs += @(
+        "-DPROJECT_COMMIT=$commit"
+    )
+
     $CmakeBuildArgs += @(
         '--preset', "windows-${Target}"
         '--config', $Configuration

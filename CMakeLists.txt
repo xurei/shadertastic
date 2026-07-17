@@ -25,6 +25,12 @@ endif()
 find_package(libobs REQUIRED)
 find_package(jansson REQUIRED)
 
+#Commit hash of the project, used by the CI. Set to 'localbuild' otherwise
+if (NOT DEFINED PROJECT_COMMIT)
+  set(PROJECT_COMMIT "unknown")
+endif()
+message(STATUS "PROJECT_COMMIT=${PROJECT_COMMIT}")
+
 target_link_libraries(
         ${CMAKE_PROJECT_NAME}
         PRIVATE

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed minor memory leak in `load_settings()`
 - Fix memory leak in condition evaluation
 - Fixed memory leak in transition auto-reload (dev mode only)
+- Fixed commit number not showing in settings
 
 ### Added
 - Gaussian Blur filter: added `sigma` parameter to control the smoothness of the blur

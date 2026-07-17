@@ -409,7 +409,8 @@ void show_settings_dialog() {
     // Build ref
     layout = new QHBoxLayout();
     layout->addStretch();
-    QLabel *buildLabel = new QLabel("Build: " PROJECT_VERSION_COMMIT "");
+    std::string commit_short = std::string(PROJECT_VERSION_COMMIT).substr(0, 10);
+    QLabel *buildLabel = new QLabel(("Build: " + commit_short).c_str());
     layout->addWidget(buildLabel);
     formLayout->addRow(layout);
 

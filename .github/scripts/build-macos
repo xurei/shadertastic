@@ -102,6 +102,7 @@ build() {
   if (( debug )) cmake_args+=(--debug-output)
 
   cmake_args+=(--preset 'macos-ci')
+  cmake_args+=(-DPROJECT_COMMIT="${GITHUB_SHA}")
 
   typeset -gx NSUnbufferedIO=YES
 
