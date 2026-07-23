@@ -42,9 +42,10 @@ class HLSLExpander {
             auto tmp = std::string(path);
             addPath(tmp);
         }
-
+        #ifndef _WIN32
         #pragma clang diagnostic push
         #pragma ide diagnostic ignored "misc-no-recursion"
+        #endif
         std::string expand_includes_recursive(const std::string& source, const std::filesystem::path &current_directory, const LoadFileFn& load_file, std::unordered_set<std::filesystem::path>& include_stack) {
             std::stringstream input(source);
             std::ostringstream output;
@@ -120,7 +121,9 @@ class HLSLExpander {
 
             return output.str();
         }
+        #ifndef _WIN32
         #pragma clang diagnostic pop
+        #endif
 
         std::optional<std::filesystem::path> try_file_exists(const std::filesystem::path &current_directory, std::string &file_path_str, std::unordered_set<std::filesystem::path> &include_stack) {
             std::filesystem::path include_path = current_directory / file_path_str;
