@@ -18,6 +18,7 @@
 #ifndef FILE_UTIL_HPP
 #define FILE_UTIL_HPP
 
+#include <optional>
 #include <vector>
 #include <filesystem>
 #include "string_util.h"
@@ -25,7 +26,8 @@ namespace fs = std::filesystem;
 
 std::string normalize_path(const std::string &input);
 
-char *load_file_zipped_or_local(const std::string &path);
+std::optional<std::string> load_file_local(const std::string &source_path);
+std::optional<std::string> load_file_zipped_or_local(const std::string &source_path);
 bool extract_file_zipped_or_local(const std::string &source_path, const std::string &destination_path);
 
 std::vector<std::string> list_files(const char* folderPath, std::string &extension);

@@ -34,9 +34,9 @@ void shadertastic_effect_t::load() {
     this->main_shader = shaders_library.get(this->path);
     this->param_facetracking = nullptr; // Resets the face_tracking param to null if present; no need to release, it's a weak pointer
 
-    char *meta_json = load_file_zipped_or_local(metadata_path);
+    auto meta_json = load_file_zipped_or_local(metadata_path);
 
-    if (meta_json == nullptr) {
+    if (!meta_json.has_value()) {
         // Something went wrong -> set default configuration
         warn("Unable to open file for effect %s.", name.c_str());
         label = name;
@@ -45,9 +45,8 @@ void shadertastic_effect_t::load() {
     }
 
     json_error_t error;
-    json_t *metadata = json_loads(meta_json, 0, &error);
+    json_t *metadata = json_loads(meta_json.value().c_str(), 0, &error);
 
-    bfree(meta_json);
     if (metadata == nullptr|| !json_is_object(metadata)) {
         // Something went wrong -> set default configuration
         warn("Unable to parse metadata for effect %s. Check the JSON syntax", name.c_str());

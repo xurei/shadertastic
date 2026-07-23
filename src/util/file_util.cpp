@@ -33,6 +33,8 @@
 #include <windows.h>
 #else
 #include <unistd.h>
+#include <optional>
+
 #endif
 #include "file_util.h"
 #include "../logging_functions.hpp"
@@ -50,12 +52,27 @@ std::string normalize_path(const std::string &input) {
     return result;
 }
 
-char *load_file_zipped_or_local(const std::string &source_path) {
+std::optional<std::string> load_file_local(const std::string &source_path) {
     std::string path = normalize_path(source_path);
     debug("load_file_zipped_or_local %s", path.c_str());
 
     if (os_file_exists(path.c_str())) {
         return os_quick_read_utf8_file(path.c_str());
+    }
+    else {
+        return nullptr;
+    }
+}
+
+std::optional<std::string> load_file_zipped_or_local(const std::string &source_path) {
+    std::string path = normalize_path(source_path);
+    debug("load_file_zipped_or_local %s", path.c_str());
+
+    if (os_file_exists(path.c_str())) {
+        char *content = os_quick_read_utf8_file(path.c_str());
+        std::string out(content);
+        bfree(content);
+        return out;
     }
     else {
         fs::path fs_path(path);

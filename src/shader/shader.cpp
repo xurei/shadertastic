@@ -22,6 +22,7 @@
 #include "../is_module_loaded.h"
 #include "shader.h"
 #include "../shadertastic.hpp"
+#include "src/util/hlsl_expander.hpp"
 
 effect_shader::~effect_shader() {
     //debug("DELETE effect_shader %s", path.c_str());
@@ -32,8 +33,8 @@ std::string effect_shader::load(const char *shader_path) {
     debug("SHADER PATH: %s", shader_path);
     this->path = std::string(shader_path);
     char *error_string = nullptr;
-    char *shader_source_ = load_file_zipped_or_local(shader_path);
-    if (shader_source_ == nullptr) {
+    auto shader_source_ = load_file_zipped_or_local(shader_path);
+    if (!shader_source_.has_value()) {
         log_error("Could not open shader file %s : File does not exist", shader_path);
         return "File does not exist";
     }
@@ -62,12 +63,19 @@ std::string effect_shader::load(const char *shader_path) {
             "sampler_state facetracking_sampler { Filter=Point; AddressU=Clamp; AddressV=Clamp;}; \n" +
             "#define facetracking_edge(fd_points_tex, edge_idx) fd_points_tex.Sample(facetracking_sampler, float2(((edge_idx) + 0.5)/478.0, 0.0)).xyz \n" +
             "#define facetracking_tex_edge(fd_points_tex, edge_idx) fd_points_tex.Sample(facetracking_sampler, float2(((edge_idx) + 0.5)/478.0, 1.0)).xyz \n" +
-            shader_source_
+            shader_source_.value()
         );
-        bfree(shader_source_);
+        try {
+            HLSLExpander expander;
+            expander.addPath("/home/olivier/obs-plugins/obs-shadertastic/effects/shadertastic-lib");
+            shader_source = expander.expand_includes(shader_source, "/home/olivier/obs-plugins/obs-shadertastic/effects/shadertastic-lib", load_file_local);
+        }
+        catch (std::runtime_error &e) {
+            debug("osef so far");
+        }
 
         obs_enter_graphics();
-        gs_effect = gs_effect_create(shader_source.c_str(), shader_path, &error_string);
+        gs_effect = gs_effect_create(shader_source.c_str(), shader_path, (char**)&error_string);
         obs_leave_graphics();
 
         if (!gs_effect) {
