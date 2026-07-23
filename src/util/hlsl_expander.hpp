@@ -28,11 +28,10 @@
 #include <list>
 #include <unordered_set>
 
-using LoadFileFn = std::function<std::optional<std::string>(const std::filesystem::path&)>;
-
 class HLSLExpander {
     private:
         std::list<std::string> include_paths;
+        typedef std::function<std::optional<std::string>(const std::string&)> LoadFileFn;
 
     public:
         inline void addPath(const std::string &path) {
@@ -84,12 +83,12 @@ class HLSLExpander {
                     };
 
                     std::string file_base = std::string(view.substr(pos, end - pos));
-                    auto include_path = try_file_exists(current_directory, file_base, load_file, include_stack);
+                    auto include_path = try_file_exists(current_directory, file_base, include_stack);
                     if (!include_path.has_value()) {
                         // Searching for the file in the include path
                         for (auto &include_dir : include_paths) {
                             std::cerr << "try " << include_dir << std::endl;
-                            include_path = try_file_exists(include_dir, file_base, load_file, include_stack);
+                            include_path = try_file_exists(include_dir, file_base, include_stack);
                             if (include_path.has_value()) {
                                 std::cerr << "found " << include_path.value() << std::endl;
                                 break;
@@ -123,7 +122,7 @@ class HLSLExpander {
         }
         #pragma clang diagnostic pop
 
-        std::optional<std::filesystem::path> try_file_exists(const std::filesystem::path &current_directory, std::string &file_path_str, const LoadFileFn& load_file, std::unordered_set<std::filesystem::path> &include_stack) {
+        std::optional<std::filesystem::path> try_file_exists(const std::filesystem::path &current_directory, std::string &file_path_str, std::unordered_set<std::filesystem::path> &include_stack) {
             std::filesystem::path include_path = current_directory / file_path_str;
             include_path = std::filesystem::weakly_canonical(include_path);
 
@@ -142,7 +141,7 @@ class HLSLExpander {
         std::string expand_includes(
             const std::string& main_source,
             const std::filesystem::path& main_directory,
-            const LoadFileFn& load_file)
+            const LoadFileFn &load_file)
         {
             std::unordered_set<std::filesystem::path> include_stack;
 
