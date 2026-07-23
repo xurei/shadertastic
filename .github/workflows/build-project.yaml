@@ -251,7 +251,7 @@ jobs:
 
   windows-build:
     name: Build for Windows 🪟
-    runs-on: windows-2025
+    runs-on: windows-2025-vs2026
     needs: check-event
     defaults:
       run:
