@@ -60,7 +60,8 @@ class effect_parameter_color_alpha : public effect_parameter_color_alpha_detail:
             return PARAM_DATATYPE_COLOR_ALPHA;
         }
 
-        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const std::string &effect_name, const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
+            UNUSED_PARAMETER(effect_name);
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
 

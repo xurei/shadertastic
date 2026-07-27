@@ -40,7 +40,8 @@ class effect_parameter_float : public effect_parameter_float_detail::base_param 
             return PARAM_DATATYPE_DOUBLE;
         }
 
-        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const std::string &effect_name, const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
+            UNUSED_PARAMETER(effect_name);
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
             json_t *slider_json = json_object_get(metadata, "slider");

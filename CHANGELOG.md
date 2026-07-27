@@ -5,11 +5,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Fixed display conditions not working in groups
+
 ## [1.2.0] - 2026-07-24
 This version fixes crashes with OBS 32.2.0 and later.
 
 ### Fixed
-- Fixed OBS 32.2.0 crashes
+- Fixed plugin not loading on OBS 32.2.0 on Windows
 
 ### Changed
 - Updated ONNX Runtime to 1.27.1 on Windows and Linux (MacOS has no more recent build for AMD64)

@@ -120,7 +120,7 @@ effect_parameter * effect_parameter_factory::create(const std::string &effect_na
             }
         }
         out->load_common_fields(effect_name, param_metadata);
-        out->initialize_params(main_shader, param_metadata, effect_path);
+        out->initialize_params(effect_name, main_shader, param_metadata, effect_path);
         return out;
     }
 }

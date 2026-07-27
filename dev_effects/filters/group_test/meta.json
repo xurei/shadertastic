@@ -72,12 +72,19 @@
       ]
     },
     {
+      "name": "prout",
+      "label": "prout",
+      "value": "prout",
+      "type": "text",
+      "if": [ "val3", "==", true ]
+    },
+    {
       "name": "group3",
       "label": "Val3 true",
       "type": "group",
-      "if": [ "val3", "==", true ],
       "parameters": [
         {
+          "if": [ "val3", "==", true ],
           "name": "valG3",
           "label": "valG3",
           "type": "float",

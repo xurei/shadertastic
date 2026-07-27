@@ -63,7 +63,8 @@ namespace effect_parameter_facetracking_detail {
             return PARAM_DATATYPE_FACETRACKING;
         }
 
-        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const std::string &effect_name, const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
+            UNUSED_PARAMETER(effect_name);
             UNUSED_PARAMETER(effect_path);
 
             std::string face_found = get_full_subparam_name_static(name, PARAM_STR_FACE_FOUND);

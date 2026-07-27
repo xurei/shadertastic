@@ -185,18 +185,7 @@ void shadertastic_effect_t::load() {
 
                 effect_params.put(param_name_str, effect_param);
 
-                if (effect_param->has_condition()) {
-                    debug("display condition found");
-                    std::vector<std::string> refs;
-                    effect_param->collect_refs_from_condition(refs);
-                    for (auto &n : refs) {
-                        //effect_params.add_inter_ref(n, effect_param->get_name());
-                        if (referenced_params.find(n) == referenced_params.end()) {
-                            referenced_params[n] = {};
-                        }
-                        referenced_params[n].push_back(effect_param);
-                    }
-                }
+                effect_param->prepare_conditions(referenced_params);
             }
         }
 

@@ -50,10 +50,10 @@ class effect_parameter_group : public effect_parameter_group_detail::base_param 
             return PARAM_DATATYPE_GROUP;
         }
 
-        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const std::string &effect_name, const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
             json_t *parameters = json_object_get(metadata, "parameters");
             if (!json_is_array(parameters)) {
-                warn("No parameters specified for effect %s", name.c_str());
+                warn("No parameters specified for effect %s", effect_name.c_str());
             }
 
             // Copy the effect params map to allow recycling
@@ -68,7 +68,7 @@ class effect_parameter_group : public effect_parameter_group_detail::base_param 
                 if (!json_is_object(param_metadata)) {
                     continue;
                 }
-                effect_parameter *effect_param = effect_parameter_factory::create(name, effect_path, shader, param_metadata);
+                effect_parameter *effect_param = effect_parameter_factory::create(effect_name, effect_path, shader, param_metadata);
 
                 if (effect_param != nullptr) {
                     std::string param_name_str;
@@ -92,6 +92,18 @@ class effect_parameter_group : public effect_parameter_group_detail::base_param 
             for (auto param: previous_group_params) {
                 debug ("Free removed param %s", param->get_name().c_str());
                 delete param;
+            }
+        }
+
+        /**
+         * Reference the required parameters in the condition of the effect.
+         * Can be extended to handle multiple subparameters in groups
+         */
+        void prepare_conditions(std::unordered_map<std::string, std::list<effect_parameter *>> &referenced_params) override {
+            effect_parameter::prepare_conditions(referenced_params);
+
+            for (auto *param : group_params) {
+                param->prepare_conditions(referenced_params);
             }
         }
 

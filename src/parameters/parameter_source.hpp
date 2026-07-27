@@ -82,7 +82,8 @@ class effect_parameter_source : public effect_parameter_source_detail::base_para
             return PARAM_DATATYPE_SOURCE;
         }
 
-        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const std::string &effect_name, const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
+            UNUSED_PARAMETER(effect_name);
             UNUSED_PARAMETER(metadata);
             UNUSED_PARAMETER(effect_path);
 

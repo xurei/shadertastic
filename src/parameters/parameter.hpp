@@ -18,6 +18,7 @@
 #ifndef SHADERTASTIC_PARAMETER_HPP
 #define SHADERTASTIC_PARAMETER_HPP
 
+#include <list>
 #include <jansson.h>
 #include "parameter_datatype.hpp"
 #include "src/condition/collect_refs.h"
@@ -152,7 +153,7 @@ class effect_parameter {
          * @param metadata
          * @param effect_path
          */
-        virtual void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) = 0;
+        virtual void initialize_params(const std::string &effect_name, const effect_shader *shader, json_t *metadata, const std::string &effect_path) = 0;
 
         /**
          * This is where you should set the defaults as explicitly specified in the metadata.
@@ -241,10 +242,21 @@ class effect_parameter {
         }
 
         /**
-         * @return true if the parameter has a condition
+         * Reference the required parameters in the condition of the effect.
+         * Can be extended to handle multiple subparameters in groups
          */
-        inline bool has_condition() {
-            return condition != nullptr;
+        virtual void prepare_conditions(std::unordered_map<std::string, std::list<effect_parameter *>> &referenced_params) {
+            if (condition != nullptr) {
+                debug("parameter '%s' has a display condition", name.c_str());
+                std::vector<std::string> refs;
+                this->collect_refs_from_condition(refs);
+                for (auto &n : refs) {
+                    if (referenced_params.find(n) == referenced_params.end()) {
+                        referenced_params[n] = {};
+                    }
+                    referenced_params[n].push_back(this);
+                }
+            }
         }
 
         /**

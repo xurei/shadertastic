@@ -37,7 +37,8 @@ class effect_parameter_bool : public effect_parameter_bool_detail::base_param {
             return PARAM_DATATYPE_BOOL;
         }
 
-        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const std::string &effect_name, const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
+            UNUSED_PARAMETER(effect_name);
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
 

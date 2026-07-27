@@ -80,7 +80,8 @@ class effect_parameter_image : public effect_parameter_image_detail::base_param 
             return PARAM_DATATYPE_IMAGE;
         }
 
-        void initialize_params(const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const std::string &effect_name, const effect_shader *shader, json_t *metadata, const std::string &effect_path) override {
+            UNUSED_PARAMETER(effect_name);
             UNUSED_PARAMETER(shader);
 
             json_t *default_json = json_object_get(metadata, "default");
