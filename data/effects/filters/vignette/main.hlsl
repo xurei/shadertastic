@@ -2,6 +2,7 @@ uniform float strength;
 uniform float curvature;
 uniform float inner;
 uniform float outer;
+uniform bool alpha_vignette;
 uniform bool keep_aspect_ratio;
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -52,6 +53,9 @@ float4 EffectLinear(float2 uv)
     //Compute vignette gradient and intensity
     float vignette = 1.0 - strength*smoothstep(inner, outer, edge);
     px.rgb *= vignette;
+
+    px.a *= alpha_vignette ? vignette : 1.0;
+
     return px;
 }
 //----------------------------------------------------------------------------------------------------------------------

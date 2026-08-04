@@ -53,6 +53,12 @@
       "max": 1.0,
       "default": 0.75,
       "step": 0.01
+    },
+    {
+      "name": "alpha_vignette",
+      "label": "Apply Vignetting in Alpha Channel",
+      "type": "bool",
+      "default": false
     }
   ]
 }
