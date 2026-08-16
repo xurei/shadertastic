@@ -81,6 +81,7 @@ float4 EffectLinearSingle(float2 uv) {
     if (color_space == 0) { // RGB
         float3 mask = displacement_map.Sample(textureSampler, uv).xyz;
         mask = srgb_linear_to_nonlinear(mask);
+        mask.xy -= 0.001960784; // half a color step
         /*if (uv.x < 0.1) {
             if (uv.y < mask.x) {
                 return displacement_map.Sample(textureSampler, uv); //float4(1.0, 0.0, 0.0, 1.0);
