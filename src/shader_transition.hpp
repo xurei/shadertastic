@@ -475,7 +475,7 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
         if (shadertastic_settings().dev_mode_enabled) {
             std::string warning_group_name = (effect_name + "__warning");
             auto *warning_group = obs_property_group_content(obs_properties_get(props, warning_group_name.c_str()));
-            obs_properties_add_button2(warning_group, "reload_btn", "Refresh error message", [](obs_properties_t *props, obs_property_t *property, void *data) {
+            obs_properties_add_button2(warning_group, (effect_name + "__reload_btn").c_str(), "Refresh error message", [](obs_properties_t *props, obs_property_t *property, void *data) {
                 UNUSED_PARAMETER(property);
                 shadertastic_transition *s = shadertastic_transition_cast(data);
                 if (s->selected_effect != nullptr) {

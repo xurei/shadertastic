@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Displacement map: fixed #808000 not actually being 0.0 displacement
 - Fixed display conditions not working in groups
+- Fixed reload button for transitions in dev mode
 
 ## [1.2.0] - 2026-07-24
 This version fixes crashes with OBS 32.2.0 and later.
