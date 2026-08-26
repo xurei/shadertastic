@@ -15,6 +15,7 @@
 #include "version.h"
 #include "settings.h"
 #include "logging_functions.hpp"
+#include "util/open_in_explorer.h"
 
 shadertastic_settings_t shadertastic_settings_;
 //----------------------------------------------------------------------------------------------------------------------
@@ -189,10 +190,16 @@ static void add_path_line(obs_data_t *settings, QVBoxLayout *pathsList, const QS
     });
     pathLayout->addWidget(changeButton);
 
+    QPushButton *openButton = new QPushButton("Open");
+    openButton->setProperty("class", QString("icon-right"));
+    pathLayout->addWidget(openButton);
+    QObject::connect(openButton, &QPushButton::clicked, [=]() {
+        open_in_explorer(path.toUtf8().constData());
+    });
+
     QPushButton *removeButton = new QPushButton("");
     removeButton->setProperty("class", QString("icon-trash"));
     pathLayout->addWidget(removeButton);
-
     QObject::connect(removeButton, &QPushButton::clicked, [=]() {
         QLayoutItem *item = pathsList->takeAt(pathsList->indexOf(pathLayout));
         delete item->widget();
