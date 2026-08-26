@@ -101,8 +101,8 @@ class HLSLExpander {
                         throw std::runtime_error("Invalid @include : File '" + file_base + "' not found");
                     }
                     else {
-                        include_stack.insert(include_path.value());
-                        auto included_source = load_file(include_path.value());
+                        include_stack.insert(include_path.value().string());
+                        auto included_source = load_file(include_path.value().string());
                         const std::string expanded_included_source = expand_includes_recursive(
                             included_source.value(),
                             include_path.value().parent_path(),

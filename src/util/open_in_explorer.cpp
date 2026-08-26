@@ -3,6 +3,9 @@
 //
 
 #include "open_in_explorer.h"
+#include <util/platform.h>
+
+#include "file_util.h"
 
 bool open_in_explorer(const char *path)
 {
@@ -11,8 +14,10 @@ bool open_in_explorer(const char *path)
     }
 
     #ifdef _WIN32
-        wchar_t *wpath = os_utf8_to_wcs_ptr(path);
-        if (!wpath) {
+        auto npath = normalize_path(path);
+        wchar_t wpath[512];
+        size_t size = os_utf8_to_wcs(npath.c_str(), 0, wpath, sizeof(wpath));
+        if (size <= 0) {
             return false;
         }
 
