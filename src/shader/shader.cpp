@@ -71,6 +71,7 @@ std::string effect_shader::load(const char *shader_path) {
             shader_source = expander.expand_includes(shader_source, "/home/olivier/obs-plugins/obs-shadertastic/effects/shadertastic-lib", load_file_local);
         }
         catch (std::runtime_error &e) {
+            UNUSED_PARAMETER(e);
             debug("osef so far");
         }
 
