@@ -35,7 +35,7 @@ class HLSLExpander {
 
     public:
         inline void addPath(const std::string &path) {
-            std::cerr << "addPath " << path << std::endl;
+            //std::cerr << "addPath " << path << std::endl;
             include_paths.push_back(path);
         }
         inline void addPath(const char *path) {
@@ -88,10 +88,10 @@ class HLSLExpander {
                     if (!include_path.has_value()) {
                         // Searching for the file in the include path
                         for (auto &include_dir : include_paths) {
-                            std::cerr << "try " << include_dir << std::endl;
+                            //std::cerr << "try " << include_dir << " / " << file_base << std::endl;
                             include_path = try_file_exists(include_dir, file_base, include_stack);
                             if (include_path.has_value()) {
-                                std::cerr << "found " << include_path.value() << std::endl;
+                                //std::cerr << "found " << include_path.value() << std::endl;
                                 break;
                             }
                         }
@@ -126,17 +126,25 @@ class HLSLExpander {
         #endif
 
         std::optional<std::filesystem::path> try_file_exists(const std::filesystem::path &current_directory, std::string &file_path_str, std::unordered_set<std::filesystem::path> &include_stack) {
-            std::filesystem::path include_path = current_directory / file_path_str;
-            include_path = std::filesystem::weakly_canonical(include_path);
+            try {
+                std::filesystem::path include_path = current_directory / file_path_str;
+                //std::cerr << "include_path " << normalize_path(include_path.string()) << std::endl;
+                include_path = normalize_path(include_path.string());
+                include_path = include_path.lexically_normal();
 
-            if (include_stack.find(include_path) != include_stack.end()) {
-                throw std::runtime_error("Circular @include detected: " + include_path.string());
-            }
+                if (include_stack.find(include_path) != include_stack.end()) {
+                    throw std::runtime_error("Circular @include detected: " + include_path.string());
+                }
 
-            if (std::filesystem::exists(include_path)) {
-                return include_path;
+                if (std::filesystem::exists(include_path)) {
+                    return include_path;
+                }
+                else {
+                    return std::nullopt;
+                }
             }
-            else {
+            catch (const std::exception &e) {
+                UNUSED_PARAMETER(e);
                 return std::nullopt;
             }
         }
