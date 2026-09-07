@@ -4,6 +4,7 @@
 #define SETTING_EFFECTS_PATH "effects_path"
 #define SETTING_EFFECTS_PATHS "effects_paths"
 #define SETTING_DEV_MODE_ENABLED "dev_mode_enabled"
+#define SETTING_DEV_MODE_LIBRARY_PATH "dev_mode_library_path"
 #define SETTING_ONE_EURO_ENABLED "one_euro_enabled"
 #define SETTING_ONE_EURO_MIN_CUTOFF "one_euro_min_cutoff"
 #define SETTING_ONE_EURO_BETA "one_euro_beta"
@@ -15,6 +16,7 @@
 struct shadertastic_settings_t {
     // Path where the user can add their own effects
     std::vector<std::string> effects_paths;
+    std::string library_path;
     bool dev_mode_enabled = false;
     bool one_euro_enabled = false;
     float one_euro_min_cutoff = 10.0f;

@@ -23,6 +23,7 @@
 #include "shader.h"
 #include "../shadertastic.hpp"
 #include "src/util/hlsl_expander.hpp"
+#include "src/settings.h"
 
 effect_shader::~effect_shader() {
     //debug("DELETE effect_shader %s", path.c_str());
@@ -67,12 +68,15 @@ std::string effect_shader::load(const char *shader_path) {
         );
         try {
             HLSLExpander expander;
-            expander.addPath("/home/olivier/obs-plugins/obs-shadertastic/effects/shadertastic-lib");
-            shader_source = expander.expand_includes(shader_source, "/home/olivier/obs-plugins/obs-shadertastic/effects/shadertastic-lib", load_file_local);
+            if (!shadertastic_settings().library_path.empty()) {
+                expander.addPath(shadertastic_settings().library_path);
+            }
+            fs::path fs_path(shader_path);
+            shader_source = expander.expand_includes(shader_source, fs_path.parent_path().c_str(), load_file_local);
         }
         catch (std::runtime_error &e) {
-            UNUSED_PARAMETER(e);
-            debug("osef so far");
+            log_error("Could not parse shader file %s :\n%s", shader_path, e.what());
+            return e.what();
         }
 
         obs_enter_graphics();

@@ -122,6 +122,9 @@ void apply_settings(obs_data_t *settings) {
         obs_data_array_release(effects_paths_array);
     }
     shadertastic_settings_.dev_mode_enabled = obs_data_get_bool(settings, SETTING_DEV_MODE_ENABLED);
+    const char *lib_path = obs_data_get_string(settings, SETTING_DEV_MODE_LIBRARY_PATH);
+    obs_data_set_default_string(settings, SETTING_DEV_MODE_LIBRARY_PATH, "");
+    shadertastic_settings_.library_path = obs_data_get_string(settings, SETTING_DEV_MODE_LIBRARY_PATH);
 
     // This is called in a separate function because changing them in the UI will immediately update the settings
     apply_settings__facetracking(settings);
@@ -246,7 +249,7 @@ void show_settings_dialog() {
     // External folder inputs
     {
         QVBoxLayout *pathsLayout = new QVBoxLayout();
-        QLabel *effectsLabel = new QLabel("Additional effects folders");
+        QLabel *effectsLabel = new QLabel("<strong>Additional effects folders</strong>");
         formLayout->addRow(effectsLabel);
 
         formLayout->addRow(new QLabel(
@@ -258,8 +261,7 @@ void show_settings_dialog() {
         effectsLabelDescription->setOpenExternalLinks(true);
         formLayout->addRow(effectsLabelDescription);
 
-        QWidget *pathsWidget = new QWidget();
-        QVBoxLayout *pathsList = new QVBoxLayout(pathsWidget);
+        QVBoxLayout *pathsList = new QVBoxLayout();
         pathsList->setContentsMargins(0, 0, 0, 0);
 
         obs_data_array_t *paths_array = obs_data_get_array(settings, SETTING_EFFECTS_PATHS);
@@ -279,7 +281,7 @@ void show_settings_dialog() {
             add_path_line(settings, pathsList, path);
         }
 
-        pathsLayout->addWidget(pathsWidget);
+        pathsLayout->addLayout(pathsList);
 
         QPushButton *addPathButton = new QPushButton("Add folder");
         addPathButton->setProperty("class", QString("icon-plus"));
@@ -323,6 +325,43 @@ void show_settings_dialog() {
         );
         effectsLabelDescription2->setOpenExternalLinks(true);
         formLayout->addRow(effectsLabelDescription2);
+
+
+        const char *lib_path = obs_data_get_string(settings, SETTING_DEV_MODE_LIBRARY_PATH);
+        QHBoxLayout *pathLayout = new QHBoxLayout();
+        QLineEdit *pathLineEdit = new QLineEdit();
+        pathLineEdit->setReadOnly(true);
+        pathLineEdit->setText(lib_path);
+        pathLayout->addWidget(pathLineEdit);
+
+        QPushButton *changeButton = new QPushButton("Select...");
+        QObject::connect(changeButton, &QPushButton::clicked, [=]() {
+            QString oldPath = pathLineEdit->text();
+
+            QString selectedFolder = QFileDialog::getExistingDirectory(nullptr, "Select folder", oldPath);
+            if (!selectedFolder.isEmpty()) {
+                pathLineEdit->setText(selectedFolder);
+                obs_data_set_string(settings, SETTING_DEV_MODE_LIBRARY_PATH, selectedFolder.toUtf8().constData());
+            }
+            else {
+                pathLineEdit->setText("");
+                obs_data_set_string(settings, SETTING_DEV_MODE_LIBRARY_PATH, nullptr);
+            }
+        });
+
+        pathLayout->addWidget(changeButton);
+
+        QPushButton *openButton = new QPushButton("Open");
+        openButton->setProperty("class", QString("icon-right"));
+        pathLayout->addWidget(openButton);
+        QObject::connect(openButton, &QPushButton::clicked, [=]() {
+            open_in_explorer(pathLineEdit->text().toUtf8().constData());
+        });
+        formLayout->addRow(new QLabel(
+            "<strong>Shadertastic Library path</strong><br/>"
+            "Use this as the root folder of your @includes when developing shaders."
+        ));
+        formLayout->addRow(pathLayout);
     }
 
     // Separator
@@ -341,6 +380,9 @@ void show_settings_dialog() {
             obs_data_set_bool(settings, SETTING_ONE_EURO_ENABLED, checked);
             apply_settings__facetracking(settings);
         });
+        formLayout->addRow(new QLabel(
+            "<strong>Face Tracking</strong>"
+        ));
         formLayout->addRow(oneEuroEnable);
     }
 
