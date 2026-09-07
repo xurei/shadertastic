@@ -12,6 +12,7 @@
       "name": "time",
       "label": "time",
       "type": "time",
+      "reset_on_show": "prompt",
       "speed": {
         "default": 0.2
       }
