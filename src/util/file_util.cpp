@@ -55,7 +55,7 @@ std::optional<std::string> load_file_local(const std::string &source_path) {
         return os_quick_read_utf8_file_std(path.c_str());
     }
     else {
-        return nullptr;
+        return std::nullopt;
     }
 }
 
@@ -71,7 +71,7 @@ std::optional<std::string> load_file_zipped_or_local(const std::string &source_p
         std::string zip_path = fs_path.parent_path().string();
         debug("FS PATH: %s", zip_path.c_str());
         if (!ends_with(zip_path, ".shadertastic")) {
-            return nullptr;
+            return std::nullopt;
         }
 
         int zip_err_code;
@@ -85,13 +85,13 @@ std::optional<std::string> load_file_zipped_or_local(const std::string &source_p
             zip_error_init_with_code(&error, zip_err_code);
             log_error("Cannot open shadertastic archive '%s': %s\n", zip_path.c_str(), zip_error_strerror(&error));
             zip_error_fini(&error);
-            return nullptr;
+            return std::nullopt;
         }
 
         if (zip_stat(zip_archive, zip_entry.c_str(), 0, &file_stat) != 0) {
             log_error("Cannot open shadertastic file in archive '%s': unable to stat entry file %s : %s\n", zip_path.c_str(), zip_entry.c_str(), zip_error_strerror(zip_get_error(zip_archive)));
             zip_close(zip_archive);
-            return nullptr;
+            return std::nullopt;
         }
 
         zip_file_t *zipped_file = zip_fopen(zip_archive, zip_entry.c_str(), 0);
@@ -99,7 +99,7 @@ std::optional<std::string> load_file_zipped_or_local(const std::string &source_p
         if (zipped_file == nullptr) {
             log_error("Cannot open shadertastic file in archive '%s': unable to open entry file %s\n", zip_path.c_str(), zip_entry.c_str());
             zip_close(zip_archive);
-            return nullptr;
+            return std::nullopt;
         }
 
         char *file_content = static_cast<char *>(bzalloc(file_stat.size + 1));
@@ -108,7 +108,9 @@ std::optional<std::string> load_file_zipped_or_local(const std::string &source_p
         zip_fread(zipped_file, file_content, file_stat.size);
         zip_fclose(zipped_file);
         zip_close(zip_archive);
-        return file_content;
+        std::string out = file_content;
+        bfree(file_content);
+        return out;
     }
 }
 
