@@ -82,9 +82,7 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     s->interm_texrender[1] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
     obs_leave_graphics();
 
-    char *filters_dir_ = obs_module_file("effects");
-    std::string filters_dir(filters_dir_);
-    bfree(filters_dir_);
+    std::string filters_dir = obs_module_file_std("effects");
 
     load_effects(s, settings, filters_dir, "filter");
     auto effects_paths = shadertastic_settings().effects_paths;

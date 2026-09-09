@@ -36,4 +36,14 @@ std::vector<std::string> list_directories(const char* folderPath);
 
 std::string create_temp_file();
 
+inline std::string obs_module_file_std(const char *file) {
+    char *file_ = obs_module_file(file);
+    std::string out = file_;
+    bfree(file_);
+    return out;
+}
+inline std::string obs_module_file_std(std::string file) {
+    return obs_module_file_std(file.c_str());
+}
+
 #endif // FILE_UTIL_HPP
