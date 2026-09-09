@@ -8,6 +8,17 @@
   "steps": 1,
   "parameters": [
     {
+      "name": "displacement_map",
+      "label": "Displacement Map",
+      "type": "source"
+    },
+    {
+      "name": "displacement_map_help",
+      "label": "",
+      "type": "text",
+      "value": "Each pixel of this source will be used to determine the amount of displacement at its position."
+    },
+    {
       "name": "displace_mode",
       "label": "Displace mode",
       "type": "list_int",
@@ -85,11 +96,6 @@
       "max": 2.0,
       "default": 0.35,
       "step": 0.001
-    },
-    {
-      "name": "displacement_map",
-      "label": "Displacement Map",
-      "type": "source"
     }
   ]
 }
