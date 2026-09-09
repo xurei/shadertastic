@@ -418,8 +418,8 @@ void shadertastic_filter_get_defaults(obs_data_t *settings) {
     if (shadertastic_no_filter == nullptr) {
         shadertastic_no_filter = static_cast<shadertastic_filter *>(shadertastic_filter_create(settings, nullptr));
     }
-    for (auto effect : *shadertastic_no_filter->effects) {
-        shadertastic_effect_set_defaults(settings, &effect.second);
+    for (auto& [effect_name, effect] : *shadertastic_no_filter->effects) {
+        shadertastic_effect_set_defaults(settings, &effect);
     }
 }
 

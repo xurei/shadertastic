@@ -507,8 +507,8 @@ void shadertastic_transition_get_defaults(obs_data_t *settings) {
     obs_data_set_default_bool(settings, "auto_reload", false);
 
     shadertastic_transition *tmp_transition = shadertastic_transition_cast(nullptr);
-    for (auto effect : *tmp_transition->effects) {
-        shadertastic_effect_set_defaults(settings, &effect.second);
+    for (auto& [effect_name, effect] : *tmp_transition->effects) {
+        shadertastic_effect_set_defaults(settings, &effect);
     }
 }
 //----------------------------------------------------------------------------------------------------------------------

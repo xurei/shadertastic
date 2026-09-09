@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Settings: Add "open" button in folders list
 - Rainbow effect: added a visibility toggle prompt
 - Add library path in settings in dev mode
+- Vignette effect: add "Apply Vignetting in Alpha Channel" in options
 
 ### Fixed
 - Displacement map: fixed #808000 not actually being 0.0 displacement
