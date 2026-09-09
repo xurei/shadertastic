@@ -18,6 +18,7 @@
 #include <string>
 #include <obs-module.h>
 #include <jansson.h>
+#include <util/platform.h>
 #include "effect.h"
 #include "logging_functions.hpp"
 #include "try_gs_effect_set.h"
@@ -27,12 +28,9 @@
 #include "util/file_util.h"
 #include "settings.h"
 
-void shadertastic_effect_t::load() {
+void shadertastic_effect_blueprint_t::load_blueprint() {
     std::string metadata_path = normalize_path(this->path + "/meta.json");
     debug(">>>>>>>>>>>>>>> load_effect %s %s %s", this->name.c_str(), this->path.c_str(), metadata_path.c_str());
-
-    this->main_shader = shaders_library.get(this->path);
-    this->param_facetracking = nullptr; // Resets the face_tracking param to null if present; no need to release, it's a weak pointer
 
     auto meta_json = load_file_zipped_or_local(metadata_path);
 
@@ -45,25 +43,34 @@ void shadertastic_effect_t::load() {
     }
 
     json_error_t error;
-    json_t *metadata = json_loads(meta_json.value().c_str(), 0, &error);
+    // For some obscure reason, we need to instanciate in a pointer THEN assign the pointer, a direct assign will SEGFAULT
+    json_t *metadata_ = json_loads(meta_json.value().c_str(), 0, &error);
+    metadata = metadata_;
 
-    if (metadata == nullptr|| !json_is_object(metadata)) {
+    if (metadata == nullptr || !json_is_object(metadata)) {
         // Something went wrong -> set default configuration
         warn("Unable to parse metadata for effect %s. Check the JSON syntax", name.c_str());
         label = name;
         nb_steps = 1;
 
-        if (metadata != nullptr) {
-            json_decref(metadata);
-        }
+        //release_resource(json_decref, metadata);
 
         return;
     }
     else {
+        std::string filters_dir = obs_module_file_std("effects");
         // Label
         json_t *label_json = json_object_get(metadata, "label");
         if (json_is_string(label_json)) {
             label = json_string_value(label_json);
+            if (!starts_with(metadata_path, filters_dir)) {
+                if (os_file_exists(metadata_path.c_str())) {
+                    label = label + std::string(" 🔧");
+                }
+                else {
+                    label = label + std::string(" 📦");
+                }
+            }
         }
         else {
             label = name;
@@ -72,7 +79,7 @@ void shadertastic_effect_t::load() {
         // Steps
         json_t *steps_json = json_object_get(metadata, "steps");
         if (json_is_integer(steps_json)) {
-            nb_steps = (int)json_integer_value(steps_json);
+            nb_steps = (int) json_integer_value(steps_json);
         }
         else {
             nb_steps = 1;
@@ -84,16 +91,12 @@ void shadertastic_effect_t::load() {
             warn("No parameters specified for effect %s", name.c_str());
             parameters = json_array();
         }
-        else {
-            json_incref(parameters);
-        }
 
         // LEGACY - input_facedetection is deprecated.
         json_t *input_facedetection_json = json_object_get(metadata, "input_facedetection");
-        legacy_input_facedetection =
-            json_is_boolean(input_facedetection_json)
-                ? json_boolean_value(input_facedetection_json)
-                : false;
+        legacy_input_facedetection =json_is_boolean(input_facedetection_json)
+            ? json_boolean_value(input_facedetection_json)
+            : false;
         if (legacy_input_facedetection) {
             json_t *param = json_pack(
                 "{s:s,s:s}",
@@ -104,18 +107,39 @@ void shadertastic_effect_t::load() {
 
         // LEGACY - input_time is deprecated.
         json_t *input_time_json = json_object_get(metadata, "input_time");
-        legacy_input_time =
-            json_is_boolean(input_time_json)
-                ? json_boolean_value(input_time_json)
-                : false;
+        legacy_input_time = json_is_boolean(input_time_json)
+            ? json_boolean_value(input_time_json)
+            : false;
         if (legacy_input_time) {
             json_t *param = json_pack(
                 "{s:s,s:s,s:s}",
                 "name", "time",
                 "type", "time",
-                "reset_on_show", "prompt");
+                "reset_on_show", "prompt"
+            );
             json_array_insert_new(parameters, 0, param);
         }
+        debug("Loaded Blueprint effect %s from %s", name.c_str(), metadata_path.c_str());
+    }
+}
+void shadertastic_effect_t::load() {
+    //load_blueprint();
+    if (metadata == nullptr || !json_is_object(metadata)) {
+        return;
+    }
+
+    json_incref(metadata);
+
+    // Parameters
+    json_t *parameters = json_object_get(metadata, "parameters");
+    if (!json_is_array(parameters)) {
+        warn("No parameters specified for effect %s", name.c_str());
+        parameters = json_array();
+    }
+
+    if (parameters != nullptr && json_is_array(parameters)) {
+        this->main_shader = shaders_library.get(this->path);
+        this->param_facetracking = nullptr; // Resets the face_tracking param to null if present; no need to release, it's a weak pointer
 
         // Clear referenced parameters
         referenced_params.clear();
@@ -195,15 +219,13 @@ void shadertastic_effect_t::load() {
             delete param;
         }
 
-        json_decref(parameters);
-        json_decref(metadata);
-
-        debug("Loaded effect %s from %s", name.c_str(), metadata_path.c_str());
+        //debug("Loaded effect %s from %s", name.c_str(), metadata_path.c_str());
     }
 }
 
 void shadertastic_effect_t::reload() {
     shaders_library.reload(this->path);
+    load_blueprint();
     load();
 }
 

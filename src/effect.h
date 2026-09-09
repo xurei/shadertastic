@@ -15,24 +15,42 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#ifndef SHADERTASTIC_EFFECT_HPP
-#define SHADERTASTIC_EFFECT_HPP
+#ifndef SHADERTASTIC_EFFECT_H
+#define SHADERTASTIC_EFFECT_H
 
 #include <memory>
+#include <utility>
 #include <vector>
+#include <jansson.h>
 
 #include "params_list.hpp"
 #include "shader/shader.h"
 #include "parameters/parameter_prev_frame.hpp"
 #include "src/shader/shaders_library.h"
 
-struct shadertastic_effect_t {
+struct shadertastic_effect_blueprint_t {
     const std::string path;
     const std::string name;
     std::string label;
     int nb_steps{};
     bool legacy_input_time = false;
     bool legacy_input_facedetection = false;
+
+    protected:
+    friend struct shadertastic_effect_t;
+    json_t *metadata{nullptr};
+
+    public:
+    void load_blueprint();
+
+    shadertastic_effect_blueprint_t(std::string name_, std::string path_): name(std::move(name_)), path(std::move(path_)) {}
+
+    virtual ~shadertastic_effect_blueprint_t() {
+        //release_resource(json_decref, metadata);
+    }
+};
+
+struct shadertastic_effect_t : public shadertastic_effect_blueprint_t {
     std::vector<effect_parameter_prev_frame *> prev_frames_to_keep{};
     effect_parameter *param_facetracking{};
 
@@ -47,8 +65,18 @@ struct shadertastic_effect_t {
         return shaders_library.get_error(this->path);
     }
 
-    shadertastic_effect_t(std::string name_, std::string path_): name(std::move(name_)), path(std::move(path_)) {}
+    explicit shadertastic_effect_t(const std::string &name_, const std::string &path_): shadertastic_effect_blueprint_t(name_, path_) {}
 
+    static shadertastic_effect_t from_blueprint(const shadertastic_effect_blueprint_t &blueprint) {
+        shadertastic_effect_t out(blueprint.name, blueprint.path);
+        out.label = blueprint.label;
+        out.nb_steps = blueprint.nb_steps;
+        out.metadata = blueprint.metadata;
+        out.legacy_input_time = blueprint.legacy_input_time;
+        out.legacy_input_facedetection = blueprint.legacy_input_facedetection;
+        json_incref(out.metadata);
+        return out;
+    }
     void load();
 
     void reload();
@@ -65,6 +93,12 @@ struct shadertastic_effect_t {
     void hide();
 
     void release();
+
+    virtual ~shadertastic_effect_t() {
+        /*if (metadata != nullptr && json_is_object(metadata)) {
+            release_resource(json_decref, metadata);
+        }*/
+    }
 };
 
-#endif // SHADERTASTIC_EFFECT_HPP
+#endif // SHADERTASTIC_EFFECT_H

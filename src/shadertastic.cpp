@@ -45,6 +45,7 @@
 // ReSharper disable once CppUnusedIncludeDirective
 #include "util/time_util.hpp"
 #include "src/util/obs-retrocompat.hpp"
+#include "blueprints_library.h"
 //----------------------------------------------------------------------------------------------------------------------
 
 OBS_DECLARE_MODULE()
@@ -137,16 +138,32 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
     std::vector<std::string> dirs = list_directories((effects_dir + "/" + effects_type + "s").c_str());
 
     for (const auto &dir : dirs) {
-        std::string effect_path = std::string(effects_dir)
+        std::string effect_path = (
+            std::string(effects_dir)
             .append("/")
             .append(effects_type)
             .append("s/")
-            .append(dir);
-        if (s->effects->find(dir) != s->effects->end()) {
-            warn("NOT LOADING EFFECT %s/%ss/%s : an effect with the name '%s' already exist", effects_dir.c_str(), effects_type.c_str(), dir.c_str(), dir.c_str());
+            .append(dir)
+        );
+
+        shadertastic_effect_blueprint_t *blueprint = nullptr;
+        if (blueprints_library.hasBlueprint(dir)) {
+            blueprint = blueprints_library.getBlueprint(dir);
+            if (effect_path != blueprint->path) {
+                warn("NOT LOADING EFFECT %s/%ss/%s : an effect with the name '%s' already exist", effects_dir.c_str(), effects_type.c_str(), dir.c_str(), dir.c_str());
+                continue;
+            }
         }
-        else if (os_file_exists((effect_path + "/meta.json").c_str())) {
-            shadertastic_effect_t effect(dir, effect_path);
+        else {
+            if (!os_file_exists((effect_path + "/meta.json").c_str())) {
+                debug ("NOT LOADING EFFECT %s : no meta.json found", dir.c_str());
+                continue;
+            }
+            blueprint = blueprints_library.loadBlueprint(dir, effect_path);
+        }
+
+        if (blueprint != nullptr) {
+            shadertastic_effect_t effect = shadertastic_effect_t::from_blueprint(*blueprint);
             effect.load();
             if (effect.main_shader == nullptr) {
                 debug ("NOT LOADING EFFECT %s", dir.c_str());

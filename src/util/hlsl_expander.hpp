@@ -149,11 +149,7 @@ class HLSLExpander {
             }
         }
 
-        std::string expand_includes(
-            const std::string& main_source,
-            const std::filesystem::path& main_directory,
-            const LoadFileFn &load_file)
-        {
+        std::string expand_includes(const std::string& main_source, const std::filesystem::path& main_directory, const LoadFileFn &load_file) {
             std::unordered_set<std::filesystem::path> include_stack;
 
             return expand_includes_recursive(
