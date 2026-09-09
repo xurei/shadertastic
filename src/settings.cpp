@@ -32,17 +32,19 @@
 #include "version.h"
 #include "settings.h"
 #include "logging_functions.hpp"
+#include "util/file_util.h"
 #include "util/open_in_explorer.h"
 
 shadertastic_settings_t shadertastic_settings_;
 //----------------------------------------------------------------------------------------------------------------------
 
 obs_data_t * load_settings() {
-    char *file = obs_module_config_path("settings.json");
-    char *path_abs = os_get_abs_path_ptr(file);
+    std::string file = obs_module_config_path_std("settings.json");
+    char *path_abs = os_get_abs_path_ptr(file.c_str());
     debug("Settings path: %s", path_abs);
-
     obs_data_t *settings = obs_data_create_from_json_file(path_abs);
+    bfree(path_abs);
+
     obs_data_set_default_bool(settings, SETTING_DEV_MODE_ENABLED, false);
 
     obs_data_set_default_bool(settings, SETTING_ONE_EURO_ENABLED, true);
@@ -51,14 +53,14 @@ obs_data_t * load_settings() {
     obs_data_set_default_double(settings, SETTING_ONE_EURO_DERIV_CUTOFF, 1.0);
 
     if (!settings) {
-        info("Settings not found. Creating default settings in %s ...", file);
+        info("Settings not found. Creating default settings in %s ...", file.c_str());
         char *obs_base_config_path = obs_module_config_path("");
         os_mkdirs(obs_base_config_path);
         bfree(obs_base_config_path);
         // Create default settings
         settings = obs_data_create();
-        if (obs_data_save_json(settings, file)) {
-            info("Settings saved to %s", file);
+        if (obs_data_save_json(settings, file.c_str())) {
+            info("Settings saved to %s", file.c_str());
         }
         else {
             warn("Failed to save settings to file.");
@@ -67,8 +69,6 @@ obs_data_t * load_settings() {
     else {
         blog(LOG_INFO, "Settings loaded successfully");
     }
-    bfree(file);
-    bfree(path_abs);
 
     // Migration - effects path
     const char *effects_paths_str = obs_data_get_string(settings, SETTING_EFFECTS_PATH);

@@ -21,6 +21,7 @@
 #include <optional>
 #include <vector>
 #include <filesystem>
+#include <util/platform.h>
 #include "string_util.h"
 namespace fs = std::filesystem;
 
@@ -42,8 +43,16 @@ inline std::string obs_module_file_std(const char *file) {
     bfree(file_);
     return out;
 }
-inline std::string obs_module_file_std(std::string file) {
-    return obs_module_file_std(file.c_str());
+inline std::string os_quick_read_utf8_file_std(const char *file) {
+    char *data_ = os_quick_read_utf8_file(file);
+    std::string out = data_;
+    bfree(data_);
+    return out;
 }
-
+inline std::string obs_module_config_path_std(const char *file) {
+    char *path_ = obs_module_config_path(file);
+    std::string out = path_;
+    bfree(path_);
+    return out;
+}
 #endif // FILE_UTIL_HPP
