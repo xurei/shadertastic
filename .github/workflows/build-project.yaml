@@ -75,6 +75,7 @@ jobs:
     name: Build for macOS 🍏
     runs-on: macos-15
     needs: check-event
+    if: github.ref_type == 'tag'
     defaults:
       run:
         shell: zsh --no-rcs --errexit --pipefail {0}
