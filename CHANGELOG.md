@@ -5,11 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [1.2.3] - 2026-09-10
 ### Added
 - Settings: Add "open" button in folders list
 - Rainbow effect: added a visibility toggle prompt
 - Add library path in settings in dev mode
 - Vignette effect: add "Apply Vignetting in Alpha Channel" in options
+- Blueprint system for faster effect loading - especially at startup
 
 ### Fixed
 - Displacement map: fixed #808000 not actually being 0.0 displacement
