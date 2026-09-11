@@ -34,9 +34,13 @@ shadertastic_effect_blueprint_t * BlueprintsLibrary::loadBlueprint(const std::st
     shadertastic_effect_blueprint_t *blueprint = new shadertastic_effect_blueprint_t(name, path);
     blueprint->load_blueprint();
 
-    this->blueprints[name] = blueprint;
-
-    return blueprint;
+    if (blueprint->is_loaded()) {
+        this->blueprints[name] = blueprint;
+        return blueprint;
+    }
+    else {
+        return nullptr;
+    }
 }
 
 void BlueprintsLibrary::removeBlueprint(const std::string &name) {

@@ -135,8 +135,11 @@ void obs_module_frontend_saveload(obs_data_t *save_data, bool saving, void *data
 }
 
 void load_effects(shadertastic_common *s, obs_data_t *settings, const std::string &effects_dir, const std::string &effects_type) {
+    std::string extension = std::string(".") + effects_type + ".shadertastic";
     std::vector<std::string> dirs = list_directories((effects_dir + "/" + effects_type + "s").c_str());
+    std::vector<std::string> zips = list_files(effects_dir.c_str(), extension);
 
+    std::vector<std::pair<std::string,std::string>> effect_paths;
     for (const auto &dir : dirs) {
         std::string effect_path = (
             std::string(effects_dir)
@@ -145,62 +148,45 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
             .append("s/")
             .append(dir)
         );
+        effect_paths.push_back(std::pair(dir, effect_path));
+    }
+    for (const auto &zip : zips) {
+        fs::path fs_path(zip);
+        std::string effect_name = fs_path.filename().string();
+        effect_name = effect_name.substr(0, effect_name.length() - extension.length());
+        effect_paths.push_back(std::pair(effect_name, zip));
+    }
 
+    for (const auto &[effect_name, effect_path] : effect_paths) {
         shadertastic_effect_blueprint_t *blueprint = nullptr;
-        if (blueprints_library.hasBlueprint(dir)) {
-            blueprint = blueprints_library.getBlueprint(dir);
+        if (blueprints_library.hasBlueprint(effect_name)) {
+            blueprint = blueprints_library.getBlueprint(effect_name);
             if (effect_path != blueprint->path) {
-                warn("NOT LOADING EFFECT %s/%ss/%s : an effect with the name '%s' already exist", effects_dir.c_str(), effects_type.c_str(), dir.c_str(), dir.c_str());
+                warn("NOT LOADING EFFECT %s/%ss/%s : an effect with the name '%s' already exist", effects_dir.c_str(), effects_type.c_str(), effect_name.c_str(), effect_name.c_str());
                 continue;
             }
         }
         else {
-            if (!os_file_exists((effect_path + "/meta.json").c_str())) {
-                debug ("NOT LOADING EFFECT %s : no meta.json found", dir.c_str());
+            if (!ends_with(effect_path, ".shadertastic") && !os_file_exists((effect_path + "/meta.json").c_str())) {
+                debug ("NOT LOADING EFFECT %s : no meta.json found", effect_name.c_str());
                 continue;
             }
-            blueprint = blueprints_library.loadBlueprint(dir, effect_path);
+            blueprint = blueprints_library.loadBlueprint(effect_name, effect_path);
         }
 
         if (blueprint != nullptr) {
             shadertastic_effect_t effect = shadertastic_effect_t::from_blueprint(*blueprint);
             effect.load();
             if (effect.main_shader == nullptr) {
-                debug ("NOT LOADING EFFECT %s", dir.c_str());
-            }
-            else {
-                s->effects->insert(shadertastic_effects_map_t::value_type(dir, effect));
-                shadertastic_effect_set_defaults(settings, &effect);
-            }
-        }
-        else {
-            debug ("NOT LOADING EFFECT %s : no meta.json found", dir.c_str());
-        }
-    }
-
-    std::string extension = std::string(".") + effects_type + ".shadertastic";
-    std::vector<std::string> zips = list_files(effects_dir.c_str(), extension);
-    for (const auto &zip : zips) {
-        fs::path fs_path(zip);
-        std::string effect_name = fs_path.filename().string();
-        effect_name = effect_name.substr(0, effect_name.length() - extension.length());
-        std::string effect_path = zip;
-
-        if (s->effects->find(effect_name) != s->effects->end()) {
-            warn("NOT LOADING EFFECT %s : an effect with the name '%s' already exist", zip.c_str(), effect_name.c_str());
-        }
-        else if (true /*shadertastic_effect_t::is_effect(effect_path)*/) {
-            // TODO the check that meta.json exists is missing in archived effects... I should add it back
-            //debug("Effect %s: %s", effect_name.c_str(), effect_path.c_str());
-            shadertastic_effect_t effect(effect_name, effect_path);
-            effect.load();
-            if (effect.main_shader == nullptr) {
-                debug ("NOT LOADING EFFECT %s", zip.c_str());
+                debug ("NOT LOADING EFFECT %s", effect_name.c_str());
             }
             else {
                 s->effects->insert(shadertastic_effects_map_t::value_type(effect_name, effect));
                 shadertastic_effect_set_defaults(settings, &effect);
             }
+        }
+        else {
+            debug ("NOT LOADING EFFECT %s : Blueprint could not be loaded", effect_name.c_str());
         }
     }
 }

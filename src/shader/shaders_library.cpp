@@ -53,7 +53,7 @@ void shaders_library_t::load() {
 }
 
 std::shared_ptr<effect_shader> shaders_library_t::get(const std::string &path) {
-    debug("shaders_library.get %s", path.c_str());
+    //debug("shaders_library.get %s", path.c_str());
     auto it = shaders.find(path);
     if (it == shaders.end()) {
         return this->load_shader_file(path);

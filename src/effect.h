@@ -42,6 +42,7 @@ struct shadertastic_effect_blueprint_t {
 
     public:
     void load_blueprint();
+    inline bool is_loaded() { return metadata != nullptr; }
 
     shadertastic_effect_blueprint_t(std::string name_, std::string path_): name(std::move(name_)), path(std::move(path_)) {}
 
@@ -65,8 +66,10 @@ struct shadertastic_effect_t : public shadertastic_effect_blueprint_t {
         return shaders_library.get_error(this->path);
     }
 
+    private:
     explicit shadertastic_effect_t(const std::string &name_, const std::string &path_): shadertastic_effect_blueprint_t(name_, path_) {}
 
+    public:
     static shadertastic_effect_t from_blueprint(const shadertastic_effect_blueprint_t &blueprint) {
         shadertastic_effect_t out(blueprint.name, blueprint.path);
         out.label = blueprint.label;
