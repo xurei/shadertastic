@@ -11,7 +11,11 @@
     {
       "type": "facetracking",
       "name": "fd",
-      "use_preraster": true
+      "use_preraster": true,
+      "reset_on_face_lost": {
+        "prompt": true,
+        "default": true
+      }
     },
     {
       "name": "audio_level",

@@ -9,7 +9,11 @@
   "parameters": [
     {
       "type": "facetracking",
-      "name": "fd"
+      "name": "fd",
+      "reset_on_face_lost": {
+        "prompt": true,
+        "default": false
+      }
     },
     {
       "name": "screen_distortion",

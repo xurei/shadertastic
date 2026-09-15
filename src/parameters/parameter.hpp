@@ -35,12 +35,19 @@ inline static std::string get_full_subparam_name_static(const std::string &paren
     return parent_param_name + '_' + param_name;
 }
 
-inline static double json_number_value_or(json_t *value, double default_value) {
+inline static double json_number_value_or(json_t *value, const double default_value) {
     if (json_is_real(value)) {
         return json_real_value(value);
     }
     if (json_is_integer(value)) {
         return (double)json_integer_value(value);
+    }
+    return default_value;
+}
+
+inline static bool json_bool_value_or(json_t *value, const bool default_value) {
+    if (json_is_boolean(value)) {
+        return json_boolean_value(value);
     }
     return default_value;
 }

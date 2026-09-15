@@ -37,6 +37,7 @@ class effect_parameter_time : public effect_parameter_time_detail::base_param {
 
         effect_parameter_time_detail::reset_type_t reset_on_show_type{effect_parameter_time_detail::CHOICE_NO};
         bool reset_on_show{false};
+        bool default_reset_on_show{false};
         bool show_speed_ui{true};
         float *time;
         float speed;
@@ -59,12 +60,21 @@ class effect_parameter_time : public effect_parameter_time_detail::base_param {
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
 
-            json_t *reset_on_show_json = json_object_get(metadata, PARAM_STR_RESET_ON_SHOW);
-            if (json_is_string(reset_on_show_json) && strcmp(json_string_value(reset_on_show_json), "prompt") == 0) {
+            json_t *reset_on_show_obj = json_object_get(metadata, PARAM_STR_RESET_ON_SHOW);
+            if (json_is_object(reset_on_show_obj)) {
+                // TODO label ?
+                //json_t *label_json = json_object_get(reset_on_show_obj, "label");
+                json_t *default_json = json_object_get(reset_on_show_obj, "default");
+
+                reset_on_show_type = effect_parameter_time_detail::CHOICE_PROMPT;
+                default_reset_on_show = json_bool_value_or(default_json, false);
+            }
+            else if (json_is_string(reset_on_show_obj) && strcmp(json_string_value(reset_on_show_obj), "prompt") == 0) {
+                reset_on_show = false;
                 reset_on_show_type = effect_parameter_time_detail::CHOICE_PROMPT;
             }
             else {
-                reset_on_show = json_is_boolean(reset_on_show_json) ? json_boolean_value(reset_on_show_json) : false;
+                reset_on_show = json_bool_value_or(reset_on_show_obj, false);
                 reset_on_show_type = reset_on_show ? effect_parameter_time_detail::CHOICE_YES : effect_parameter_time_detail::CHOICE_NO;
             }
 
@@ -97,7 +107,7 @@ class effect_parameter_time : public effect_parameter_time_detail::base_param {
         void set_default(obs_data_t *settings, const char *effect_name) override {
             std::string full_param_name = get_full_param_name(effect_name);
             obs_data_set_default_double(settings, get_full_subparam_name_static(full_param_name, PARAM_STR_SPEED).c_str(), default_speed);
-            obs_data_set_default_bool(settings, get_full_subparam_name_static(full_param_name, std::string(PARAM_STR_RESET_ON_SHOW)).c_str(), false);
+            obs_data_set_default_bool(settings, get_full_subparam_name_static(full_param_name, std::string(PARAM_STR_RESET_ON_SHOW)).c_str(), default_reset_on_show);
         }
 
         void render_property_ui(const char *effect_name, obs_properties_t *props) override {

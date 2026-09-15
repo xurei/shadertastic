@@ -149,17 +149,18 @@ type param_facetracking = param_common & {
      * - G,B: Barycentric coordinates of the point, for texturing
      */
     use_preraster?: boolean,
-    // /**
-    //  * Allow to chain the result of the face tracking to the next filter.
-    //  * If enabled, the face tracking algorithm will not be applied again on posterior filters. Instead, the result of
-    //  * this filter will be used.
-    //  *
-    //  * Enable this option only if you don't move the face in the scene with the effect.
-    //  * For example, the "Laser Eyes" effect uses this option, but the "Distort" effect doesn't.
-    //  *
-    //  * @defaut false
-    //  */
-    // allow_chaining?: boolean,
+
+    /**
+     * Behavior of the face tracker when the face is lost.
+     * - false: reset the face tracking texture and keep the `fd_face_found` flag to false
+     * - true: keep the previous face tracking texture and set the `fd_face_found` flag to true
+     * - prompt: show an input in the property UI
+     */
+    reset_on_face_lost?: boolean | "prompt" | {
+        prompt: true,
+        default: boolean,
+        //label?: string,
+    },
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -455,7 +456,11 @@ type param_time = param_common & {
      * If "prompt", let the user decide by showing an input in the property UI.
      * @default false
      */
-    reset_on_show?: boolean | "prompt",
+    reset_on_show?: boolean | "prompt" | {
+        prompt: true,
+        default: boolean,
+        //label?: string,
+    },
 
     /**
      * Speed options

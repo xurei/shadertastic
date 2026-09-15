@@ -10,7 +10,11 @@
     {
       "type": "facetracking",
       "name": "facetracking",
-      "use_preraster": true
+      "use_preraster": true,
+      "reset_on_face_lost": {
+        "prompt": true,
+        "default": true
+      }
     },
     {
       "name": "show_mesh_face",
