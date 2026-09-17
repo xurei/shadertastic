@@ -43,8 +43,11 @@ inline std::string obs_module_file_std(const char *file) {
     bfree(file_);
     return out;
 }
-inline std::string os_quick_read_utf8_file_std(const char *file) {
+inline std::optional<std::string> os_quick_read_utf8_file_std(const char *file) {
     char *data_ = os_quick_read_utf8_file(file);
+    if (data_ == nullptr) {
+        return std::nullopt;
+    }
     std::string out = data_;
     bfree(data_);
     return out;
