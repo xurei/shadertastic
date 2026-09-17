@@ -16,6 +16,7 @@
 ******************************************************************************/
 
 #include "blueprints_library.h"
+#include "effect.h"
 
 BlueprintsLibrary blueprints_library;
 

@@ -24,7 +24,6 @@
 #include <stdexcept>
 #include <string>
 #include <optional>
-#include <iostream>
 #include <list>
 #include <unordered_set>
 
@@ -35,7 +34,6 @@ class HLSLExpander {
 
     public:
         inline void addPath(const std::string &path) {
-            //std::cerr << "addPath " << path << std::endl;
             include_paths.push_back(path);
         }
         inline void addPath(const char *path) {
@@ -88,10 +86,8 @@ class HLSLExpander {
                     if (!include_path.has_value()) {
                         // Searching for the file in the include path
                         for (auto &include_dir : include_paths) {
-                            //std::cerr << "try " << include_dir << " / " << file_base << std::endl;
                             include_path = try_file_exists(include_dir, file_base, include_stack);
                             if (include_path.has_value()) {
-                                //std::cerr << "found " << include_path.value() << std::endl;
                                 break;
                             }
                         }
@@ -110,8 +106,6 @@ class HLSLExpander {
                             include_stack
                         );
 
-                        //std::cerr << expanded_included_source << std::endl;
-
                         output << expanded_included_source;
 
                         include_stack.erase(include_path.value());
@@ -128,7 +122,6 @@ class HLSLExpander {
         std::optional<std::filesystem::path> try_file_exists(const std::filesystem::path &current_directory, std::string &file_path_str, std::unordered_set<std::filesystem::path> &include_stack) {
             try {
                 std::filesystem::path include_path = current_directory / file_path_str;
-                //std::cerr << "include_path " << normalize_path(include_path.string()) << std::endl;
                 include_path = normalize_path(include_path.string());
                 include_path = include_path.lexically_normal();
 

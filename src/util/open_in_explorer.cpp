@@ -16,18 +16,25 @@
 ******************************************************************************/
 
 #include "open_in_explorer.h"
-#include <util/platform.h>
-
 #include "file_util.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#include <shellapi.h>
+#else
+#include <spawn.h>
+#include <sys/types.h>
+extern char **environ;
+#endif
 
 bool open_in_explorer(const char *path)
 {
     if (!path || !*path) {
         return false;
     }
+    auto npath = normalize_path(path);
 
     #ifdef _WIN32
-        auto npath = normalize_path(path);
         wchar_t wpath[512];
         size_t size = os_utf8_to_wcs(npath.c_str(), 0, wpath, sizeof(wpath));
         if (size <= 0) {
@@ -53,7 +60,7 @@ bool open_in_explorer(const char *path)
         pid_t pid;
         char *const argv[] = {
             const_cast<char *>("open"),
-            const_cast<char *>(path),
+            const_cast<char *>(npath.c_str()),
             nullptr,
         };
 
@@ -63,7 +70,7 @@ bool open_in_explorer(const char *path)
         pid_t pid;
         char *const argv[] = {
             const_cast<char *>("xdg-open"),
-            const_cast<char *>(path),
+            const_cast<char *>(npath.c_str()),
             nullptr,
         };
 

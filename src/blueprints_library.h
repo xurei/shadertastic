@@ -20,7 +20,8 @@
 
 #include <string>
 #include <map>
-#include "effect.h"
+
+struct shadertastic_effect_blueprint_t;
 
 class BlueprintsLibrary {
     private:
