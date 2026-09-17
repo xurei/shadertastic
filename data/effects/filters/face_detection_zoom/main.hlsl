@@ -1,8 +1,12 @@
 uniform texture2d fd_points_tex;
+uniform texture2d prev_step0;
+uniform int step_max;
 uniform bool fd_face_found;
 uniform float zoom_level;
+uniform float smoothing;
 uniform bool show_ref_points;
 uniform bool preserve_aspect_ratio;
+uniform bool use_tilt_compensate;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -17,31 +21,11 @@ sampler_state pointsSampler {
     AddressU  = Clamp;
     AddressV  = Clamp;
 };
-
-struct VertData {
-    float2 uv  : TEXCOORD0;
-    float4 pos : POSITION;
-};
-
-struct FragData {
-    float2 uv  : TEXCOORD0;
-};
-
-VertData VSDefault(VertData v_in)
-{
-    VertData vert_out;
-    vert_out.uv  = v_in.uv;
-    vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
-    return vert_out;
-}
 //----------------------------------------------------------------------------------------------------------------------
 
 float rand2(float2 co){
 	float v = sin(dot(co, float2(12.9898, 78.233))) * 43758.5453;
 	return fract(v);
-}
-float rand(float a, float b) {
-	return rand2(float2(a, b));
 }
 
 bool inside_box(float2 v, float2 left_top, float2 right_bottom) {
@@ -70,23 +54,54 @@ float2 ortho_to_uv(float2 uv_ortho) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
+float2 sample_facemap_smooth(int index) {
+    float2 prev_sample = facetracking_edge(prev_step0, index).xy;
+
+    if (fd_face_found) {
+        float2 sample = facetracking_edge(fd_points_tex, index).xy;
+        return lerp(sample, prev_sample, 0.999999);
+    }
+
+    return prev_sample;
+}
+
 float4 EffectLinear(float2 uv) {
+    if (current_step >= step_max) {
+        return tex_interm.Sample(pointsSampler, uv);
+    }
+    if (!fd_face_found) {
+        return image.Sample(pointsSampler, uv);
+    }
+    if (current_step == 0) {
+        if (frame_index < 10) {
+            return float4(fd_points_tex.Sample(pointsSampler, uv).xyz, 1.0);
+        }
+        else {
+            float3 cur_fd_px = fd_points_tex.Sample(pointsSampler, uv).xyz;
+            float3 prev_fd_px = prev_step0.Sample(pointsSampler, uv).xyz;
+
+            float lerp_val = pow(smoothing*0.001, 0.1);
+
+            prev_fd_px = lerp(cur_fd_px, prev_fd_px, lerp_val);
+            return float4(prev_fd_px, 1.0);
+        }
+    }
     float2 uv_ortho = uv_to_ortho(uv);
     float2 tex_size = uv_to_ortho(float2(1.0, 1.0));
 
-    float2 face_tip = uv_to_ortho(fd_points_tex.Sample(pointsSampler, float2((1 + 0.5)/478.0, 0)).xy);
-    float2 face_center = uv_to_ortho(fd_points_tex.Sample(pointsSampler, float2((197 + 0.5)/478.0, 0)).xy);
-    float2 face_top = uv_to_ortho(fd_points_tex.Sample(pointsSampler, float2((10 + 0.5)/478.0, 0)).xy);
-    float2 face_bottom = uv_to_ortho(fd_points_tex.Sample(pointsSampler, float2((152 + 0.5)/478.0, 0)).xy);
+    float2 face_tip = uv_to_ortho(sample_facemap_smooth(1).xy);
+    float2 face_center = uv_to_ortho(sample_facemap_smooth(197).xy);
+    float2 face_top = uv_to_ortho(sample_facemap_smooth(10).xy);
+    float2 face_bottom = uv_to_ortho(sample_facemap_smooth(152).xy);
 
-    if (!fd_face_found) {
+    /*if (!fd_face_found) {
         return image.Sample(textureSampler, uv);
-    }
+    }*/
 
-    float2 face_left1 = uv_to_ortho(fd_points_tex.Sample(pointsSampler, float2((234 + 0.5)/478.0, 0)).xy);
-    float2 face_left2 = uv_to_ortho(fd_points_tex.Sample(pointsSampler, float2((227 + 0.5)/478.0, 0)).xy);
-    float2 face_left3 = uv_to_ortho(fd_points_tex.Sample(pointsSampler, float2((116 + 0.5)/478.0, 0)).xy);
-    float2 face_left  = uv_to_ortho(fd_points_tex.Sample(pointsSampler, float2((117 + 0.5)/478.0, 0)).xy);
+    float2 face_left1 = uv_to_ortho(sample_facemap_smooth(234).xy);
+    float2 face_left2 = uv_to_ortho(sample_facemap_smooth(227).xy);
+    float2 face_left3 = uv_to_ortho(sample_facemap_smooth(116).xy);
+    float2 face_left  = uv_to_ortho(sample_facemap_smooth(117).xy);
     if (face_left.x > face_left1.x) {
         face_left = face_left1;
     }
@@ -100,10 +115,10 @@ float4 EffectLinear(float2 uv) {
         face_left = face_tip;
     }
 
-    float2 face_right1 = uv_to_ortho(fd_points_tex.Sample(pointsSampler, float2((454 + 0.5)/478.0, 0)).xy);
-    float2 face_right2 = uv_to_ortho(fd_points_tex.Sample(pointsSampler, float2((447 + 0.5)/478.0, 0)).xy);
-    float2 face_right3 = uv_to_ortho(fd_points_tex.Sample(pointsSampler, float2((345 + 0.5)/478.0, 0)).xy);
-    float2 face_right  = uv_to_ortho(fd_points_tex.Sample(pointsSampler, float2((346 + 0.5)/478.0, 0)).xy);
+    float2 face_right1 = uv_to_ortho(sample_facemap_smooth(454).xy);
+    float2 face_right2 = uv_to_ortho(sample_facemap_smooth(447).xy);
+    float2 face_right3 = uv_to_ortho(sample_facemap_smooth(345).xy);
+    float2 face_right  = uv_to_ortho(sample_facemap_smooth(346).xy);
     if (face_right.x < face_right1.x) {
         face_right = face_right1;
     }
@@ -139,7 +154,10 @@ float4 EffectLinear(float2 uv) {
     }
     float2 center = (top_left + bottom_right) * 0.5;
 
-    float2 zoomed_region_size_scaled = zoomed_region_size / zoom_level;
+    float ratio_compensate = !use_tilt_compensate ? 1.0 : distance(face_top, face_bottom) / max(0.000001, abs(face_top.y - face_bottom.y));
+    zoomed_region_size = bottom_right - top_left;
+
+    float2 zoomed_region_size_scaled = zoomed_region_size / zoom_level * ratio_compensate;
     zoomed_region_size_scaled = clamp(zoomed_region_size_scaled, float2(0.0, 0.0), tex_size);
 
     // Compute eligible area for the center based on the zoom level
@@ -157,6 +175,8 @@ float4 EffectLinear(float2 uv) {
         float uref = upixel*2;
         float vref = vpixel*2;
         float2 uvref = float2(0.002,0.002);
+        float4 px_orig = image.Sample(textureSampler, uv);
+
         if (inside_box(uv_ortho, face_center - uvref, face_center + uvref)) {
             return float4(1.0, 1.0, 1.0, 1.0);
         }
@@ -173,12 +193,10 @@ float4 EffectLinear(float2 uv) {
             return float4(1.0, 0.0, 0.0, 1.0);
         }
 
-        float4 px_orig = image.Sample(textureSampler, uv);
-
         if (inside_box(uv_ortho, top_left_scaled, top_left_scaled + zoomed_region_size_scaled)) {
             px_orig = lerp(px_orig, float4(0.0, 1.0, 0.0, 1.0), 0.5);
         }
-        if (inside_box(uv_ortho, top_left, top_left + zoomed_region_size)) {
+        if (inside_box(uv_ortho, top_left, bottom_right)) {
             px_orig = lerp(px_orig, float4(1.0, 0.0, 0.0, 1.0), 0.5);
         }
         if (inside_box(uv_ortho, eligible_area_top_left, eligible_area_bottom_right)) {
@@ -199,6 +217,22 @@ float4 EffectLinear(float2 uv) {
 
 // You probably don't want to change anything from this point.
 
+struct VertData {
+    float2 uv  : TEXCOORD0;
+    float4 pos : POSITION;
+};
+
+struct FragData {
+    float2 uv  : TEXCOORD0;
+};
+
+VertData VSDefault(VertData v_in)
+{
+    VertData vert_out;
+    vert_out.uv  = v_in.uv;
+    vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+    return vert_out;
+}
 float4 PSEffect(FragData f_in) : TARGET
 {
     float4 rgba = EffectLinear(f_in.uv);

@@ -7,11 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ## [1.2.4] - 2026-09-11
 ### Added
-- Settings: Add "open" button in folders list
 - Rainbow effect: added a visibility toggle prompt
-- Add library path in settings in dev mode
+- Zoom to face effect: add smoothing and tilt compensation
 - Vignette effect: add "Apply Vignetting in Alpha Channel" in options
-- Blueprint system for faster effect loading - especially at startup
+- Settings: Add "open" button in folders list
+- Settings: Add library path for dev mode
+- Internal: Blueprint system for faster effect loading - especially at startup
 
 ### Fixed
 - Displacement map: fixed #808000 not actually being 0.0 displacement
