@@ -23,11 +23,6 @@ sampler_state pointsSampler {
 };
 //----------------------------------------------------------------------------------------------------------------------
 
-float rand2(float2 co){
-	float v = sin(dot(co, float2(12.9898, 78.233))) * 43758.5453;
-	return fract(v);
-}
-
 bool inside_box(float2 v, float2 left_top, float2 right_bottom) {
     float2 s = step(left_top, v) - step(right_bottom, v);
     return s.x * s.y != 0.0;
@@ -80,7 +75,7 @@ float4 EffectLinear(float2 uv) {
             float3 cur_fd_px = fd_points_tex.Sample(pointsSampler, uv).xyz;
             float3 prev_fd_px = prev_step0.Sample(pointsSampler, uv).xyz;
 
-            float lerp_val = pow(smoothing*0.001, 0.1);
+            float lerp_val = min(0.9999999, pow(smoothing*0.001, 0.1));
 
             prev_fd_px = lerp(cur_fd_px, prev_fd_px, lerp_val);
             return float4(prev_fd_px, 1.0);
