@@ -50,8 +50,6 @@ bool open_in_explorer(const char *path)
             SW_SHOWNORMAL
         );
 
-        bfree(wpath);
-
         return reinterpret_cast<intptr_t>(result) > 32;
 
     #elif defined(__APPLE__)
