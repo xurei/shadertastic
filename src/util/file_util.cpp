@@ -20,7 +20,6 @@
 #else
 #include <dirent.h>
 #include <unistd.h>
-#include <optional>
 #endif
 
 #include <filesystem>

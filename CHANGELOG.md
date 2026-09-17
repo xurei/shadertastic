@@ -12,7 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Vignette effect: add "Apply Vignetting in Alpha Channel" in options
 - Settings: Add "open" button in folders list
 - Settings: Add library path for dev mode
+
+### Changed
 - Internal: Blueprint system for faster effect loading - especially at startup
+- prev_frame parameter: create texrenders only when the effect is shown
 
 ### Fixed
 - Displacement map: fixed #808000 not actually being 0.0 displacement

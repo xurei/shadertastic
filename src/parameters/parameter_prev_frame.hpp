@@ -77,8 +77,6 @@ class effect_parameter_prev_frame : public effect_parameter_prev_frame_detail::b
 
             json_t *step_json = json_object_get(metadata, "step");
             step_ = json_is_integer(step_json) ? (int)json_integer_value(step_json) : -1;
-
-            init_texrenders();
         }
 
         void try_gs_set_val() override {
@@ -117,6 +115,14 @@ class effect_parameter_prev_frame : public effect_parameter_prev_frame_detail::b
             const int next_texrender_buffer = prev_texrender_buffer ^ 1;
             gs_texrender_end(prev_texrender[next_texrender_buffer]);
             return prev_texrender[next_texrender_buffer];
+        }
+
+        void show() override {
+            init_texrenders();
+        }
+
+        void hide() override {
+            release_texrenders();
         }
 
         void next_frame() {
