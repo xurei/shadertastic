@@ -69,7 +69,6 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
         load_effects(s, settings, effect_path, "transition");
     }
 
-    //obs_source_update(source, settings);
     shadertastic_transition_update(s, settings);
     return s;
 }
@@ -402,22 +401,24 @@ bool shadertastic_transition_import_button_click(obs_properties_t *props, obs_pr
     UNUSED_PARAMETER(property);
     struct shadertastic_transition *s = shadertastic_transition_cast(data);
     auto *settings = obs_source_get_settings(s->source);
+    auto *defaults = obs_data_get_defaults(settings);
+    release_resource(obs_data_release, settings);
 
     QClipboard *clipboard = QApplication::clipboard();
     auto new_data = obs_data_create_from_json(clipboard->text().toStdString().c_str());
 
     if (!new_data) {
         QMessageBox::information(nullptr, obs_module_text("TransitionImport"), obs_module_text("TransitionImportError"));
-        return false;
     }
-
-    obs_source_update(s->source, obs_data_get_defaults(settings));
-    obs_source_update(s->source, new_data);
-    QMessageBox::information(nullptr, obs_module_text("TransitionImport"), obs_module_text("TransitionImportConfirm"));
-
-    release_resource(obs_data_release, settings);
+    else {
+        obs_source_update(s->source, defaults);
+        obs_source_update(s->source, new_data);
+        QMessageBox::information(nullptr, obs_module_text("TransitionImport"), obs_module_text("TransitionImportConfirm"));
+    }
+    release_resource(obs_data_release, defaults);
     release_resource(obs_data_release, new_data);
-    return true;
+
+    return (new_data != nullptr);
 }
 //----------------------------------------------------------------------------------------------------------------------
 
