@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Rainbow effect: added a visibility toggle prompt
 - Zoom to face effect: add smoothing and tilt compensation
-- Vignette effect: add "Apply Vignetting in Alpha Channel" in options
+- Vignette effect remvamped: add "Apply Vignetting in Alpha Channel" in options, custom positioning and size
 - Settings: Add "open" button in folders list
 - Settings: Add library path for dev mode
 - Filter auto rename: if the name of the filter contains "Shadertastic", rename it on effect change

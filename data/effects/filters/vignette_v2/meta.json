@@ -1,0 +1,121 @@
+{
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io"
+  },
+  "metafileVersion": 1,
+  "label": "Vignette v2",
+  "revision": 2,
+  "steps": 1,
+  "parameters": [
+    {
+      "name": "center_group",
+      "label": "Center",
+      "type": "group",
+      "parameters": [
+        {
+          "name": "center_x",
+          "label": "X",
+          "type": "float",
+          "slider": true,
+          "min": 0,
+          "max": 1000,
+          "step": 0.1,
+          "default": 500.0
+        },
+        {
+          "name": "center_y",
+          "label": "Y",
+          "type": "float",
+          "slider": true,
+          "min": 0,
+          "max": 1000,
+          "step": 0.1,
+          "default": 500.0
+        }
+      ]
+    },
+    {
+      "name": "dimensions_group",
+      "label": "Dimensions",
+      "type": "group",
+      "parameters": [
+        {
+          "name": "keep_aspect_ratio",
+          "label": "Preserve aspect ratio",
+          "type": "bool",
+          "default": false
+        },
+        {
+          "name": "width",
+          "label": "Width",
+          "type": "float",
+          "slider": true,
+          "min": 0,
+          "max": 1000,
+          "step": 0.1,
+          "default": 450.0
+        },
+        {
+          "name": "height",
+          "label": "Height",
+          "type": "float",
+          "slider": true,
+          "min": 0,
+          "max": 1000,
+          "step": 0.1,
+          "default": 450.0
+        }
+      ]
+    },
+    {
+      "name": "aspect_group",
+      "label": "Aspect",
+      "type": "group",
+      "parameters": [
+        {
+          "name": "strength",
+          "label": "Strength",
+          "type": "float",
+          "slider": true,
+          "min": 0,
+          "max": 1,
+          "default": 0.8,
+          "step": 0.01
+        },
+        {
+          "name": "smoothing",
+          "label": "Smoothing",
+          "type": "float",
+          "slider": true,
+          "min": 0.0,
+          "max": 1000.0,
+          "default": 100,
+          "step": 0.1
+        },
+        {
+          "name": "curvature",
+          "label": "Curvature",
+          "type": "float",
+          "slider": true,
+          "min": 0.10,
+          "max": 1.0,
+          "default": 0.75,
+          "step": 0.01
+        },
+        {
+          "name": "alpha_vignette",
+          "label": "Apply on alpha channel",
+          "type": "bool",
+          "default": false
+        },
+        {
+          "name": "invert_effect",
+          "label": "Invert effect",
+          "type": "bool",
+          "default": false
+        }
+      ]
+    }
+  ]
+}
