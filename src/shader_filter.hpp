@@ -25,6 +25,7 @@
 
 #include <obs-module.h>
 #include <QApplication>
+#include <obs.hpp>
 #include "effect.h"
 #include "face_tracking/face_tracking.h"
 #include "obs-source-custom.h"
@@ -75,7 +76,7 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     //    }
     //    debug("FILTER %s ON %s Settings : %s", obs_source_get_name(source), obs_source_get_name(root_source), obs_data_get_json(settings));
     //#endif
-    debug("FILTER %s Settings : %s", (source==nullptr) ? "null" : obs_source_get_name(source), obs_data_get_json(settings));
+    //debug("FILTER %s Settings : %s", (source==nullptr) ? "null" : obs_source_get_name(source), obs_data_get_json(settings));
 
     obs_enter_graphics();
     s->interm_texrender[0] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
@@ -109,6 +110,18 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     }
 
     return s;
+}
+//----------------------------------------------------------------------------------------------------------------------
+
+static void shadertastic_filter_add_callback(void *data, obs_source_t *source) {
+    shadertastic_filter *s = shadertastic_filter_cast(data);
+    s->parent_source = source;
+}
+
+static void shadertastic_filter_remove_callback(void *data, obs_source_t *source) {
+    UNUSED_PARAMETER(source);
+    shadertastic_filter *s = shadertastic_filter_cast(data);
+    s->parent_source = nullptr;
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -329,13 +342,25 @@ bool shadertastic_filter_properties_change_effect_callback(void *priv, obs_prope
     //shadertastic_filter_properties(priv);
     const char *select_effect_name = obs_data_get_string(data, "effect");
     debug("CALLBACK : %s", select_effect_name);
-    auto selected_effect = s->effects->find(std::string(select_effect_name));
-    if (selected_effect != s->effects->end()) {
-        debug("CALLBACK : %s -> %s", select_effect_name, selected_effect->second.name.c_str());
-        obs_property_set_visible(obs_properties_get(props, (selected_effect->second.name + "__params").c_str()), true);
+    auto selected_effect_it = s->effects->find(std::string(select_effect_name));
+    if (selected_effect_it != s->effects->end()) {
+        debug("CALLBACK : %s -> %s", select_effect_name, selected_effect_it->second.name.c_str());
+        obs_property_set_visible(obs_properties_get(props, (selected_effect_it->second.name + "__params").c_str()), true);
 
-        if (selected_effect->second.has_error()) {
-            obs_property_set_visible(obs_properties_get(props, (selected_effect->second.name + "__warning").c_str()), true);
+        if (selected_effect_it->second.has_error()) {
+            obs_property_set_visible(obs_properties_get(props, (selected_effect_it->second.name + "__warning").c_str()), true);
+        }
+
+        std::string source_name = obs_source_get_name(s->source);
+        if (source_name.find("Shadertastic") != std::string::npos && s->parent_source != nullptr) {
+            int i = 2;
+            OBSSourceAutoRelease existing_filter;
+            std::string new_source_name = (selected_effect_it->second.label + " (Shadertastic)");
+            QString placeholder = QString::fromStdString(new_source_name);
+            while ((existing_filter = obs_source_get_filter_by_name(s->parent_source, new_source_name.c_str()))) {
+                new_source_name = QString("%1 %2").arg(placeholder).arg(i++).toStdString();
+            }
+            obs_source_set_name(s->source, new_source_name.c_str());
         }
     }
 
@@ -391,7 +416,7 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
         const char *effect_label = effect->label.c_str();
         obs_property_list_add_string(p, effect_label, effect_name.c_str());
     }
-    obs_property_set_modified_callback2(p, shadertastic_filter_properties_change_effect_callback, data);
+    obs_property_set_modified_callback2(p, shadertastic_filter_properties_change_effect_callback, s);
 
     for (auto& [effect_name, effect] : *(s->effects)) {
         effect.create_properties(props);

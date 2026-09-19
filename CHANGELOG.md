@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Vignette effect: add "Apply Vignetting in Alpha Channel" in options
 - Settings: Add "open" button in folders list
 - Settings: Add library path for dev mode
+- Filter auto rename: if the name of the filter contains "Shadertastic", rename it on effect change
 
 ### Changed
 - Internal: Blueprint system for faster effect loading - especially at startup

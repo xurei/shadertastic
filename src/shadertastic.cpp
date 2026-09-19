@@ -251,6 +251,8 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
     shadertastic_filter_info.show = shadertastic_filter_show;
     shadertastic_filter_info.hide = shadertastic_filter_hide;
     shadertastic_filter_info.video_get_color_space = shadertastic_filter_get_color_space;
+    shadertastic_filter_info.filter_add = shadertastic_filter_add_callback;
+    shadertastic_filter_info.filter_remove = shadertastic_filter_remove_callback;
     obs_register_source(&shadertastic_filter_info);
 
     QAction *action = static_cast<QAction *>(obs_frontend_add_tools_menu_qaction(obs_module_text("Shadertastic Settings")));
