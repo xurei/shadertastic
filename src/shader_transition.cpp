@@ -130,10 +130,14 @@ void shadertastic_transition_update(void *data, obs_data_t *settings) {
     const char *selected_effect_name = obs_data_get_string(settings, "effect");
     auto selected_effect_it = s->effects->find(selected_effect_name);
     if (selected_effect_it != s->effects->end()) {
+        if (s->selected_effect != nullptr && s->selected_effect != &(selected_effect_it->second)) {
+            s->selected_effect->hide();
+        }
         s->selected_effect = &(selected_effect_it->second);
     }
 
     if (s->selected_effect != nullptr) {
+        s->selected_effect->show();
         for (auto param: s->selected_effect->effect_params) {
             param->set_data_from_settings(settings, selected_effect_name);
         }

@@ -151,10 +151,14 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
     const char *selected_effect_name = obs_data_get_string(settings, "effect");
     auto selected_effect_it = s->effects->find(selected_effect_name);
     if (selected_effect_it != s->effects->end()) {
+        if (s->selected_effect != nullptr && s->selected_effect != &(selected_effect_it->second)) {
+            s->selected_effect->hide();
+        }
         s->selected_effect = &(selected_effect_it->second);
     }
 
     if (s->selected_effect != nullptr) {
+        s->selected_effect->show();
         //obs_data_set_string(settings, (std::string(selected_effect_name) + "__compile_error").c_str(), s->selected_effect->error_str.c_str());
         for (auto param: s->selected_effect->effect_params) {
             param->set_data_from_settings(settings, selected_effect_name);
@@ -321,6 +325,7 @@ bool shadertastic_filter_properties_change_effect_callback(void *priv, obs_prope
     shadertastic_filter *s = shadertastic_filter_cast(priv);
 
     if (s->selected_effect != nullptr) {
+        s->selected_effect->hide();
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), false);
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__warning").c_str()), false);
     }
