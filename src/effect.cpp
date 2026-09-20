@@ -64,7 +64,7 @@ void shadertastic_effect_blueprint_t::load_blueprint() {
         json_t *label_json = json_object_get(metadata, "label");
         if (json_is_string(label_json)) {
             label = json_string_value(label_json);
-            if (!starts_with(metadata_path, filters_dir)) {
+            if (!starts_with(normalize_path(metadata_path), normalize_path(filters_dir))) {
                 if (os_file_exists(metadata_path.c_str())) {
                     label = label + std::string(" 🔧");
                 }
