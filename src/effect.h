@@ -25,9 +25,8 @@
 
 #include "params_list.hpp"
 #include "shader/shader.h"
+#include "parameters/parameter_prev_frame.hpp"
 #include "src/shader/shaders_library.h"
-
-struct effect_parameter_prev_frame;
 
 struct shadertastic_effect_blueprint_t {
     const std::string path;
