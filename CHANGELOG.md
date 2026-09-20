@@ -5,26 +5,27 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-## [1.2.4] - 2026-09-11
+## [1.3.0] - 2026-09-20
 ### Added
+- Vignette v2 effect: add "Apply Vignetting in Alpha Channel" in options, custom positioning and size
+- Face tracking: added "Reset on face lost" option
+- Zoom to face effect: add smoothing and tilt compensation
 - Shake on sound effect: support negative zoom
 - Rainbow effect: added a visibility toggle prompt
-- Zoom to face effect: add smoothing and tilt compensation
-- Vignette effect remvamped: add "Apply Vignetting in Alpha Channel" in options, custom positioning and size
 - Settings: Add "open" button in folders list
-- Settings: Add library path for dev mode
 - Filter auto rename: if the name of the filter contains "Shadertastic", rename it on effect change
+- Displacement Map : add contextual text
+- Developers: Added "@include" mechanism for easier dependencies uses; also added library path option
 
 ### Changed
 - Internal: Blueprint system for faster effect loading - especially at startup
-- Internal: Moved implementations of filter and transition to cpp files
+- Internal: Moved implementations of filter and transition to cpp files (chore)
 - prev_frame parameter: create texrenders only when the effect is shown
 
 ### Fixed
 - Displacement map: fixed #808000 not actually being 0.0 displacement
 - Fixed display conditions not working in groups
 - Fixed reload button for transitions in dev mode
-- Fixed all memory leaks! (I think...)
 
 ## [1.2.0] - 2026-07-24
 This version fixes crashes with OBS 32.2.0 and later.
