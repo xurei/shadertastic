@@ -1,11 +1,13 @@
 {
   "about": {
     "author_name": "xurei",
-    "author_url": "http://about.xurei.io"
+    "author_url": "http://about.xurei.io",
+    "description": "Shaky shaky ! Make the source vibrate and zoom when audio is detected on a given source"
   },
   "metafileVersion": 1,
   "label": "Shake on sound",
   "steps": 1,
+  "revision": 2,
   "parameters": [
     {
       "name": "audio_level",
@@ -27,7 +29,7 @@
       "label": "Zoom Level",
       "type": "float",
       "slider": true,
-      "min": 0,
+      "min": -0.5,
       "max": 0.5,
       "default": 0.02,
       "step": 0.001

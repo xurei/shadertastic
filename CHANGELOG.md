@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ## [1.2.4] - 2026-09-11
 ### Added
+- Shake on sound effect: support negative zoom
 - Rainbow effect: added a visibility toggle prompt
 - Zoom to face effect: add smoothing and tilt compensation
 - Vignette effect remvamped: add "Apply Vignetting in Alpha Channel" in options, custom positioning and size

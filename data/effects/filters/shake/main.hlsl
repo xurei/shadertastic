@@ -68,6 +68,13 @@ float4 EffectLinear(float2 uv)
     uv[0] += sin_u * (zoom_level_ratio*shake_level) * 0.5;
     uv[1] += sin_v * (zoom_level_ratio*shake_level) * 0.5;
 
+    if (uv.x < 0.0 || uv.x > 1.0) {
+        return float4(0.0, 0.0, 0.0, 0.0);
+    }
+    if (uv.y < 0.0 || uv.y > 1.0) {
+        return float4(0.0, 0.0, 0.0, 0.0);
+    }
+
     return image.Sample(textureSampler, uv);
 }
 //----------------------------------------------------------------------------------------------------------------------
