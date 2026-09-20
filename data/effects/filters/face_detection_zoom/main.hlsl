@@ -50,13 +50,7 @@ float2 ortho_to_uv(float2 uv_ortho) {
 //----------------------------------------------------------------------------------------------------------------------
 
 float2 sample_facemap_smooth(int index) {
-    float2 prev_sample = facetracking_edge(prev_step0, index).xy;
-
-    if (fd_face_found) {
-        float2 sample = facetracking_edge(fd_points_tex, index).xy;
-        return lerp(sample, prev_sample, 0.999999);
-    }
-
+    float2 prev_sample = facetracking_edge(tex_interm, index).xy;
     return prev_sample;
 }
 
@@ -68,17 +62,24 @@ float4 EffectLinear(float2 uv) {
         return image.Sample(pointsSampler, uv);
     }
     if (current_step == 0) {
-        if (frame_index < 10) {
+        if (frame_index < 5) {
             return float4(fd_points_tex.Sample(pointsSampler, uv).xyz, 1.0);
         }
         else {
+            if (uv.x >= 1.0-2*upixel && uv.y >= 0.75) {
+                return float4((fd_face_found ? 1.0 : 0.0)*float3(1.0,1.0,1.0), 1.0);
+            }
+            float prev_fd_face_found = prev_step0.Sample(pointsSampler, float2(1.0, 1.0)).r;
             float3 cur_fd_px = fd_points_tex.Sample(pointsSampler, uv).xyz;
-            float3 prev_fd_px = prev_step0.Sample(pointsSampler, uv).xyz;
 
-            float lerp_val = min(0.9999999, pow(smoothing*0.001, 0.1));
+            if (prev_fd_face_found > 0.5) {
+                float3 prev_fd_px = prev_step0.Sample(pointsSampler, uv).xyz;
+                float lerp_val = min(0.9999999, pow(smoothing*0.001, 0.1));
+                prev_fd_px.rgb = lerp(cur_fd_px, prev_fd_px, lerp_val);
+                return float4(prev_fd_px, 1.0);
+            }
 
-            prev_fd_px = lerp(cur_fd_px, prev_fd_px, lerp_val);
-            return float4(prev_fd_px, 1.0);
+            return float4(cur_fd_px, 1.0);
         }
     }
     float2 uv_ortho = uv_to_ortho(uv);
@@ -167,6 +168,17 @@ float4 EffectLinear(float2 uv) {
     float2 uv_scaled = top_left_scaled + zoomed_region_size_scaled * uv;
 
     if (show_ref_points) {
+        /*if (uv.y < 0.05) {
+            float4 px = fd_points_tex.Sample(pointsSampler, uv / float2(1.0, 0.05));
+            px.a = 1.0;
+            return px;
+        }
+        if (uv.y < 0.10) {
+            float4 px = tex_interm.Sample(pointsSampler, (uv - float2(0.0, 0.05)) / float2(1.0, 0.05));
+            px.a = 1.0;
+            return px;
+        }*/
+
         float uref = upixel*2;
         float vref = vpixel*2;
         float2 uvref = float2(0.002,0.002);
