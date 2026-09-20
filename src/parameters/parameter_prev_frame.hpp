@@ -20,9 +20,9 @@
 
 #include <string>
 #include "parameter.hpp"
-#include "../shadertastic_common.hpp"
 #include "../util/string_util.h"
 #include "../util/file_util.h"
+#include "../util/resource_util.hpp"
 
 namespace effect_parameter_prev_frame_detail {
     using base_param = effect_param_with_no_prop<effect_parameter>;

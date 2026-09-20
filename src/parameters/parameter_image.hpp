@@ -22,6 +22,7 @@
 #include "parameter.hpp"
 #include "../util/string_util.h"
 #include "../util/file_util.h"
+#include "../util/resource_util.hpp"
 
 namespace effect_parameter_image_detail {
     using base_param = effect_parameter;

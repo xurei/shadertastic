@@ -5,8 +5,8 @@
 #include <string>
 #include <obs-module.h>
 #include "face_tracking/face_tracking_state.h"
+#include "util/resource_util.hpp"
 
-#define release_resource(function, resource) if ((resource) != nullptr) { function(resource); resource = nullptr; }
 
 struct shadertastic_effect_t;
 typedef std::map<std::string, shadertastic_effect_t> shadertastic_effects_map_t;
