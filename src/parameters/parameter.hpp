@@ -20,12 +20,14 @@
 
 #include <list>
 #include <jansson.h>
+#include <unordered_map>
 #include "parameter_datatype.hpp"
 #include "src/condition/collect_refs.h"
 #include "src/condition/condition_parser.h"
 #include "src/shader/shader.h"
-#include "src/shadertastic_common.hpp"
 #include "src/try_gs_effect_set.h"
+
+struct shadertastic_common;
 
 inline static std::string get_full_param_name_static(const std::string &effect_name, const std::string &param_name) {
     return effect_name + '.' + param_name;
@@ -76,7 +78,7 @@ class effect_parameter {
         effect_parameter(const size_t data_size, gs_eparam_t *shader_param) {
             this->data_size = data_size;
             this->shader_param = shader_param;
-            this->data = bmalloc(data_size);
+            this->data = bzalloc(data_size);
         }
 
         /**

@@ -139,16 +139,7 @@ class effect_parameter_time : public effect_parameter_time_detail::base_param {
             }
         }
 
-        void tick(shadertastic_common *s) override {
-            uint64_t frame_interval = obs_get_frame_interval_ns();
-            (*time) += (
-                // Converting to double first before reconverting to float to keep precision. Might be useless
-                speed < 0.0001 ? 0.0f : (float)(((double)frame_interval/1000000000.0) * speed)
-            );
-            if (reset_on_show && !s->was_enabled) {
-                *time = 0.0;
-            }
-        }
+        void tick(shadertastic_common *s) override;
 
         void set_data_from_settings(obs_data_t *settings, const char *effect_name) override {
             std::string full_param_name = get_full_param_name(effect_name);

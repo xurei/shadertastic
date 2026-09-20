@@ -30,7 +30,6 @@
 #include "version.h"
 
 #ifdef DEV_MODE
-// ReSharper disable once CppUnusedIncludeDirective
 #include "util/debug_util.hpp"
 #endif
 
@@ -41,11 +40,13 @@
 #include "shader/shaders_library.h"
 #include "shadertastic.hpp"
 #include "util/file_util.h"
-#include "shader_transition.hpp"
-// ReSharper disable once CppUnusedIncludeDirective
 #include "util/time_util.hpp"
 #include "src/util/obs-retrocompat.hpp"
 #include "blueprints_library.h"
+
+#include "shader_filter.h"
+#include "shader_transition.h"
+#include "src/face_tracking/face_tracking_raster.h"
 //----------------------------------------------------------------------------------------------------------------------
 
 OBS_DECLARE_MODULE()
@@ -192,11 +193,6 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "shader_filter.hpp"
-#include "shader_transition.hpp"
-#include "src/face_tracking/face_tracking_raster.h"
-//----------------------------------------------------------------------------------------------------------------------
-
 [[maybe_unused]] bool obs_module_load(void) {
     info("loaded version %s", PROJECT_VERSION);
     srand(time(nullptr));
@@ -284,6 +280,7 @@ bool is_module_loaded() {
 [[maybe_unused]] void obs_module_unload(void) {
     module_loaded = false;
     shadertastic_filter_unload();
+    shadertastic_transition_unload();
 
     obs_enter_graphics();
     {

@@ -5,15 +5,16 @@
 #include <string>
 #include <obs-module.h>
 #include "face_tracking/face_tracking_state.h"
+#include "effect.h"
 #include "util/resource_util.hpp"
 
-
-struct shadertastic_effect_t;
 typedef std::map<std::string, shadertastic_effect_t> shadertastic_effects_map_t;
 extern gs_texture_t *shadertastic_transparent_texture;
 
 struct shadertastic_common {
-    shadertastic_effects_map_t *effects{};
+    // !!! Do not add constructors or destructors. OBS handles this with bzalloc which won't execute them
+
+    shadertastic_effects_map_t *effects{}; // Pointer is required here, otherwise the map gets corrupted (by OBS ?)
     shadertastic_effect_t *selected_effect{};
     obs_source_t *parent_source{};
     obs_source_t *source{};
@@ -28,6 +29,8 @@ struct shadertastic_common {
     bool was_enabled = false;
 
     bool must_render = true;
+
+    void release();
 };
 //----------------------------------------------------------------------------------------------------------------------
 

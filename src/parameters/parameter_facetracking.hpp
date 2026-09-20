@@ -140,11 +140,7 @@ class effect_parameter_facetracking : public effect_parameter_facetracking_detai
             }
         }
 
-        void tick(shadertastic_common *s) override {
-            face_tracking = s->face_tracking.get();
-            cx = obs_source_get_width(s->source);
-            cy = obs_source_get_height(s->source);
-        }
+        void tick(shadertastic_common *s) override;
 
         void try_gs_set_val() override {
             if (!face_tracking) {

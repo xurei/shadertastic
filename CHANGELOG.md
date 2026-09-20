@@ -16,12 +16,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - Internal: Blueprint system for faster effect loading - especially at startup
+- Internal: Moved implementations of filter and transition to cpp files
 - prev_frame parameter: create texrenders only when the effect is shown
 
 ### Fixed
 - Displacement map: fixed #808000 not actually being 0.0 displacement
 - Fixed display conditions not working in groups
 - Fixed reload button for transitions in dev mode
+- Fixed all memory leaks! (I think...)
 
 ## [1.2.0] - 2026-07-24
 This version fixes crashes with OBS 32.2.0 and later.

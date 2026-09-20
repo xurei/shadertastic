@@ -25,8 +25,9 @@
 
 #include "params_list.hpp"
 #include "shader/shader.h"
-#include "parameters/parameter_prev_frame.hpp"
 #include "src/shader/shaders_library.h"
+
+struct effect_parameter_prev_frame;
 
 struct shadertastic_effect_blueprint_t {
     const std::string path;
@@ -45,10 +46,6 @@ struct shadertastic_effect_blueprint_t {
     inline bool is_loaded() { return metadata != nullptr; }
 
     shadertastic_effect_blueprint_t(std::string name_, std::string path_): name(std::move(name_)), path(std::move(path_)) {}
-
-    virtual ~shadertastic_effect_blueprint_t() {
-        //release_resource(json_decref, metadata);
-    }
 };
 
 struct shadertastic_effect_t : public shadertastic_effect_blueprint_t {
@@ -96,12 +93,6 @@ struct shadertastic_effect_t : public shadertastic_effect_blueprint_t {
     void hide();
 
     void release();
-
-    virtual ~shadertastic_effect_t() {
-        /*if (metadata != nullptr && json_is_object(metadata)) {
-            release_resource(json_decref, metadata);
-        }*/
-    }
 };
 
 #endif // SHADERTASTIC_EFFECT_H

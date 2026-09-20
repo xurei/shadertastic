@@ -21,6 +21,7 @@
 #include <obs-module.h>
 #include <opencv2/core.hpp>
 #include <thread>
+#include "face_tracking_state.h"
 
 struct face_tracking_bounding_box {
     union {

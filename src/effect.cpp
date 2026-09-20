@@ -24,6 +24,7 @@
 #include "try_gs_effect_set.h"
 #include "parameters/parameter_facetracking.hpp"
 #include "parameters/parameter_factory.h"
+#include "parameters/parameter_prev_frame.hpp"
 #include "shader/shaders_library.h"
 #include "util/file_util.h"
 #include "settings.h"

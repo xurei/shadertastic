@@ -24,7 +24,7 @@
  */
 
 #include "obs-source-custom.h"
-#include "shadertastic.hpp"
+#include "shader_filter.h"
 #include "src/util/texture_util.h"
 
 bool shadertastic_source_process_filter_begin_with_color_space(obs_source_t *filter, shadertastic_filter *s, gs_color_format format, gs_color_space space) {
