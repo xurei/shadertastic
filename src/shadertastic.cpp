@@ -128,8 +128,8 @@ void obs_module_frontend_saveload(obs_data_t *save_data, bool saving, void *data
                     obs_data_release(transi);
                 }
             }
-            obs_data_array_release(transi_backup_array);
         }
+        release_resource(obs_data_array_release, transi_backup_array);
     }
     obs_frontend_source_list_free(&transitions);
 }
