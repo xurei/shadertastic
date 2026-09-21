@@ -65,7 +65,7 @@ void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *source)
         load_effects(s, settings, effect_path, "transition");
     }
 
-    //shadertastic_transition_update(s, settings);
+    shadertastic_transition_update(s, settings);
     return s;
 }
 //----------------------------------------------------------------------------------------------------------------------

@@ -26,10 +26,10 @@ class BlueprintsLibrary {
     private:
         std::map<std::string, shadertastic_effect_blueprint_t *> blueprints;
     public:
-        bool hasBlueprint(const std::string &name);
-        shadertastic_effect_blueprint_t * getBlueprint(const std::string &name);
-        shadertastic_effect_blueprint_t * loadBlueprint(const std::string &name, const std::string &path);
-        void removeBlueprint(const std::string &name);
+        bool hasBlueprint(const std::string &effect_type, const std::string &name);
+        shadertastic_effect_blueprint_t * getBlueprint(const std::string &effect_type, const std::string &name);
+        shadertastic_effect_blueprint_t * loadBlueprint(const std::string &effect_type, const std::string &name, const std::string &path);
+        void removeBlueprint(const std::string &effect_type, const std::string &name);
 };
 
 extern BlueprintsLibrary blueprints_library;

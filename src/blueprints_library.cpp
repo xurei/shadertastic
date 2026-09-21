@@ -20,23 +20,26 @@
 
 BlueprintsLibrary blueprints_library;
 
-bool BlueprintsLibrary::hasBlueprint(const std::string &name) {
-    return !(this->blueprints.find(name) == this->blueprints.end());
+bool BlueprintsLibrary::hasBlueprint(const std::string &effect_type, const std::string &name) {
+    std::string blueprint_name = effect_type + ":" + name;
+    return !(this->blueprints.find(blueprint_name) == this->blueprints.end());
 }
 
-shadertastic_effect_blueprint_t * BlueprintsLibrary::getBlueprint(const std::string &name) {
-    if (this->blueprints.find(name) == this->blueprints.end()) {
+shadertastic_effect_blueprint_t * BlueprintsLibrary::getBlueprint(const std::string &effect_type, const std::string &name) {
+    std::string blueprint_name = effect_type + ":" + name;
+    if (!this->hasBlueprint(effect_type, name)) {
         return nullptr;
     }
-    return this->blueprints[name];
+    return this->blueprints[blueprint_name];
 }
 
-shadertastic_effect_blueprint_t * BlueprintsLibrary::loadBlueprint(const std::string &name, const std::string &path) {
+shadertastic_effect_blueprint_t * BlueprintsLibrary::loadBlueprint(const std::string &effect_type, const std::string &name, const std::string &path) {
+    std::string blueprint_name = effect_type + ":" + name;
     shadertastic_effect_blueprint_t *blueprint = new shadertastic_effect_blueprint_t(name, path);
     blueprint->load_blueprint();
 
     if (blueprint->is_loaded()) {
-        this->blueprints[name] = blueprint;
+        this->blueprints[blueprint_name] = blueprint;
         return blueprint;
     }
     else {
@@ -44,8 +47,8 @@ shadertastic_effect_blueprint_t * BlueprintsLibrary::loadBlueprint(const std::st
     }
 }
 
-void BlueprintsLibrary::removeBlueprint(const std::string &name) {
-    if (hasBlueprint(name)) {
+void BlueprintsLibrary::removeBlueprint(const std::string &effect_type, const std::string &name) {
+    if (hasBlueprint(effect_type, name)) {
         delete this->blueprints[name];
         this->blueprints.erase(name);
     }

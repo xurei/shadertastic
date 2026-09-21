@@ -160,8 +160,8 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
 
     for (const auto &[effect_name, effect_path] : effect_paths) {
         shadertastic_effect_blueprint_t *blueprint = nullptr;
-        if (blueprints_library.hasBlueprint(effect_name)) {
-            blueprint = blueprints_library.getBlueprint(effect_name);
+        if (blueprints_library.hasBlueprint(effects_type, effect_name)) {
+            blueprint = blueprints_library.getBlueprint(effects_type, effect_name);
             if (effect_path != blueprint->path) {
                 warn("NOT LOADING EFFECT %s/%ss/%s : an effect with the name '%s' already exist", effects_dir.c_str(), effects_type.c_str(), effect_name.c_str(), effect_name.c_str());
                 continue;
@@ -172,7 +172,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
                 debug ("NOT LOADING EFFECT %s : no meta.json found", effect_name.c_str());
                 continue;
             }
-            blueprint = blueprints_library.loadBlueprint(effect_name, effect_path);
+            blueprint = blueprints_library.loadBlueprint(effects_type, effect_name, effect_path);
         }
 
         if (blueprint != nullptr) {
