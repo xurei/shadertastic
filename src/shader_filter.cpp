@@ -347,10 +347,12 @@ bool shadertastic_filter_properties_change_effect_callback(void *priv, obs_prope
             OBSSourceAutoRelease existing_filter;
             std::string new_source_name = (selected_effect_it->second.label + " (Shadertastic)");
             QString placeholder = QString::fromStdString(new_source_name);
-            while ((existing_filter = obs_source_get_filter_by_name(s->parent_source, new_source_name.c_str()))) {
+            while (new_source_name != source_name && (existing_filter = obs_source_get_filter_by_name(s->parent_source, new_source_name.c_str()))) {
                 new_source_name = QString("%1 %2").arg(placeholder).arg(i++).toStdString();
             }
-            obs_source_set_name(s->source, new_source_name.c_str());
+            if (new_source_name != source_name) {
+                obs_source_set_name(s->source, new_source_name.c_str());
+            }
         }
     }
 
