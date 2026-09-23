@@ -60,6 +60,22 @@
       "default": 0.5
     },
     {
+      "name": "smoothing_mode",
+      "label": "Smoothing",
+      "type": "list_int",
+      "values": [
+        {
+          "label": "None",
+          "value": 0
+        },
+        {
+          "label": "9-pixels average",
+          "value": 1
+        }
+      ],
+      "default": 1
+    },
+    {
       "type": "list_int",
       "name": "superposition_mode",
       "label": "Mode:",

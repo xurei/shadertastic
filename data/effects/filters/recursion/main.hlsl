@@ -20,6 +20,7 @@ uniform float center_y;
 uniform bool show_debug_point;
 uniform int reset_on_toggle;
 uniform int superposition_mode;
+uniform int smoothing_mode;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -117,18 +118,23 @@ float4 EffectLinear(float2 uv)
             prev_px = float4(0.0,0.0,0.0, 0.0);
         }
         else {
-            #ifdef _D3D11
-            [loop]
-            #endif
-            for (float du=-upixel; du <= upixel; du += upixel) {
+            if (smoothing_mode == 0) {
+                prev_px = prev_image.Sample(textureSampler, uv2);
+            }
+            else if (smoothing_mode == 1) {
                 #ifdef _D3D11
                 [loop]
                 #endif
-                for (float dv=-vpixel; dv <= vpixel; dv += vpixel) {
-                    prev_px += prev_image.Sample(textureSampler, uv2 + float2(du,dv));
+                for (float du=-upixel; du <= upixel; du += upixel) {
+                    #ifdef _D3D11
+                    [loop]
+                    #endif
+                    for (float dv=-vpixel; dv <= vpixel; dv += vpixel) {
+                        prev_px += prev_image.Sample(textureSampler, uv2 + float2(du,dv));
+                    }
                 }
+                prev_px *= 0.111111110;
             }
-            prev_px *= 0.111111110;
         }
 
         if (superposition_mode == 1) {
