@@ -138,7 +138,7 @@ float4 EffectLinear(float2 uv)
         }
 
         float alpha = px.a;
-        alpha = max(alpha, lerp(prev_px.a*prev_alpha, px.a, px.a));
+        alpha = max(prev_px.a*prev_alpha, lerp(prev_px.a*prev_alpha, px.a, px.a));
         alpha = clamp(alpha, 0.0, 1.0);
 
         float4 px_out = float4(0.0, 0.0, 0.0, alpha);
