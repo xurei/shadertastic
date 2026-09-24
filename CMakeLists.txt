@@ -106,12 +106,7 @@ elseif(OS_LINUX)
     COMMAND patchelf --replace-needed libonnxruntime.so.1 libonnxruntime.so.${Onnxruntime_VERSION} $<TARGET_FILE:${PROJECT_NAME}>
     COMMENT "Fixing ONNX dependency name for portability"
   )
-
-  # Packaging - force the dependencies so Qt is not taken with it; OBS will have it anyways
 endif()
-set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS OFF CACHE BOOL "" FORCE)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.38), libgcc-s1 (>= 4.0), libqt6core6t64 (>= 6.4.0), libstdc++6 (>= 13.1), obs-studio, zlib1g (>= 1:1.1.4)" CACHE STRING "" FORCE)
-set(CPACK_DEBIAN_shadertastic_PACKAGE_DEPENDS "libc6 (>= 2.38), libgcc-s1 (>= 4.0), libqt6core6t64 (>= 6.4.0), libstdc++6 (>= 13.1), obs-studio, zlib1g (>= 1:1.1.4)" CACHE STRING "" FORCE)
 
 # libzip
 # Disable warnings for libzip

@@ -156,6 +156,15 @@ ${_usage_host:-}"
   popd
 
   if (( package )) {
+    # Temporary wrapper to dpkg-shlibdeps to ignore breaking Qt dependencies. OBS has them anyways
+    rm -rf /tmp/cpack-shlibdeps || true
+    mkdir -p /tmp/cpack-shlibdeps/bin
+    echo "\
+#!/bin/bash \n\
+/usr/bin/dpkg-shlibdeps -xlibqt6gui6 -xlibqt6widgets6 \$@\n" > /tmp/cpack-shlibdeps/bin/dpkg-shlibdeps
+    chmod +x /tmp/cpack-shlibdeps/bin/dpkg-shlibdeps
+    export PATH="/tmp/cpack-shlibdeps/bin:$PATH"
+
     log_group "Packaging ${product_name}..."
     pushd ${project_root}
     cmake --build build_${target##*-} --config ${config} -t package ${cmake_args}
