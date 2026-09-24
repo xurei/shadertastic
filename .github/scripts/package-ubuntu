@@ -161,7 +161,7 @@ ${_usage_host:-}"
     mkdir -p /tmp/cpack-shlibdeps/bin
     echo "\
 #!/bin/bash \n\
-/usr/bin/dpkg-shlibdeps -xlibqt6gui6 -xlibqt6widgets6 \$@\n" > /tmp/cpack-shlibdeps/bin/dpkg-shlibdeps
+/usr/bin/dpkg-shlibdeps -xlibqt6gui6 -xlibqt6widgets6 -xlibqt6gui6t64 -xlibqt6widgets6t64 \$@\n" > /tmp/cpack-shlibdeps/bin/dpkg-shlibdeps
     chmod +x /tmp/cpack-shlibdeps/bin/dpkg-shlibdeps
     export PATH="/tmp/cpack-shlibdeps/bin:$PATH"
 
