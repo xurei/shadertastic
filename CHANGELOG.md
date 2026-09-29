@@ -5,7 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-## [1.3.0] - 2026-09-20
+### Fixed
+- Fixed glitch in Vignette v2 effect swapping width and height when source is vertical
+
+
+## [1.3.1] - 2026-09-20
 ### Added
 - Vignette v2 effect: add "Apply Vignetting in Alpha Channel" in options, custom positioning and size
 - Face tracking: added "Reset on face lost" option

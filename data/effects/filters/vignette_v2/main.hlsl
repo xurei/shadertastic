@@ -39,16 +39,16 @@ float4 EffectLinear(float2 uv)
     float outer = border * (1.0 + smoothing*0.001);
     float inner = border * (1.0 - smoothing*0.001);
 
-    if (vpixel > upixel) {
+    /*if (vpixel > upixel)*/ {
         uv.x -= center.x;
         uv.x /= aspect_ratio_modifier;
         uv.x += center.x;
     }
-    else {
+    /*else {
         uv.y -= center.y;
         uv.y /= aspect_ratio_modifier;
         uv.y += center.y;
-    }
+    }*/
 
     float2 uv_centered = (uv-center)*2.0;
 
