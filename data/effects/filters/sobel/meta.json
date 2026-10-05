@@ -26,6 +26,7 @@
       "values": [
         {"label": "RGB", "value": 1},
         {"label": "YUV", "value": 4},
+        {"label": "Alpha", "value": 5},
         {"label": "Luminance Only", "value": 3},
         {"label": "Add Luminance", "value": 2}
       ],

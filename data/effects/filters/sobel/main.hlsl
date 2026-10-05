@@ -17,6 +17,7 @@ uniform float orig_ratio;
 
 #define FILTER_MODE_RGB 1
 #define FILTER_MODE_YUV 4
+#define FILTER_MODE_ALPHA 5
 #define FILTER_MODE_LUMINANCE 2
 #define FILTER_MODE_LUMINANCE_ONLY 3
 
@@ -93,6 +94,7 @@ float4 EffectLinear(float2 uv)
     float3 resultY = float3(0.0,0.0,0.0);
 
     bool is_yuv = (filter_mode == FILTER_MODE_LUMINANCE || filter_mode == FILTER_MODE_LUMINANCE_ONLY || filter_mode == FILTER_MODE_YUV);
+    bool is_alpha = (filter_mode == FILTER_MODE_ALPHA);
 
     // Horizontal and Vertical Sobel combined
     for (int y = -2; y <= 2; y++) {
@@ -104,6 +106,9 @@ float4 EffectLinear(float2 uv)
             if (is_yuv) {
                 pixelWeighted.rgb = rgb2yuvNormalized(pixelWeighted.rgb);
             }
+            else if (is_alpha) {
+                 pixelWeighted.rgb = float3(pixelWeighted.a, pixelWeighted.a, pixelWeighted.a);
+             }
             resultX += weightX * pixelWeighted.rgb;
             resultY += weightY * pixelWeighted.rgb;
         }
