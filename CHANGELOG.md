@@ -11,7 +11,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - Fixed glitch in Vignette v2 effect swapping width and height when source is vertical
-- Fixed black frame glich with auto reloading transitions in dev mode
 
 ## [1.3.0] - 2026-09-20
 ### Added
